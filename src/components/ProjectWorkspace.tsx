@@ -201,41 +201,41 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
         <aside className="w-80 lg:w-96 bg-bg-panel border-r border-border-main flex flex-col shrink-0 h-full overflow-y-auto z-10 custom-scrollbar">
           {isCreating ? (
             <div className="p-6 border-b border-border-main">
-              <h2 className="text-sm font-bold mb-4 text-white uppercase tracking-widest font-mono flex items-center gap-2">
-                <Plus className="w-4 h-4 text-accent-blue" /> Initialize Project
+              <h2 className="text-base font-bold mb-4 text-white uppercase tracking-widest font-mono flex items-center gap-2">
+                <Plus className="w-5 h-5 text-accent-blue" /> Initialize Project
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Project Name</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1 font-mono">Project Name</label>
                   <input 
                     type="text"
                     value={newProject.name}
                     onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-xs text-white focus:border-accent-blue outline-none font-mono"
+                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-sm text-white focus:border-accent-blue outline-none font-mono"
                     placeholder="e.g. Analytics Dashboard"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Description</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1 font-mono">Description</label>
                   <textarea 
                     value={newProject.description}
                     onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-xs text-white h-20 font-mono outline-none focus:border-accent-blue"
+                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-sm text-white h-20 font-mono outline-none focus:border-accent-blue"
                     placeholder="Define project scope..."
                   />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase font-mono">Classification</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase font-mono">Classification</label>
                     <button 
                       onClick={() => setIsManagingTypes(!isManagingTypes)}
-                      className={`text-[8px] font-bold px-2 py-0.5 rounded-sm transition-all uppercase font-mono border flex items-center gap-1 ${
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-sm transition-all uppercase font-mono border flex items-center gap-1 ${
                         isManagingTypes 
                           ? 'bg-accent-blue/10 text-accent-blue border-accent-blue' 
                           : 'bg-bg-dark text-slate-500 border-border-main hover:text-white hover:border-slate-500'
                       }`}
                     >
-                      <Settings className={`w-2.5 h-2.5 ${isManagingTypes ? 'animate-spin-slow' : ''}`} />
+                      <Settings className={`w-3.5 h-3.5 ${isManagingTypes ? 'animate-spin-slow' : ''}`} />
                       {isManagingTypes ? 'Exit Config' : 'Manage Types'}
                     </button>
                   </div>
@@ -325,24 +325,24 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   )}
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 font-mono">Technical Constraints (JSON)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1 font-mono">Technical Constraints (JSON)</label>
                   <textarea 
                     value={newProject.constraints}
                     onChange={(e) => setNewProject({ ...newProject, constraints: e.target.value })}
-                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-[10px] text-accent-blue h-20 font-mono outline-none focus:border-accent-blue"
+                    className="w-full bg-bg-dark border border-border-main p-2 rounded-sm text-xs text-accent-blue h-20 font-mono outline-none focus:border-accent-blue"
                     placeholder='{ "minStars": 100 }'
                   />
                 </div>
                 <div className="flex gap-2 pt-2">
                   <button 
                     onClick={handleCreateProject}
-                    className="flex-1 bg-accent-blue text-white text-[10px] font-bold py-2 rounded-sm hover:bg-blue-600 uppercase tracking-widest"
+                    className="flex-1 bg-accent-blue text-white text-xs font-bold py-2 rounded-sm hover:bg-blue-600 uppercase tracking-widest"
                   >
                     Deploy
                   </button>
                   <button 
                     onClick={() => setIsCreating(false)}
-                    className="flex-1 bg-bg-dark text-slate-400 text-[10px] font-bold py-2 rounded-sm border border-border-main hover:text-white transition-colors uppercase tracking-widest"
+                    className="flex-1 bg-bg-dark text-slate-400 text-xs font-bold py-2 rounded-sm border border-border-main hover:text-white transition-colors uppercase tracking-widest"
                   >
                     Abort
                   </button>
@@ -352,10 +352,10 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
           ) : (
             <>
               <div className="p-4 border-b border-border-main bg-bg-dark/50">
-                <label className="block text-[9px] font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest">Active Project Selector</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest">Active Project Selector</label>
                 <div className="relative">
                   <select 
-                    className="w-full bg-bg-panel border border-border-main p-2 rounded-sm text-xs text-white font-mono outline-none appearance-none cursor-pointer focus:border-accent-blue"
+                    className="w-full bg-bg-panel border border-border-main p-2 rounded-sm text-sm text-white font-mono outline-none appearance-none cursor-pointer focus:border-accent-blue"
                     value={activeProject?.id || ''}
                     onChange={(e) => {
                       const p = projects.find(proj => proj.id === parseInt(e.target.value));
@@ -367,20 +367,20 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                    <Search className="w-3 h-3" />
+                    <Search className="w-4 h-4" />
                   </div>
                 </div>
               </div>
               <div className="p-6 border-b border-border-main">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-accent-blue uppercase tracking-widest">
+                  <span className="text-xs font-mono text-accent-blue uppercase tracking-widest">
                     {activeProject ? `Project ID: ${activeProject.id}` : 'Status: Idle'}
                   </span>
                   <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse"></div>
                   </div>
                 </div>
-                <h2 className="text-xl font-bold leading-tight mb-4 text-white font-mono tracking-tight">
+                <h2 className="text-2xl font-bold leading-tight mb-4 text-white font-mono tracking-tight">
                   {activeProject?.name || 'Workspace Root'}
                 </h2>
                 
@@ -390,7 +390,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                       try {
                         const c = JSON.parse(activeProject.constraints);
                         return c.types?.map((t: string) => (
-                          <span key={t} className="px-2 py-0.5 bg-accent-blue/10 text-accent-blue border border-accent-blue/20 text-[9px] font-bold uppercase rounded-sm font-mono">
+                          <span key={t} className="px-2 py-0.5 bg-accent-blue/10 text-accent-blue border border-accent-blue/20 text-xs font-bold uppercase rounded-sm font-mono">
                             {t}
                           </span>
                         ));
@@ -402,12 +402,12 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 <div className="space-y-6">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Project Brief</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest font-mono">Project Brief</label>
                       {activeProject && brief !== activeProject.description && (
                         <button 
                           onClick={handleSaveProject}
                           disabled={isSaving}
-                          className="text-[9px] font-bold text-accent-blue hover:underline flex items-center gap-1 font-mono uppercase"
+                          className="text-[10px] font-bold text-accent-blue hover:underline flex items-center gap-1 font-mono uppercase"
                         >
                           {isSaving ? 'Syncing...' : 'Commit Changes'}
                         </button>
@@ -416,7 +416,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     <textarea 
                       value={brief}
                       onChange={(e) => setBrief(e.target.value)}
-                      className="w-full bg-bg-dark border border-border-main p-3 rounded-sm text-xs text-slate-300 font-mono resize-y focus:border-accent-blue outline-none h-32 custom-scrollbar" 
+                      className="w-full bg-bg-dark border border-border-main p-3 rounded-sm text-sm text-slate-300 font-mono resize-y focus:border-accent-blue outline-none h-32 custom-scrollbar" 
                       placeholder="Input project parameters..."
                     />
                   </div>
@@ -424,9 +424,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   <button 
                     onClick={handleUpdateRecommendations}
                     disabled={isAnalyzing || !activeProject}
-                    className="w-full bg-accent-blue text-white font-mono text-[10px] font-bold py-3 px-4 rounded-sm hover:bg-blue-600 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
+                    className="w-full bg-accent-blue text-white font-mono text-xs font-bold py-3 px-4 rounded-sm hover:bg-blue-600 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
                   >
-                    {isAnalyzing ? <Layers className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
+                    {isAnalyzing ? <Layers className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
                     Execute Analysis
                   </button>
 
@@ -436,8 +436,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                       if (c.data && Object.keys(c.data).length > 0) {
                         return (
                           <div className="mt-6 pt-6 border-t border-border-main">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest">Technical Constraints</label>
-                            <pre className="text-[10px] font-mono bg-bg-dark p-3 rounded border border-border-main text-accent-blue overflow-x-auto custom-scrollbar">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest">Technical Constraints</label>
+                            <pre className="text-xs font-mono bg-bg-dark p-3 rounded border border-border-main text-accent-blue overflow-x-auto custom-scrollbar">
                               {JSON.stringify(c.data, null, 2)}
                             </pre>
                           </div>
@@ -451,15 +451,15 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             </>
           )}
           <div className="p-6 bg-bg-dark/30 flex-1">
-            <h3 className="font-mono font-bold text-[10px] uppercase tracking-widest text-slate-500 mb-4">Telemetry Stats</h3>
+            <h3 className="font-mono font-bold text-xs uppercase tracking-widest text-slate-500 mb-4">Telemetry Stats</h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-bg-panel p-3 border border-border-main rounded-sm">
-                <div className="text-xl font-bold text-white font-mono">{repos.length}</div>
-                <div className="text-[9px] text-slate-500 uppercase font-mono mt-1">Nodes Scanned</div>
+                <div className="text-2xl font-bold text-white font-mono">{repos.length}</div>
+                <div className="text-[10px] text-slate-500 uppercase font-mono mt-1">Nodes Scanned</div>
               </div>
               <div className="bg-bg-panel p-3 border border-border-main rounded-sm">
-                <div className="text-xl font-bold text-accent-green font-mono">92%</div>
-                <div className="text-[9px] text-slate-500 uppercase font-mono mt-1">Match Prob</div>
+                <div className="text-2xl font-bold text-accent-green font-mono">92%</div>
+                <div className="text-[10px] text-slate-500 uppercase font-mono mt-1">Match Prob</div>
               </div>
             </div>
           </div>
@@ -469,11 +469,11 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8 border-b border-border-main pb-6">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-3 font-mono uppercase tracking-tight">
-                  <BrainCircuit className="text-accent-blue w-6 h-6" />
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3 font-mono uppercase tracking-tight">
+                  <BrainCircuit className="text-accent-blue w-8 h-8" />
                   AI Curated Recommendations
                 </h2>
-                <p className="text-xs text-slate-500 mt-2 font-mono">Neural analysis of repository nodes based on project heuristics.</p>
+                <p className="text-sm text-slate-500 mt-2 font-mono">Neural analysis of repository nodes based on project heuristics.</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5">
@@ -481,28 +481,28 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     onClick={() => setRecViewMode('list')}
                     className={`p-1.5 rounded-sm transition-all ${recViewMode === 'list' ? 'bg-accent-blue text-white' : 'text-slate-500 hover:text-slate-300'}`}
                   >
-                    <ListIcon className="w-3.5 h-3.5" />
+                    <ListIcon className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => setRecViewMode('grid')}
                     className={`p-1.5 rounded-sm transition-all ${recViewMode === 'grid' ? 'bg-accent-blue text-white' : 'text-slate-500 hover:text-slate-300'}`}
                   >
-                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <LayoutGrid className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="h-4 w-px bg-border-main"></div>
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-accent-blue animate-pulse"></div>
-                  <span className="text-[10px] font-mono text-accent-blue uppercase tracking-widest">Live Engine</span>
+                  <div className="h-2.5 w-2.5 rounded-full bg-accent-blue animate-pulse"></div>
+                  <span className="text-xs font-mono text-accent-blue uppercase tracking-widest">Live Engine</span>
                 </div>
               </div>
             </div>
 
             {recommendations.length === 0 && !isAnalyzing ? (
               <div className="py-32 flex flex-col items-center justify-center text-slate-600 border border-dashed border-border-main rounded-sm bg-bg-panel/20">
-                <BrainCircuit className="w-12 h-12 mb-4 opacity-10" />
-                <p className="text-xs font-mono uppercase tracking-widest opacity-50">Awaiting Input Parameters</p>
-                <p className="text-[10px] font-mono mt-2 text-slate-500">Update brief and execute analysis to populate nodes.</p>
+                <BrainCircuit className="w-16 h-16 mb-4 opacity-10" />
+                <p className="text-sm font-mono uppercase tracking-widest opacity-50">Awaiting Input Parameters</p>
+                <p className="text-xs font-mono mt-2 text-slate-500">Update brief and execute analysis to populate nodes.</p>
               </div>
             ) : recViewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-24">
@@ -511,48 +511,57 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   if (!repo) return null;
                   return (
                     <article key={idx} className="bg-bg-panel border border-border-main rounded-sm shadow-2xl relative overflow-hidden group hover:border-accent-blue transition-all">
-                      <div className="absolute top-0 right-0 p-4 z-10">
+                      <div className="absolute top-0 right-0 p-4 z-10 flex flex-col items-end gap-2">
                         <div className="h-12 w-12 rounded-full border border-accent-green/30 bg-bg-dark flex flex-col items-center justify-center shadow-lg">
                           <span className="text-[8px] font-mono text-accent-green uppercase leading-none mb-0.5">FIT</span>
                           <span className="font-bold text-accent-green text-lg leading-none">{rec.fitScore}</span>
                         </div>
+                        <a 
+                          href={repo.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-2 bg-bg-dark border border-border-main rounded-full text-slate-400 hover:text-white hover:border-accent-blue transition-all shadow-lg"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Search className="w-4 h-4" />
+                        </a>
                       </div>
                       <div className="p-6 border-b border-border-main relative bg-gradient-to-br from-bg-panel to-bg-dark">
                         <div className="flex gap-2 items-center mb-3">
-                          <span className="text-[9px] font-mono text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded border border-accent-blue/20 uppercase">{repo.id}</span>
+                          <span className="text-xs font-mono text-accent-blue bg-accent-blue/10 px-2 py-0.5 rounded border border-accent-blue/20 uppercase">{repo.id}</span>
                         </div>
-                        <h4 className="text-lg font-bold text-white mb-2 group-hover:text-accent-blue transition-colors font-mono tracking-tight">{repo.name}</h4>
-                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 font-sans">{repo.description}</p>
+                        <h4 className="text-xl font-bold text-white mb-2 group-hover:text-accent-blue transition-colors font-mono tracking-tight">{repo.name}</h4>
+                        <p className="text-sm text-slate-400 leading-relaxed line-clamp-2 font-sans">{repo.description}</p>
                       </div>
                       <div className="p-5 border-b border-border-main bg-bg-dark/30">
                         <div className="flex items-start gap-3">
-                          <CheckCircle className="text-accent-green w-4 h-4 mt-0.5 shrink-0" />
+                          <CheckCircle className="text-accent-green w-5 h-5 mt-0.5 shrink-0" />
                           <div>
-                            <div className="text-[9px] font-bold text-slate-500 uppercase mb-1 font-mono tracking-widest">AI Rationale</div>
-                            <p className="text-xs text-slate-300 leading-relaxed">{rec.rationale}</p>
+                            <div className="text-xs font-bold text-slate-500 uppercase mb-1 font-mono tracking-widest">AI Rationale</div>
+                            <p className="text-sm text-slate-300 leading-relaxed">{rec.rationale}</p>
                           </div>
                         </div>
                       </div>
                       {rec.warnings?.length > 0 && (
                         <div className="bg-accent-red/5 p-4 border-b border-accent-red/20 flex items-start gap-3">
-                          <AlertTriangle className="text-accent-red w-4 h-4 mt-0.5 shrink-0" />
+                          <AlertTriangle className="text-accent-red w-5 h-5 mt-0.5 shrink-0" />
                           <div>
-                            <div className="text-[9px] font-bold text-accent-red uppercase mb-1 font-mono tracking-widest">System Warning</div>
-                            <p className="text-[10px] text-slate-400">{rec.warnings[0]}</p>
+                            <div className="text-xs font-bold text-accent-red uppercase mb-1 font-mono tracking-widest">System Warning</div>
+                            <p className="text-xs text-slate-400">{rec.warnings[0]}</p>
                           </div>
                         </div>
                       )}
-                      <div className="flex items-center justify-between px-6 py-3 bg-bg-dark/50 text-[10px] font-mono text-slate-500">
-                        <span className="flex items-center gap-1.5"><Star className="w-3 h-3 text-accent-amber" /> {repo.stars}</span>
-                        <span className="flex items-center gap-1.5"><History className="w-3 h-3" /> {new Date(repo.last_push).toLocaleDateString()}</span>
+                      <div className="flex items-center justify-between px-6 py-3 bg-bg-dark/50 text-xs font-mono text-slate-500">
+                        <span className="flex items-center gap-1.5"><Star className="w-4 h-4 text-accent-amber" /> {repo.stars}</span>
+                        <span className="flex items-center gap-1.5"><History className="w-4 h-4" /> {new Date(repo.last_push).toLocaleDateString()}</span>
                         <span className={`px-1.5 py-0.5 rounded border uppercase ${getLicenseColor(repo.license)}`}>{repo.license}</span>
                       </div>
                       <div className="grid grid-cols-2 divide-x divide-border-main border-t border-border-main">
-                        <button className="py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-bg-dark flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-all font-mono">
-                          <Search className="w-3.5 h-3.5" /> Inspect
+                        <button className="py-3 text-xs font-bold uppercase tracking-widest hover:bg-bg-dark flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-all font-mono">
+                          <Search className="w-4 h-4" /> Inspect
                         </button>
-                        <button className="py-3 text-[10px] font-bold uppercase tracking-widest text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center gap-2 transition-all font-mono">
-                          <Pin className="w-3.5 h-3.5" /> Pin Node
+                        <button className="py-3 text-xs font-bold uppercase tracking-widest text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center gap-2 transition-all font-mono">
+                          <Pin className="w-4 h-4" /> Pin Node
                         </button>
                       </div>
                     </article>
@@ -573,23 +582,28 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                       <div className="flex-1 p-4 flex items-center justify-between gap-6 min-w-0">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <h4 className="text-sm font-bold text-white font-mono truncate">{repo.id}</h4>
-                            <span className="text-[9px] font-mono text-slate-500 uppercase">{repo.language}</span>
+                            <h4 className="text-base font-bold text-white font-mono truncate">{repo.id}</h4>
+                            <span className="text-xs font-mono text-slate-500 uppercase">{repo.language}</span>
                           </div>
-                          <p className="text-xs text-slate-400 line-clamp-1 font-sans">{rec.rationale}</p>
+                          <p className="text-sm text-slate-400 line-clamp-1 font-sans">{rec.rationale}</p>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
-                          <div className="flex flex-col items-end text-[10px] font-mono text-slate-500">
-                            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-accent-amber" /> {repo.stars}</span>
+                          <div className="flex flex-col items-end text-xs font-mono text-slate-500">
+                            <span className="flex items-center gap-1"><Star className="w-4 h-4 text-accent-amber" /> {repo.stars}</span>
                             <span className={`px-1 py-0.5 rounded border uppercase mt-1 ${getLicenseColor(repo.license)}`}>{repo.license}</span>
                           </div>
                           <div className="flex gap-2">
                             <button className="p-2 bg-bg-dark border border-border-main rounded-sm text-slate-400 hover:text-white hover:border-slate-500 transition-all">
-                              <Pin className="w-3.5 h-3.5" />
+                              <Pin className="w-4 h-4" />
                             </button>
-                            <button className="p-2 bg-bg-dark border border-border-main rounded-sm text-slate-400 hover:text-white hover:border-slate-500 transition-all">
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </button>
+                            <a 
+                              href={repo.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="p-2 bg-bg-dark border border-border-main rounded-sm text-slate-400 hover:text-white hover:border-accent-blue transition-all"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
                           </div>
                         </div>
                       </div>

@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   ChevronDown,
   X,
-  Star
+  Star,
+  Github
 } from 'lucide-react';
 import { Repo } from '../types';
 
@@ -140,15 +141,15 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
     <div className="flex-1 flex flex-col min-w-0 bg-bg-dark relative overflow-hidden">
       <div className="flex-none p-6 pb-4 flex items-end justify-between border-b border-border-main/50">
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-1 font-mono">
+          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1 font-mono">
             <span className="hover:text-white cursor-pointer">Workspace</span>
             <span>/</span>
             <span className="text-white">Library</span>
           </div>
-          <h2 className="text-2xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
             <span className="text-accent-blue">~/</span>Repositories
           </h2>
-          <p className="text-xs text-slate-500 mt-1 font-mono">
+          <p className="text-sm text-slate-500 mt-1 font-mono">
             Managing {repos.length} repositories across internal and external sources.
           </p>
         </div>
@@ -190,13 +191,13 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             </div>
 
             <div className="relative group">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 w-3.5 h-3.5 group-focus-within:text-accent-blue transition-colors" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 group-focus-within:text-accent-blue transition-colors" />
               <input 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search library..."
-                className="bg-bg-panel border border-border-main rounded-sm text-xs py-1.5 pl-8 pr-3 text-white placeholder-slate-600 focus:border-accent-blue outline-none transition-all w-64"
+                className="bg-bg-panel border border-border-main rounded-sm text-sm py-1.5 pl-9 pr-3 text-white placeholder-slate-600 focus:border-accent-blue outline-none transition-all w-72"
               />
             </div>
 
@@ -204,9 +205,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
             <button 
               onClick={() => setIsFilterModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-bg-panel border border-border-main rounded-sm text-xs font-bold text-slate-300 hover:text-white hover:border-accent-blue transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 bg-bg-panel border border-border-main rounded-sm text-sm font-bold text-slate-300 hover:text-white hover:border-accent-blue transition-all"
             >
-              <Filter className="w-3.5 h-3.5" />
+              <Filter className="w-4 h-4" />
               <span>Advanced Filters</span>
               {(selectedCategory !== 'All' || selectedLanguage !== 'All' || minScore > 0) && (
                 <span className="w-2 h-2 rounded-full bg-accent-blue animate-pulse"></span>
@@ -214,11 +215,11 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             </button>
 
             <div className="flex items-center gap-1.5 ml-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Sort:</span>
+              <span className="text-xs font-bold text-slate-500 uppercase font-mono">Sort:</span>
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-bg-panel border border-border-main rounded-sm text-[10px] font-bold py-1.5 px-2 text-slate-200 focus:border-accent-blue outline-none cursor-pointer uppercase font-mono"
+                className="bg-bg-panel border border-border-main rounded-sm text-xs font-bold py-1.5 px-2 text-slate-200 focus:border-accent-blue outline-none cursor-pointer uppercase font-mono"
               >
                 <option value="score">Score</option>
                 <option value="stars">Stars</option>
@@ -226,13 +227,13 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               </select>
             </div>
           </div>
-          <div className="text-xs text-slate-500 font-mono">
+          <div className="text-sm text-slate-500 font-mono">
             Showing <span className="text-slate-200 font-bold">{filteredRepos.length}</span> of <span className="text-slate-200">{repos.length}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <span className="text-[10px] font-bold text-slate-500 uppercase font-mono whitespace-nowrap mr-1">License Filter:</span>
+          <span className="text-xs font-bold text-slate-500 uppercase font-mono whitespace-nowrap mr-1">License Filter:</span>
           {licenses.map(license => {
             const isActive = selectedLicense === license;
             const colorClasses = getLicenseColor(license);
@@ -240,7 +241,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               <button
                 key={license}
                 onClick={() => setSelectedLicense(license)}
-                className={`px-3 py-1 rounded-full text-[10px] font-bold font-mono transition-all border whitespace-nowrap ${
+                className={`px-3 py-1 rounded-full text-xs font-bold font-mono transition-all border whitespace-nowrap ${
                   isActive 
                     ? `${colorClasses} scale-105 shadow-md` 
                     : 'bg-slate-800/30 text-slate-500 border-slate-700/50 hover:border-slate-500 hover:text-slate-300'
@@ -336,14 +337,14 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           <div className="p-8 text-center text-slate-500 font-mono text-sm">No repositories match your filters.</div>
         ) : viewMode === 'list' ? (
           <div className="bg-bg-panel border border-border-main rounded-sm shadow-xl min-w-[900px]">
-            <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-border-main bg-[#162032] text-xs font-bold text-slate-400 uppercase tracking-wider font-mono sticky top-0 z-10">
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-border-main bg-[#162032] text-sm font-bold text-slate-400 uppercase tracking-wider font-mono sticky top-0 z-10">
               <div className="col-span-3 pl-2">Repository Name</div>
-              <div className="col-span-2 text-sm text-slate-300">Suitability</div>
+              <div className="col-span-2">Suitability</div>
               <div className="col-span-1">Status</div>
               <div className="col-span-1">Stars</div>
               <div className="col-span-2">AI Score</div>
               <div className="col-span-1">Language</div>
-              <div className="col-span-2 text-right pr-2">License</div>
+              <div className="col-span-2 text-right pr-2">Actions</div>
             </div>
             
             <div className="divide-y divide-border-main">
@@ -360,25 +361,25 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                     className="group hover:bg-[#253248] cursor-pointer transition-colors grid grid-cols-12 gap-4 items-center px-4 py-3 border-l-2 border-l-transparent hover:border-l-accent-blue"
                   >
                     <div className="col-span-3 flex items-center gap-3 pl-2">
-                      <div className="w-8 h-8 rounded-md border border-border-main bg-slate-800 flex items-center justify-center text-[10px] font-bold">
+                      <div className="w-8 h-8 rounded-md border border-border-main bg-slate-800 flex items-center justify-center text-xs font-bold">
                         {repo.owner[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-bold text-sm text-slate-200 group-hover:text-accent-blue transition-colors truncate">{repo.id}</div>
-                        <div className="text-[10px] text-slate-500 font-mono mt-0.5 flex gap-2">
+                        <div className="font-bold text-base text-slate-200 group-hover:text-accent-blue transition-colors truncate">{repo.id}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-0.5 flex gap-2">
                           <span>Updated {new Date(repo.last_push).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
                     <div className="col-span-2 flex flex-wrap gap-1">
                       {aiData?.useCases?.slice(0, 2).map((useCase: string, i: number) => (
-                        <span key={i} className="px-2 py-0.5 bg-accent-green/10 text-accent-green border border-accent-green/20 text-[10px] font-bold uppercase rounded-sm font-mono truncate max-w-full">
+                        <span key={i} className="px-2 py-0.5 bg-accent-green/10 text-accent-green border border-accent-green/20 text-xs font-bold uppercase rounded-sm font-mono truncate max-w-full">
                           {useCase}
                         </span>
                       ))}
                     </div>
                     <div className="col-span-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border mono ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border mono ${
                         repo.status === 'ACTIVE' 
                           ? 'bg-green-500/10 text-green-400 border-green-500/20' 
                           : 'bg-slate-700/50 text-slate-400 border-slate-600/50'
@@ -387,8 +388,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         {repo.status}
                       </span>
                     </div>
-                    <div className="col-span-1 flex items-center gap-1 text-slate-300 font-mono text-xs">
-                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    <div className="col-span-1 flex items-center gap-1 text-slate-300 font-mono text-sm">
+                      <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                       <span>{repo.stars > 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}</span>
                     </div>
                     <div className="col-span-2">
@@ -401,20 +402,30 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                             style={{ width: `${repo.score}%` }}
                           ></div>
                         </div>
-                        <span className={`text-xs font-bold font-mono w-8 text-right ${
+                        <span className={`text-sm font-bold font-mono w-8 text-right ${
                           repo.score > 80 ? 'text-accent-green' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'
                         }`}>{repo.score}</span>
                       </div>
                     </div>
                     <div className="col-span-1 flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                      <span className="text-xs text-slate-200 font-mono truncate">{repo.language}</span>
+                      <span className="text-sm text-slate-200 font-mono truncate">{repo.language}</span>
                     </div>
-                    <div className="col-span-2 flex justify-end pr-2">
+                    <div className="col-span-2 flex justify-end items-center gap-3 pr-2">
                       <div className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors ${getLicenseColor(repo.license)}`}>
                         <Verified className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-bold font-mono">{repo.license}</span>
+                        <span className="text-xs font-bold font-mono">{repo.license}</span>
                       </div>
+                      <a 
+                        href={repo.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded transition-all"
+                        title="View on GitHub"
+                      >
+                        <Github className="w-4 h-4" />
+                      </a>
                     </div>
                   </div>
                 );
@@ -422,7 +433,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredRepos.map(repo => {
               let aiData = null;
               try {
@@ -441,38 +452,49 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         {repo.owner[0].toUpperCase()}
                       </div>
                       <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1 text-yellow-500 font-mono text-xs mb-1">
-                          <Star className="w-3 h-3 fill-yellow-500" />
+                        <div className="flex items-center gap-1 text-yellow-500 font-mono text-sm mb-1">
+                          <Star className="w-3.5 h-3.5 fill-yellow-500" />
                           <span>{repo.stars > 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}</span>
                         </div>
-                        <div className={`text-lg font-bold font-mono ${
+                        <div className={`text-xl font-bold font-mono ${
                           repo.score > 80 ? 'text-accent-green' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'
                         }`}>{repo.score}</div>
-                        <div className="text-[8px] text-slate-500 uppercase font-mono">Intelligence Score</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-mono">Intelligence Score</div>
                       </div>
                     </div>
-                    <h4 className="text-base font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate">{repo.id}</h4>
-                    <p className="text-[10px] text-slate-500 font-mono mt-1">Updated {new Date(repo.last_push).toLocaleDateString()}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-lg font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate">{repo.id}</h4>
+                      <a 
+                        href={repo.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-slate-500 hover:text-white transition-colors"
+                      >
+                        <Github className="w-4 h-4" />
+                      </a>
+                    </div>
+                    <p className="text-xs text-slate-500 font-mono mt-1">Updated {new Date(repo.last_push).toLocaleDateString()}</p>
                   </div>
 
                   <div className="p-5 flex-1 space-y-4">
                     <div>
-                      <div className="text-[9px] font-bold text-slate-500 uppercase mb-1.5 font-mono tracking-widest flex items-center gap-1.5">
-                        <Cpu className="w-3 h-3 text-accent-blue" /> AI Analysis
+                      <div className="text-xs font-bold text-slate-500 uppercase mb-1.5 font-mono tracking-widest flex items-center gap-1.5">
+                        <Cpu className="w-3.5 h-3.5 text-accent-blue" /> AI Analysis
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                      <p className="text-sm text-slate-300 leading-relaxed line-clamp-3">
                         {aiData?.summary || repo.description || 'No detailed analysis available for this node.'}
                       </p>
                     </div>
 
                     {aiData?.useCases && (
                       <div>
-                        <div className="text-[9px] font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest flex items-center gap-1.5">
-                          <Tag className="w-3 h-3 text-accent-green" /> Best Suitability
+                        <div className="text-xs font-bold text-slate-500 uppercase mb-2 font-mono tracking-widest flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-accent-green" /> Best Suitability
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {aiData.useCases.slice(0, 3).map((useCase: string, i: number) => (
-                            <span key={i} className="px-2 py-0.5 bg-accent-green/10 text-accent-green border border-accent-green/20 text-[9px] font-bold uppercase rounded-sm font-mono">
+                            <span key={i} className="px-2 py-0.5 bg-accent-green/10 text-accent-green border border-accent-green/20 text-xs font-bold uppercase rounded-sm font-mono">
                               {useCase}
                             </span>
                           ))}
@@ -482,11 +504,11 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   </div>
 
                   <div className="px-5 py-3 bg-bg-dark/50 border-t border-border-main flex items-center justify-between">
-                    <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500">
-                      <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> {repo.language}</span>
-                      <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${getLicenseColor(repo.license)}`}><ShieldCheck className="w-3 h-3" /> {repo.license}</span>
+                    <div className="flex items-center gap-3 text-xs font-mono text-slate-500">
+                      <span className="flex items-center gap-1"><Globe className="w-3.5 h-3.5" /> {repo.language}</span>
+                      <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${getLicenseColor(repo.license)}`}><ShieldCheck className="w-3.5 h-3.5" /> {repo.license}</span>
                     </div>
-                    <ExternalLink className="w-3 h-3 text-slate-600 group-hover:text-white transition-colors" />
+                    <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" />
                   </div>
                 </div>
               );
