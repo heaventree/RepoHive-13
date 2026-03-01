@@ -18,7 +18,8 @@ import {
   X,
   Star,
   Github,
-  HelpCircle
+  HelpCircle,
+  ChevronRight
 } from 'lucide-react';
 import { Repo } from '../types';
 
@@ -540,8 +541,12 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate">
                             {formatRepoName(repo.id)}
                           </div>
-                          <div className="text-xs text-slate-500 font-mono mt-0.5 flex gap-2">
+                          <div className="text-xs text-slate-500 font-mono mt-0.5 flex items-center gap-3">
                             <span>Updated {new Date(repo.last_push).toLocaleDateString()}</span>
+                            <span className="text-accent-blue/60 group-hover:text-accent-blue flex items-center gap-0.5 transition-colors">
+                              <ChevronRight className="w-3 h-3" />
+                              View Details
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -587,7 +592,17 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           <span className="text-xs font-bold font-mono">{repo.license}</span>
                         </div>
                       </div>
-                      <div className="col-span-1 flex justify-end items-center pr-2">
+                      <div className="col-span-1 flex justify-end items-center pr-2 gap-1">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onViewRepo(repo);
+                          }}
+                          className="p-1.5 text-accent-blue hover:text-white hover:bg-accent-blue/20 rounded transition-all"
+                          title="View Details"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
                         <a 
                           href={repo.url} 
                           target="_blank" 
@@ -626,18 +641,6 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           {formatRepoName(repo.id)}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-mono mt-0.5">Updated {new Date(repo.last_push).toLocaleDateString()}</p>
-                        <div className="mt-2">
-                          <a 
-                            href={repo.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-slate-700 bg-slate-800/50 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-[10px] font-bold font-mono uppercase"
-                          >
-                            <Github className="w-3.5 h-3.5" />
-                            <span>View on Github</span>
-                          </a>
-                        </div>
                       </div>
                       <div className="flex flex-col items-end">
                         <div className="flex items-center gap-1 text-yellow-500 font-mono text-sm mb-1">
@@ -658,6 +661,29 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           }`}>{repo.score}</span>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="mt-5 flex gap-3 items-center">
+                      <a 
+                        href={repo.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-slate-700 bg-slate-800/50 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-[10px] font-bold font-mono uppercase"
+                      >
+                        <Github className="w-3.5 h-3.5" />
+                        <span>View on Github</span>
+                      </a>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewRepo(repo);
+                        }}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-accent-blue/30 bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 hover:border-accent-blue transition-all text-[10px] font-bold font-mono uppercase"
+                      >
+                        <span>Full Details</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
