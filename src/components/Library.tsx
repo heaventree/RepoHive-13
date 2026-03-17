@@ -141,10 +141,11 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore;
       })
       .sort((a, b) => {
+        if (sortBy === 'latest') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        if (sortBy === 'oldest') return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        
         let comparison = 0;
-        if (sortBy === 'latest') comparison = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        else if (sortBy === 'oldest') comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
-        else if (sortBy === 'score') comparison = a.score - b.score;
+        if (sortBy === 'score') comparison = a.score - b.score;
         else if (sortBy === 'stars') comparison = a.stars - b.stars;
         else if (sortBy === 'name') comparison = a.id.localeCompare(b.id);
         else if (sortBy === 'language') comparison = (a.language || '').localeCompare(b.language || '');
