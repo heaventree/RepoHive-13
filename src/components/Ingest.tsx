@@ -75,82 +75,18 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
         <div className="absolute top-1/4 left-1/2 w-[300px] h-[300px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)', filter: 'blur(60px)' }}></div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-8 py-10 flex flex-col h-full">
-        {/* Page Header */}
-        <div className="mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-400/40 bg-indigo-500/10 text-indigo-300 text-xs font-semibold mb-4 tracking-wide">
-            <Zap className="w-3 h-3" />
-            BULK IMPORT
+      <div className="relative z-10 max-w-7xl mx-auto px-8 py-6 flex flex-col h-full">
+        {/* Page Header — compact single line */}
+        <div className="mb-6 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-indigo-400" />
+            <h1 className="text-xl font-bold text-white tracking-tight">Bulk Import</h1>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-3 tracking-tight leading-none">
-            Add repositories<br />
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #818cf8 0%, #38bdf8 100%)' }}>at scale.</span>
-          </h1>
-          <p className="text-slate-400 text-lg max-w-xl">
-            Paste GitHub URLs and let AI analyse, score, and categorise every repo in seconds.
-          </p>
+          <span className="text-slate-500 text-sm">— Paste GitHub URLs and AI will analyse, score and categorise every repo in seconds.</span>
         </div>
 
-        {/* Two-column layout */}
+        {/* Two-column layout — Live Monitor LEFT, URL Input RIGHT */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
-
-          {/* URL Input Card */}
-          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
-            {/* Card header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-              <div>
-                <p className="text-white font-semibold text-lg">Paste URLs</p>
-                <p className="text-slate-500 text-xs mt-0.5">One GitHub repository per line</p>
-              </div>
-              <div className="flex items-center gap-3">
-                {repoCount > 0 && (
-                  <span className="text-xs font-bold text-slate-400 tabular-nums">
-                    <span className="text-indigo-300 text-sm">{repoCount}</span> repos
-                  </span>
-                )}
-                <button
-                  onClick={() => setUrls('')}
-                  title="Clear list"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Textarea */}
-            <div className="flex-1 relative p-1">
-              <textarea
-                value={urls}
-                onChange={(e) => setUrls(e.target.value)}
-                className="w-full h-full min-h-64 rounded-xl text-slate-200 font-mono text-sm p-5 resize-none leading-7 placeholder-slate-600 outline-none transition-all focus:ring-2 focus:ring-indigo-500/40 border border-transparent focus:border-indigo-500/30"
-                style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
-                placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
-                spellCheck={false}
-              />
-            </div>
-
-            {/* Scan button */}
-            <div className="px-6 py-5 border-t border-white/10">
-              <button
-                onClick={handleInitiate}
-                disabled={isScanning || repoCount === 0}
-                className="w-full py-3.5 rounded-xl text-white font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  background: isScanning || repoCount === 0
-                    ? 'rgba(99,102,241,0.2)'
-                    : 'linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)',
-                  boxShadow: repoCount > 0 && !isScanning ? '0 0 30px rgba(79,70,229,0.4), 0 4px 20px rgba(14,165,233,0.2)' : 'none'
-                }}
-              >
-                {isScanning ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Scanning {repoCount} repositories...</>
-                ) : (
-                  <><Rocket className="w-4 h-4" /> Scan {repoCount > 0 ? `${repoCount} repositories` : 'repositories'}</>
-                )}
-              </button>
-            </div>
-          </div>
 
           {/* Live Monitor Card */}
           <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
@@ -245,6 +181,56 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               ))}
             </div>
           </div>
+
+          {/* URL Input Card */}
+          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+            {/* Card header — scan + count + clear all together */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <div>
+                <p className="text-white font-semibold text-lg">Paste URLs</p>
+                <p className="text-slate-500 text-xs mt-0.5">One GitHub repository per line</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono text-slate-400 tabular-nums">
+                  <span className="text-indigo-300 font-bold text-sm">{repoCount}</span> repos
+                </span>
+                <button
+                  onClick={() => setUrls('')}
+                  title="Clear list"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleInitiate}
+                  disabled={isScanning || repoCount === 0}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: isScanning || repoCount === 0
+                      ? 'rgba(99,102,241,0.2)'
+                      : 'linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)',
+                    boxShadow: repoCount > 0 && !isScanning ? '0 0 20px rgba(79,70,229,0.4)' : 'none'
+                  }}
+                >
+                  {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
+                  SCAN
+                </button>
+              </div>
+            </div>
+
+            {/* Textarea — fills remaining space */}
+            <div className="flex-1 p-1">
+              <textarea
+                value={urls}
+                onChange={(e) => setUrls(e.target.value)}
+                className="w-full h-full min-h-64 rounded-xl text-slate-200 font-mono text-sm p-5 resize-none leading-7 placeholder-slate-600 outline-none transition-all focus:ring-2 focus:ring-indigo-500/40 border border-transparent focus:border-indigo-500/30"
+                style={{ background: 'rgba(0,0,0,0.25)' }}
+                placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
+                spellCheck={false}
+              />
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
