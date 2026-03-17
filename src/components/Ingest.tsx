@@ -5,7 +5,8 @@ import {
   Check, 
   Loader2,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  Zap
 } from 'lucide-react';
 
 interface IngestProps {
@@ -16,6 +17,8 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   const [urls, setUrls] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [stream, setStream] = useState<any[]>([]);
+
+  const repoCount = urls.split('\n').filter(u => u.trim().startsWith('http')).length;
 
   const handleInitiate = async () => {
     const urlList = urls.split('\n').filter(u => u.trim().startsWith('http'));
@@ -53,137 +56,193 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
     setIsScanning(false);
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === 'FETCHING') return 'Fetching metadata...';
+    if (status === 'ANALYZING') return 'AI analysis...';
+    if (status === 'SCORING') return 'Computing score...';
+    if (status === 'COMPLETE') return 'Added to library';
+    return 'Failed';
+  };
+
   return (
-    <main className="flex-1 overflow-auto bg-gradient-to-br from-[#0F1420] via-[#1A1F3A] to-[#0F1420] p-8 custom-scrollbar">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Bulk Repository Import</h1>
-          <p className="text-slate-400 text-lg">Add multiple repositories at once. Real-time analysis with intelligent categorization.</p>
+    <main className="flex-1 overflow-auto custom-scrollbar relative" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1e1b4b 0%, #0f172a 40%, #0a0f1e 100%)' }}>
+
+      {/* Background colour orbs — these make glass morphism actually work */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-40" style={{ background: 'radial-gradient(circle, #4f46e5 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
+        <div className="absolute top-1/3 right-0 w-[400px] h-[400px] rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
+        <div className="absolute bottom-0 left-1/3 w-[600px] h-[400px] rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(100px)' }}></div>
+        <div className="absolute top-1/4 left-1/2 w-[300px] h-[300px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)', filter: 'blur(60px)' }}></div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-8 py-10 flex flex-col h-full">
+        {/* Page Header */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-400/40 bg-indigo-500/10 text-indigo-300 text-xs font-semibold mb-4 tracking-wide">
+            <Zap className="w-3 h-3" />
+            BULK IMPORT
+          </div>
+          <h1 className="text-5xl font-bold text-white mb-3 tracking-tight leading-none">
+            Add repositories<br />
+            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #818cf8 0%, #38bdf8 100%)' }}>at scale.</span>
+          </h1>
+          <p className="text-slate-400 text-lg max-w-xl">
+            Paste GitHub URLs and let AI analyse, score, and categorise every repo in seconds.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Paste URLs Card */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/8 to-white/5 border border-white/15 rounded-2xl shadow-2xl hover:shadow-3xl hover:border-white/20 transition-all duration-300 overflow-hidden h-full flex flex-col">
-              
-              {/* Header */}
-              <div className="p-8 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white tracking-tight">Paste URLs</h2>
-                    <p className="text-sm text-slate-400 mt-2">One GitHub repository per line</p>
-                  </div>
-                  <button 
-                    onClick={handleInitiate}
-                    disabled={isScanning || !urls.trim()}
-                    className="ml-4 flex-shrink-0 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-cyan-500/20 flex items-center gap-2 whitespace-nowrap border border-cyan-400/30 hover:border-cyan-300/50 disabled:border-slate-600/20"
-                  >
-                    {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-                    SCAN
-                  </button>
-                </div>
-              </div>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 
-              {/* Content */}
-              <div className="flex-1 flex flex-col p-8 gap-6">
-                <textarea 
-                  value={urls}
-                  onChange={(e) => setUrls(e.target.value)}
-                  className="flex-1 min-h-80 bg-gradient-to-b from-white/8 to-white/5 border border-white/12 rounded-xl text-slate-100 font-mono text-sm p-5 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all resize-none leading-relaxed placeholder-slate-500 shadow-inner"
-                  placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
-                  spellCheck={false}
-                />
-                
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div className="text-sm font-mono text-slate-400">
-                    <span className="text-cyan-400 font-bold text-base">{urls.split('\n').filter(u => u.trim()).length}</span>
-                    <span className="ml-2">repositories detected</span>
-                  </div>
-                  <button 
-                    onClick={() => setUrls('')} 
-                    title="Clear list" 
-                    className="text-slate-500 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+          {/* URL Input Card */}
+          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+            {/* Card header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <div>
+                <p className="text-white font-semibold text-lg">Paste URLs</p>
+                <p className="text-slate-500 text-xs mt-0.5">One GitHub repository per line</p>
               </div>
+              <div className="flex items-center gap-3">
+                {repoCount > 0 && (
+                  <span className="text-xs font-bold text-slate-400 tabular-nums">
+                    <span className="text-indigo-300 text-sm">{repoCount}</span> repos
+                  </span>
+                )}
+                <button
+                  onClick={() => setUrls('')}
+                  title="Clear list"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Textarea */}
+            <div className="flex-1 relative p-1">
+              <textarea
+                value={urls}
+                onChange={(e) => setUrls(e.target.value)}
+                className="w-full h-full min-h-64 rounded-xl text-slate-200 font-mono text-sm p-5 resize-none leading-7 placeholder-slate-600 outline-none transition-all focus:ring-2 focus:ring-indigo-500/40 border border-transparent focus:border-indigo-500/30"
+                style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
+                placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
+                spellCheck={false}
+              />
+            </div>
+
+            {/* Scan button */}
+            <div className="px-6 py-5 border-t border-white/10">
+              <button
+                onClick={handleInitiate}
+                disabled={isScanning || repoCount === 0}
+                className="w-full py-3.5 rounded-xl text-white font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{
+                  background: isScanning || repoCount === 0
+                    ? 'rgba(99,102,241,0.2)'
+                    : 'linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%)',
+                  boxShadow: repoCount > 0 && !isScanning ? '0 0 30px rgba(79,70,229,0.4), 0 4px 20px rgba(14,165,233,0.2)' : 'none'
+                }}
+              >
+                {isScanning ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Scanning {repoCount} repositories...</>
+                ) : (
+                  <><Rocket className="w-4 h-4" /> Scan {repoCount > 0 ? `${repoCount} repositories` : 'repositories'}</>
+                )}
+              </button>
             </div>
           </div>
 
           {/* Live Monitor Card */}
-          <div className="group relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/8 to-white/5 border border-white/15 rounded-2xl shadow-2xl hover:shadow-3xl hover:border-white/20 transition-all duration-300 overflow-hidden h-full flex flex-col">
-              
-              {/* Header */}
-              <div className="p-8 border-b border-white/10 bg-gradient-to-r from-white/5 to-transparent">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-green-400 to-emerald-400 animate-pulse shadow-lg shadow-green-500/50"></div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white tracking-tight">Live Monitor</h2>
-                      <p className="text-sm text-slate-400 mt-1">Real-time ingestion status</p>
-                    </div>
-                  </div>
-                  <span className="text-xs bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 px-4 py-2 rounded-full border border-green-400/30 font-mono font-bold whitespace-nowrap ml-4">
-                    {stream.filter(s => s.status !== 'COMPLETE').length} active
-                  </span>
+          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+            {/* Card header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                  <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-60"></div>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-lg">Live Monitor</p>
+                  <p className="text-slate-500 text-xs mt-0.5">Real-time ingestion status</p>
                 </div>
               </div>
+              <div className="px-3 py-1.5 rounded-full text-xs font-bold font-mono border" style={{ background: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
+                {stream.filter(s => s.status !== 'COMPLETE' && s.status !== 'FAILED').length} active
+              </div>
+            </div>
 
-              {/* Content */}
-              <div className="flex-1 flex flex-col p-8 gap-4 overflow-y-auto custom-scrollbar">
-                {stream.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    <div className="text-center">
-                      <p className="text-sm">Scans will appear here</p>
-                      <p className="text-xs text-slate-600 mt-2">Start scanning to see real-time progress</p>
+            {/* Stream list */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+              {stream.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                  <div className="w-16 h-16 rounded-2xl border border-white/10 flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <Rocket className="w-7 h-7 text-slate-600" />
+                  </div>
+                  <p className="text-slate-500 font-medium">No scans running</p>
+                  <p className="text-slate-700 text-sm mt-1">Results will stream here in real time</p>
+                </div>
+              ) : stream.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border p-4 transition-all duration-300"
+                  style={{
+                    background: item.status === 'COMPLETE'
+                      ? 'rgba(255,255,255,0.03)'
+                      : item.status === 'FAILED'
+                      ? 'rgba(239,68,68,0.05)'
+                      : 'rgba(16,185,129,0.06)',
+                    borderColor: item.status === 'COMPLETE'
+                      ? 'rgba(255,255,255,0.07)'
+                      : item.status === 'FAILED'
+                      ? 'rgba(239,68,68,0.3)'
+                      : 'rgba(16,185,129,0.3)',
+                    opacity: item.status === 'COMPLETE' ? 0.65 : 1
+                  }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">{item.id.split('/')[1]}</p>
+                      <p className="text-slate-500 font-mono text-xs truncate mt-0.5">{item.id}</p>
+                    </div>
+                    <div className="flex-shrink-0 ml-3">
+                      {item.status === 'COMPLETE' ? (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        </div>
+                      ) : item.status === 'FAILED' ? (
+                        <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center">
+                          <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                          <RotateCcw className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+                        </div>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  stream.map((item, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`backdrop-blur-lg bg-gradient-to-r border rounded-xl p-5 transition-all duration-300 ${
-                        item.status === 'COMPLETE' 
-                          ? 'from-white/5 to-white/3 border-white/10 opacity-60' 
-                          : 'from-green-500/10 to-emerald-500/5 border-green-400/40 shadow-lg shadow-green-500/10'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-500 font-mono truncate mb-1">{item.id}</p>
-                          <h4 className="font-bold text-white tracking-tight truncate text-sm">{item.id.split('/')[1]}</h4>
-                        </div>
-                        {item.status === 'COMPLETE' ? (
-                          <Check className="w-5 h-5 text-green-400 flex-shrink-0 ml-3" />
-                        ) : item.status === 'FAILED' ? (
-                          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 ml-3" />
-                        ) : (
-                          <div className="flex items-center gap-1.5 text-green-400 text-xs font-bold flex-shrink-0 ml-3">
-                            <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs text-slate-500 font-mono">
-                          <span className="truncate">{item.error || 'Processing...'}</span>
-                          <span className="flex-shrink-0 ml-2">{item.progress}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-                          <div 
-                            className={`h-full transition-all duration-300 rounded-full ${item.status === 'FAILED' ? 'bg-gradient-to-r from-red-400 to-red-500 shadow-lg shadow-red-500/30' : 'bg-gradient-to-r from-green-400 to-emerald-400 shadow-lg shadow-green-500/30'}`}
-                            style={{ width: `${item.progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-slate-500">{item.error || getStatusLabel(item.status)}</span>
+                      <span className="text-slate-400">{item.progress}%</span>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${item.progress}%`,
+                          background: item.status === 'FAILED'
+                            ? 'linear-gradient(90deg, #ef4444, #f87171)'
+                            : 'linear-gradient(90deg, #10b981, #34d399)',
+                          boxShadow: item.status === 'FAILED'
+                            ? '0 0 8px rgba(239,68,68,0.5)'
+                            : '0 0 8px rgba(16,185,129,0.6)'
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
