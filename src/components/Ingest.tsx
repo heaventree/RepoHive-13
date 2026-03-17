@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Terminal, 
   Rocket, 
   Trash2, 
-  Copy, 
   Check, 
   Loader2,
   AlertCircle,
@@ -56,96 +54,120 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   };
 
   return (
-    <main className="flex flex-1 overflow-hidden relative bg-bg-dark">
-      <section className="flex-1 flex flex-col h-full bg-bg-panel min-w-[320px] border-r border-border-main">
-        <div className="px-5 py-4 border-b border-border-main flex justify-between items-center bg-[#16201A]">
-          <h3 className="text-base font-semibold text-white flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent-green animate-pulse"></div>
-            Live Ingest Monitor
-          </h3>
-          <span className="text-xs bg-[#1F2923] text-slate-400 px-2 py-0.5 rounded-full border border-border-main font-mono">
-            Queue: {stream.filter(s => s.status !== 'COMPLETE').length}
-          </span>
+    <main className="flex-1 overflow-auto bg-gradient-to-br from-bg-dark via-bg-dark to-[#0A0F0D] p-6 custom-scrollbar">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Bulk Import</h1>
+          <p className="text-slate-400">Ingest multiple repositories at once for rapid library building</p>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {stream.map((item, idx) => (
-            <div key={idx} className={`bg-[#0A0F0D] border rounded-lg p-4 relative overflow-hidden group shadow-lg transition-all ${
-              item.status === 'COMPLETE' ? 'border-border-main opacity-70' : 'border-accent-green'
-            }`}>
-              {item.status !== 'COMPLETE' && <div className="absolute top-0 left-0 w-1 h-full bg-accent-green shadow-[0_0_15px_rgba(16,185,129,0.4)]"></div>}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 auto-rows-max">
+          {/* Bulk Import Card */}
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300 overflow-hidden">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">Paste URLs</h2>
+                <p className="text-xs text-slate-400 mt-1">One GitHub repository per line</p>
+              </div>
+              <button 
+                onClick={handleInitiate}
+                disabled={isScanning || !urls.trim()}
+                className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold py-2.5 px-5 rounded-lg transition-all shadow-lg hover:shadow-xl flex items-center gap-2 whitespace-nowrap ml-4"
+              >
+                {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+                SCAN
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col gap-4">
+              <textarea 
+                value={urls}
+                onChange={(e) => setUrls(e.target.value)}
+                className="flex-1 min-h-80 bg-white/5 border border-white/10 rounded-lg text-slate-200 font-mono text-sm p-4 focus:border-accent-green focus:ring-2 focus:ring-accent-green/20 outline-none transition-all resize-none leading-relaxed placeholder-slate-600"
+                placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
+                spellCheck={false}
+              />
               
-              <div className="flex justify-between items-start mb-3 relative z-10">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-mono text-slate-500">ID: {item.id}</span>
-                  <h4 className="font-bold text-base text-white tracking-tight">{item.id}</h4>
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-mono text-slate-400">
+                  <span className="text-slate-200 font-bold">{urls.split('\n').filter(u => u.trim()).length}</span> repositories
                 </div>
-                {item.status === 'COMPLETE' ? (
-                  <Check className="w-5 h-5 text-accent-green" />
-                ) : item.status === 'FAILED' ? (
-                  <AlertCircle className="w-5 h-5 text-accent-red" />
-                ) : (
-                  <div className="flex items-center gap-1 text-accent-green bg-[#14532D]/30 px-2 py-0.5 rounded text-xs font-bold border border-[#14532D]">
-                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                    {item.status}
-                  </div>
-                )}
+                <button 
+                  onClick={() => setUrls('')} 
+                  title="Clear list" 
+                  className="text-slate-500 hover:text-slate-300 transition-colors p-2 hover:bg-white/5 rounded-lg"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
+            </div>
+          </div>
 
-              <div className="space-y-2 relative z-10">
-                <div className="flex justify-between text-xs text-slate-500 font-mono">
-                  <span>{item.error || 'Processing...'}</span>
-                  <span>{item.progress}%</span>
+          {/* Live Monitor Card */}
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl hover:shadow-3xl transition-shadow duration-300 overflow-hidden">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse"></div>
+                  Live Monitor
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Real-time ingestion status</p>
+              </div>
+              <span className="text-xs bg-accent-green/10 text-accent-green px-3 py-1.5 rounded-full border border-accent-green/30 font-mono font-bold">
+                {stream.filter(s => s.status !== 'COMPLETE').length} active
+              </span>
+            </div>
+
+            <div className="p-6 flex flex-col gap-3 max-h-96 overflow-y-auto custom-scrollbar">
+              {stream.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  <p className="text-sm">Scans will appear here</p>
                 </div>
-                <div className="w-full bg-[#1F2923] h-1.5 rounded-full overflow-hidden">
+              ) : (
+                stream.map((item, idx) => (
                   <div 
-                    className={`h-full transition-all duration-300 ${item.status === 'FAILED' ? 'bg-accent-red' : 'bg-accent-green'}`}
-                    style={{ width: `${item.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+                    key={idx} 
+                    className={`bg-white/5 border rounded-lg p-4 transition-all ${
+                      item.status === 'COMPLETE' 
+                        ? 'border-white/10 opacity-60' 
+                        : 'border-accent-green/50 shadow-lg shadow-accent-green/10'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-500 font-mono truncate">{item.id}</p>
+                        <h4 className="font-bold text-white tracking-tight truncate">{item.id.split('/')[1]}</h4>
+                      </div>
+                      {item.status === 'COMPLETE' ? (
+                        <Check className="w-5 h-5 text-accent-green flex-shrink-0 ml-2" />
+                      ) : item.status === 'FAILED' ? (
+                        <AlertCircle className="w-5 h-5 text-accent-red flex-shrink-0 ml-2" />
+                      ) : (
+                        <div className="flex items-center gap-1 text-accent-green text-xs font-bold flex-shrink-0 ml-2">
+                          <RotateCcw className="w-3 h-3 animate-spin" />
+                        </div>
+                      )}
+                    </div>
 
-      <section className="flex-1 flex flex-col border-l border-border-main h-full min-w-0">
-        <div className="flex-none px-6 py-4 flex items-center justify-between bg-bg-dark border-b border-border-main">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
-              <span className="text-accent-blue">~/</span>Bulk Import
-              <span className="text-xs text-slate-500 font-normal ml-2">— Paste GitHub URLs (one per line)</span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setUrls('')} title="Clear list" className="text-slate-400 hover:text-white transition-colors">
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <div className="text-sm font-mono text-slate-400">
-              <span className="text-slate-200 font-bold">{urls.split('\n').filter(u => u.trim()).length}</span> repos
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-slate-500 font-mono">
+                        <span className="truncate">{item.error || 'Processing...'}</span>
+                        <span className="flex-shrink-0 ml-2">{item.progress}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-300 ${item.status === 'FAILED' ? 'bg-accent-red' : 'bg-accent-green'}`}
+                          style={{ width: `${item.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <button 
-              onClick={handleInitiate}
-              disabled={isScanning || !urls.trim()}
-              className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold py-2 px-4 rounded-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
-            >
-              {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-              SCAN
-            </button>
           </div>
         </div>
-
-        <div className="flex-1 relative flex flex-col bg-[#0D1310]">
-          <div className="flex flex-1 overflow-hidden relative">
-            <textarea 
-              value={urls}
-              onChange={(e) => setUrls(e.target.value)}
-              className="flex-1 w-full h-full bg-transparent border-0 text-slate-200 font-mono text-sm p-4 focus:ring-0 resize-none leading-relaxed placeholder-slate-700 outline-none"
-              placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
-              spellCheck={false}
-            />
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
   );
 };
