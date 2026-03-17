@@ -57,46 +57,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
   return (
     <main className="flex flex-1 overflow-hidden relative bg-bg-dark">
-      <section className="flex-1 flex flex-col border-r border-border-main h-full min-w-0">
-        <div className="flex-none px-6 py-4 flex items-center justify-between bg-bg-dark border-b border-border-main">
-          <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
-            <span className="text-accent-blue">~/</span>Bulk Import
-            <span className="text-xs text-slate-500 font-normal ml-2">— Paste GitHub URLs (one per line)</span>
-          </h2>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-sm font-mono text-slate-400">
-                <span className="text-slate-200 font-bold">{urls.split('\n').filter(u => u.trim()).length}</span> repos
-              </div>
-            </div>
-            <button 
-              onClick={handleInitiate}
-              disabled={isScanning || !urls.trim()}
-              className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold py-2 px-4 rounded-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
-            >
-              {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
-              SCAN
-            </button>
-            <button onClick={() => setUrls('')} title="Clear" className="text-slate-400 hover:text-white transition-colors">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 relative flex flex-col bg-[#0D1310]">
-          <div className="flex flex-1 overflow-hidden relative">
-            <textarea 
-              value={urls}
-              onChange={(e) => setUrls(e.target.value)}
-              className="flex-1 w-full h-full bg-transparent border-0 text-slate-200 font-mono text-sm p-4 focus:ring-0 resize-none leading-relaxed placeholder-slate-700 outline-none"
-              placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
-              spellCheck={false}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="flex-1 flex flex-col h-full bg-bg-panel min-w-[320px]">
+      <section className="flex-1 flex flex-col h-full bg-bg-panel min-w-[320px] border-r border-border-main">
         <div className="px-5 py-4 border-b border-border-main flex justify-between items-center bg-[#16201A]">
           <h3 className="text-base font-semibold text-white flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-accent-green animate-pulse"></div>
@@ -144,6 +105,45 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="flex-1 flex flex-col border-l border-border-main h-full min-w-0">
+        <div className="flex-none px-6 py-4 flex items-center justify-between bg-bg-dark border-b border-border-main">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+              <span className="text-accent-blue">~/</span>Bulk Import
+              <span className="text-xs text-slate-500 font-normal ml-2">— Paste GitHub URLs (one per line)</span>
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setUrls('')} title="Clear list" className="text-slate-400 hover:text-white transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <div className="text-sm font-mono text-slate-400">
+              <span className="text-slate-200 font-bold">{urls.split('\n').filter(u => u.trim()).length}</span> repos
+            </div>
+            <button 
+              onClick={handleInitiate}
+              disabled={isScanning || !urls.trim()}
+              className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold py-2 px-4 rounded-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
+            >
+              {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+              SCAN
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 relative flex flex-col bg-[#0D1310]">
+          <div className="flex flex-1 overflow-hidden relative">
+            <textarea 
+              value={urls}
+              onChange={(e) => setUrls(e.target.value)}
+              className="flex-1 w-full h-full bg-transparent border-0 text-slate-200 font-mono text-sm p-4 focus:ring-0 resize-none leading-relaxed placeholder-slate-700 outline-none"
+              placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
+              spellCheck={false}
+            />
+          </div>
         </div>
       </section>
     </main>
