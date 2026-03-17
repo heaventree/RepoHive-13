@@ -352,7 +352,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 pb-6 custom-scrollbar">
+      <div className="flex-1 overflow-auto px-6 pb-16 custom-scrollbar">
         {purposeRepo && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <div className="bg-bg-panel border border-border-main rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden">
