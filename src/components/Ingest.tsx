@@ -9,8 +9,6 @@ import {
   AlertCircle,
   RotateCcw
 } from 'lucide-react';
-import { fetchGitHubRepo, calculateScore } from '../services/githubService';
-import { analyzeRepo } from '../services/geminiService';
 
 interface IngestProps {
   onComplete: () => void;
@@ -30,29 +28,27 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
     for (const url of urlList) {
       const id = url.split('/').slice(-2).join('/');
-      const newEntry = { id, status: 'FETCHING', progress: 10 };
-      setStream(prev => [newEntry, ...prev]);
+      setStream(prev => [{ id, status: 'FETCHING', progress: 10 }, ...prev]);
 
       try {
-        const repoData = await fetchGitHubRepo(url);
         setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'ANALYZING', progress: 40 } : item));
-        
-        // AI Analysis
-        const aiAnalysis = await analyzeRepo(repoData);
-        setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'SCORING', progress: 80 } : item));
 
-        const score = calculateScore(repoData, { popularity: 25, activity: 25, maintenance: 20 });
-        
-        // Save to DB
-        await fetch('/api/repos', {
+        const res = await fetch('/api/ingest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...repoData, score, aiAnalysis })
+          body: JSON.stringify({ url })
         });
 
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error || res.statusText);
+        }
+
+        setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'SCORING', progress: 80 } : item));
+        await new Promise(r => setTimeout(r, 300));
         setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'COMPLETE', progress: 100 } : item));
       } catch (error: any) {
-        setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'FAILED', error: error.message } : item));
+        setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'FAILED', error: error.message, progress: 0 } : item));
       }
     }
 

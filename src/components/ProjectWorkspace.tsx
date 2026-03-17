@@ -23,7 +23,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Repo, Project } from '../types';
-import { getRecommendations } from '../services/geminiService';
 
 interface ProjectWorkspaceProps {
   setActiveTab: (tab: string) => void;
@@ -187,7 +186,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
           constraints = JSON.parse(activeProject.constraints);
         } catch (e) {}
       }
-      const recs = await getRecommendations(brief, repos, constraints);
+      const res = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief, repos, constraints })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const recs = await res.json();
       setRecommendations(recs);
     } catch (e) {
       console.error(e);
