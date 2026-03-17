@@ -58,52 +58,42 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   return (
     <main className="flex flex-1 overflow-hidden relative bg-bg-dark">
       <section className="flex-[2] flex flex-col border-r border-border-main h-full min-w-0">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-border-main bg-[#0F1512]">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold uppercase tracking-wider text-accent-green flex items-center gap-2">
-              <Terminal className="w-5 h-5" />
-              Bulk URL Entry
+        <div className="flex-none px-6 py-4 flex items-center justify-between bg-bg-dark border-b border-border-main">
+          <div>
+            <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+              <span className="text-accent-blue">~/</span>Bulk Import
             </h2>
+            <p className="text-xs text-slate-500 font-mono mt-1">Paste GitHub URLs (one per line)</p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500">Paste GitHub URLs (one per line)</span>
-            <button className="text-slate-400 hover:text-white"><Copy className="w-5 h-5" /></button>
-            <button onClick={() => setUrls('')} className="text-slate-400 hover:text-white"><Trash2 className="w-5 h-5" /></button>
+            <div className="text-right">
+              <div className="text-sm font-mono text-slate-400">
+                <span className="text-slate-200 font-bold">{urls.split('\n').filter(u => u.trim()).length}</span> repos
+              </div>
+            </div>
+            <button 
+              onClick={handleInitiate}
+              disabled={isScanning || !urls.trim()}
+              className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold py-2 px-4 rounded-sm transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
+            >
+              {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+              SCAN
+            </button>
+            <button onClick={() => setUrls('')} title="Clear" className="text-slate-400 hover:text-white transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
         <div className="flex-1 relative flex flex-col bg-[#0D1310]">
-          <div className="flex items-center gap-1 px-4 bg-[#16201A] border-b border-border-main">
-            <div className="px-4 py-2 bg-[#0D1310] border-t-2 border-t-accent-green text-sm text-white font-mono flex items-center gap-2">
-              urls.txt
-            </div>
-          </div>
           <div className="flex flex-1 overflow-hidden relative">
-            <div className="py-4 pl-4 font-mono text-base bg-[#111613] text-slate-600 select-none w-12 shrink-0 h-full flex flex-col items-end border-r border-border-main">
-              {Array.from({ length: 15 }).map((_, i) => <div key={i}>{i + 1}</div>)}
-            </div>
             <textarea 
               value={urls}
               onChange={(e) => setUrls(e.target.value)}
-              className="flex-1 w-full h-full bg-transparent border-0 text-slate-200 font-mono text-base p-4 focus:ring-0 resize-none leading-relaxed placeholder-slate-700 outline-none"
-              placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js"
+              className="flex-1 w-full h-full bg-transparent border-0 text-slate-200 font-mono text-sm p-4 focus:ring-0 resize-none leading-relaxed placeholder-slate-700 outline-none"
+              placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
               spellCheck={false}
             />
-          </div>
-          <div className="p-4 border-t border-border-main bg-[#111814] flex justify-between items-center">
-            <div className="flex gap-4 text-sm font-mono text-slate-500">
-              <span>{urls.split('\n').filter(u => u.trim()).length} Repositories Detected</span>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={handleInitiate}
-                disabled={isScanning || !urls.trim()}
-                className="bg-accent-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-black text-base font-bold py-2 px-6 rounded-md transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-2"
-              >
-                {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
-                INITIATE SCAN
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -156,9 +146,6 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               </div>
             </div>
           ))}
-        </div>
-        <div className="p-3 bg-[#111814] border-t border-border-main text-xs text-center text-slate-600 font-mono">
-          WORKER_NODE_US_EAST_1 • v2.4.1
         </div>
       </section>
     </main>
