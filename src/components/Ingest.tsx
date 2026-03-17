@@ -218,13 +218,13 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               </div>
             </div>
 
-            {/* Textarea — fills remaining space */}
-            <div className="flex-1 p-1">
+            {/* Textarea — flush fill, no rounding, styled scrollbar */}
+            <div className="flex-1">
               <textarea
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
-                className="w-full h-full min-h-64 rounded-xl text-slate-200 font-mono text-sm p-5 resize-none leading-7 placeholder-slate-600 outline-none transition-all focus:ring-2 focus:ring-indigo-500/40 border border-transparent focus:border-indigo-500/30"
-                style={{ background: 'rgba(0,0,0,0.25)' }}
+                className="custom-scrollbar w-full h-full min-h-64 text-slate-200 font-mono text-sm px-6 py-5 resize-none leading-7 placeholder-slate-600 outline-none"
+                style={{ background: 'transparent' }}
                 placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
                 spellCheck={false}
               />
