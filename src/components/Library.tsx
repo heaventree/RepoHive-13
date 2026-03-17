@@ -177,7 +177,10 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         body: JSON.stringify({ url })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || res.statusText);
+      if (!res.ok) {
+        if (res.status === 409) throw new Error('Already in library');
+        throw new Error(data.error || res.statusText);
+      }
       setQuickAddStatus({ ok: true, msg: `Added ${data.id} · score ${data.score} · ${data.category}` });
       setSingleRepoUrl('');
       fetchRepos();

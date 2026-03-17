@@ -181,6 +181,10 @@ Return ONLY valid JSON with this exact structure:
       const canonicalName  = data.name ?? repoName;
       const id = `${canonicalOwner}/${canonicalName}`;
 
+      // Check for duplicates
+      const existing = db.prepare('SELECT id FROM repos WHERE id = ?').get(id);
+      if (existing) return res.status(409).json({ error: `Repo ${id} already exists in library` });
+
       const stars     = data.stargazers_count ?? 0;
       const forks     = data.forks_count ?? 0;
       const issues    = data.open_issues_count ?? 0;
