@@ -57,14 +57,12 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
   return (
     <main className="flex flex-1 overflow-hidden relative bg-bg-dark">
-      <section className="flex-[2] flex flex-col border-r border-border-main h-full min-w-0">
+      <section className="flex-1 flex flex-col border-r border-border-main h-full min-w-0">
         <div className="flex-none px-6 py-4 flex items-center justify-between bg-bg-dark border-b border-border-main">
-          <div>
-            <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
-              <span className="text-accent-blue">~/</span>Bulk Import
-            </h2>
-            <p className="text-xs text-slate-500 font-mono mt-1">Paste GitHub URLs (one per line)</p>
-          </div>
+          <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
+            <span className="text-accent-blue">~/</span>Bulk Import
+            <span className="text-xs text-slate-500 font-normal ml-2">— Paste GitHub URLs (one per line)</span>
+          </h2>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <div className="text-sm font-mono text-slate-400">
