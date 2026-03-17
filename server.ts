@@ -125,6 +125,11 @@ async function startServer() {
     try {
       const data = await fetchGitHub(`/repos/${owner}/${repoName}`);
 
+      // Always use GitHub's canonical casing to avoid duplicates
+      const canonicalOwner = data.owner?.login ?? owner;
+      const canonicalName  = data.name ?? repoName;
+      const id = `${canonicalOwner}/${canonicalName}`;
+
       const stars     = data.stargazers_count ?? 0;
       const forks     = data.forks_count ?? 0;
       const issues    = data.open_issues_count ?? 0;
@@ -138,21 +143,20 @@ async function startServer() {
 
       let readme = null;
       try {
-        const rm = await fetchGitHub(`/repos/${owner}/${repoName}/readme`);
+        const rm = await fetchGitHub(`/repos/${canonicalOwner}/${canonicalName}/readme`);
         readme = Buffer.from(rm.content, 'base64').toString('utf8').slice(0, 5000);
       } catch (_) {}
 
       const aiAnalysis = {
         category,
         tags: [language, ...topics.slice(0, 4)].filter(Boolean) as string[],
-        summary: desc || `${owner}/${repoName}`,
+        summary: desc || id,
         useCases: topics.slice(0, 3).map((t: string) =>
           t.split('-').map((w: string) => w[0]?.toUpperCase() + w.slice(1)).join(' ')
         ).filter(Boolean),
         integrationNotes: []
       };
 
-      const id = `${owner}/${repoName}`;
       const stmt = db.prepare(`
         INSERT INTO repos (id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -162,7 +166,7 @@ async function startServer() {
           readme=excluded.readme, ai_analysis=excluded.ai_analysis,
           updated_at=CURRENT_TIMESTAMP
       `);
-      stmt.run(id, owner, repoName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis));
+      stmt.run(id, canonicalOwner, canonicalName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis));
       db.prepare("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)").run(id, score, stars, issues);
 
       console.log(`Ingested ${id} — score: ${score}, category: ${category}`);
