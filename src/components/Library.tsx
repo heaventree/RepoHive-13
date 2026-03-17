@@ -55,6 +55,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [isRescanning, setIsRescanning] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [singleRepoUrl, setSingleRepoUrl] = useState('');
+  const [isQuickAdding, setIsQuickAdding] = useState(false);
+  const [quickAddStatus, setQuickAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
 
   const fetchRepos = () => {
@@ -160,11 +162,28 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
     }
   };
 
-  const handleQuickAdd = () => {
-    if (!singleRepoUrl.trim()) return;
-    console.log('Quick adding:', singleRepoUrl);
-    setSingleRepoUrl('');
-    onBulkIngest(); 
+  const handleQuickAdd = async () => {
+    const url = singleRepoUrl.trim();
+    if (!url || isQuickAdding) return;
+    setIsQuickAdding(true);
+    setQuickAddStatus(null);
+    try {
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      setQuickAddStatus({ ok: true, msg: `Added ${data.id} · score ${data.score} · ${data.category}` });
+      setSingleRepoUrl('');
+      fetchRepos();
+    } catch (err: any) {
+      setQuickAddStatus({ ok: false, msg: err.message });
+    } finally {
+      setIsQuickAdding(false);
+      setTimeout(() => setQuickAddStatus(null), 4000);
+    }
   };
 
   const formatRepoName = (id: string) => {
@@ -199,16 +218,26 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </h2>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-bg-panel border border-border-main rounded-sm px-3 py-1.5 focus-within:border-accent-blue transition-colors">
-            <PlusCircle className="w-4 h-4 text-slate-500" />
-            <input 
-              type="text" 
-              placeholder="Quick add repo URL..." 
-              className="bg-transparent border-0 text-xs text-white outline-none w-48 placeholder-slate-600"
-              value={singleRepoUrl}
-              onChange={(e) => setSingleRepoUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
-            />
+          <div className="flex flex-col items-end gap-1">
+            <div className={`flex items-center gap-2 bg-bg-panel border rounded-sm px-3 py-1.5 transition-colors ${isQuickAdding ? 'border-accent-blue' : 'border-border-main focus-within:border-accent-blue'}`}>
+              {isQuickAdding
+                ? <RefreshCw className="w-4 h-4 text-accent-blue animate-spin" />
+                : <PlusCircle className="w-4 h-4 text-slate-500" />}
+              <input 
+                type="text" 
+                placeholder="Quick add repo URL..." 
+                className="bg-transparent border-0 text-xs text-white outline-none w-48 placeholder-slate-600"
+                value={singleRepoUrl}
+                onChange={(e) => setSingleRepoUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
+                disabled={isQuickAdding}
+              />
+            </div>
+            {quickAddStatus && (
+              <span className={`text-[10px] font-mono px-1 ${quickAddStatus.ok ? 'text-accent-green' : 'text-accent-red'}`}>
+                {quickAddStatus.msg}
+              </span>
+            )}
           </div>
           <button 
             onClick={handleRescanAll}
