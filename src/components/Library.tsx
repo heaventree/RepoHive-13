@@ -50,7 +50,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('All');
   const [minScore, setMinScore] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<string>('score');
+  const [sortBy, setSortBy] = useState<string>('latest');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isRescanning, setIsRescanning] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -142,7 +142,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
       })
       .sort((a, b) => {
         let comparison = 0;
-        if (sortBy === 'score') comparison = a.score - b.score;
+        if (sortBy === 'latest') comparison = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        else if (sortBy === 'oldest') comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        else if (sortBy === 'score') comparison = a.score - b.score;
         else if (sortBy === 'stars') comparison = a.stars - b.stars;
         else if (sortBy === 'name') comparison = a.id.localeCompare(b.id);
         else if (sortBy === 'language') comparison = (a.language || '').localeCompare(b.language || '');
@@ -314,6 +316,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="bg-bg-panel border border-border-main rounded-sm text-xs font-bold py-1.5 px-2 text-slate-200 focus:border-accent-blue outline-none cursor-pointer uppercase font-mono"
               >
+                <option value="latest">Latest</option>
+                <option value="oldest">Oldest</option>
                 <option value="score">Score</option>
                 <option value="stars">Stars</option>
                 <option value="name">Name</option>
