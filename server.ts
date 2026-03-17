@@ -113,6 +113,57 @@ async function startServer() {
     return res.json() as Promise<any>;
   }
 
+  async function deepseekAnalyze(id: string, description: string, language: string | null, topics: string[], readme: string | null, fallbackCategory: string): Promise<any> {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) return null;
+
+    const prompt = `You are a software repository analyst. Analyze this GitHub repository and return a JSON object.
+
+Repository: ${id}
+Language: ${language || 'unknown'}
+Topics: ${topics.join(', ') || 'none'}
+Description: ${description || 'none'}
+README (first 2000 chars): ${(readme || '').slice(0, 2000)}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "category": "one of: Frontend, Backend, AI/ML, DevOps, Database, Tooling, Mobile, Security, General",
+  "tags": ["array", "of", "3-6", "relevant", "tech", "tags"],
+  "summary": "2-3 sentence plain English summary of what this repo does and who it's for",
+  "useCases": ["3-5 specific use case strings"],
+  "integrationNotes": [
+    { "platform": "e.g. Next.js", "match": "Perfect Match or Good Fit", "description": "one sentence" }
+  ]
+}`;
+
+    try {
+      const res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 600,
+          temperature: 0.3
+        })
+      });
+      if (!res.ok) {
+        console.warn(`DeepSeek API error ${res.status}: ${res.statusText}`);
+        return null;
+      }
+      const data: any = await res.json();
+      const text = data.choices?.[0]?.message?.content || '';
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return null;
+      const parsed = JSON.parse(jsonMatch[0]);
+      console.log(`DeepSeek analyzed ${id} → ${parsed.category}`);
+      return parsed;
+    } catch (err: any) {
+      console.warn(`DeepSeek analysis failed for ${id}: ${err.message}`);
+      return null;
+    }
+  }
+
   // POST /api/ingest
   app.post("/api/ingest", async (req, res) => {
     const { url } = req.body;
@@ -147,7 +198,7 @@ async function startServer() {
         readme = Buffer.from(rm.content, 'base64').toString('utf8').slice(0, 5000);
       } catch (_) {}
 
-      const aiAnalysis = {
+      const fallbackAnalysis = {
         category,
         tags: [language, ...topics.slice(0, 4)].filter(Boolean) as string[],
         summary: desc || id,
@@ -156,6 +207,9 @@ async function startServer() {
         ).filter(Boolean),
         integrationNotes: []
       };
+
+      const aiResult = await deepseekAnalyze(id, desc, language, topics, readme, category);
+      const aiAnalysis = aiResult ?? fallbackAnalysis;
 
       const stmt = db.prepare(`
         INSERT INTO repos (id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis)
