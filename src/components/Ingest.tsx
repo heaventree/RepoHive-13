@@ -65,15 +65,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   };
 
   return (
-    <main className="flex-1 overflow-auto custom-scrollbar relative" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1e1b4b 0%, #0f172a 40%, #0a0f1e 100%)' }}>
-
-      {/* Background colour orbs — these make glass morphism actually work */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-40" style={{ background: 'radial-gradient(circle, #4f46e5 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
-        <div className="absolute top-1/3 right-0 w-[400px] h-[400px] rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
-        <div className="absolute bottom-0 left-1/3 w-[600px] h-[400px] rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(100px)' }}></div>
-        <div className="absolute top-1/4 left-1/2 w-[300px] h-[300px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)', filter: 'blur(60px)' }}></div>
-      </div>
+    <main className="flex-1 overflow-auto custom-scrollbar relative">
 
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-6 flex flex-col h-full">
         {/* Page Header — compact single line */}

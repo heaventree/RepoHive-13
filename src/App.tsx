@@ -141,8 +141,17 @@ export default function App() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 flex flex-col min-w-0 bg-bg-dark relative overflow-hidden">
-          {renderContent()}
+        <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1e1b4b 0%, #0f172a 40%, #0a0f1e 100%)' }}>
+          {/* Global background orbs — make glass morphism work on every page */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+            <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-40" style={{ background: 'radial-gradient(circle, #4f46e5 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
+            <div className="absolute top-1/3 right-0 w-[400px] h-[400px] rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)', filter: 'blur(80px)' }}></div>
+            <div className="absolute bottom-0 left-1/3 w-[600px] h-[400px] rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)', filter: 'blur(100px)' }}></div>
+            <div className="absolute top-1/4 left-1/2 w-[300px] h-[300px] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)', filter: 'blur(60px)' }}></div>
+          </div>
+          <div className="flex-1 flex flex-col min-w-0 relative z-10 overflow-hidden">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>

@@ -201,9 +201,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-bg-dark h-full">
+    <div className="flex-1 flex flex-col overflow-hidden h-full">
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 lg:w-96 bg-bg-panel border-r border-border-main flex flex-col shrink-0 h-full overflow-y-auto z-10 custom-scrollbar">
+        <aside className="w-80 lg:w-96 glass-card border-r flex flex-col shrink-0 h-full overflow-y-auto z-10 custom-scrollbar" style={{ borderRadius: 0 }}>
           {isCreating ? (
             <div className="p-6 border-b border-border-main">
               <h2 className="text-base font-bold mb-4 text-white uppercase tracking-widest font-mono flex items-center gap-2">
@@ -458,11 +458,11 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
           <div className="p-6 bg-bg-dark/30 flex-1">
             <h3 className="font-mono font-bold text-xs uppercase tracking-widest text-slate-500 mb-4">Telemetry Stats</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-bg-panel p-3 border border-border-main rounded-sm">
+              <div className="glass-card rounded-xl p-3">
                 <div className="text-2xl font-bold text-white font-mono">{repos.length}</div>
                 <div className="text-[10px] text-slate-500 uppercase font-mono mt-1">Nodes Scanned</div>
               </div>
-              <div className="bg-bg-panel p-3 border border-border-main rounded-sm">
+              <div className="glass-card rounded-xl p-3">
                 <div className="text-2xl font-bold text-accent-green font-mono">92%</div>
                 <div className="text-[10px] text-slate-500 uppercase font-mono mt-1">Match Prob</div>
               </div>
@@ -470,7 +470,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-8 relative custom-scrollbar bg-bg-dark">
+        <main className="flex-1 overflow-y-auto p-8 relative custom-scrollbar">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8 border-b border-border-main pb-6">
               <div>
@@ -515,7 +515,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   const repo = repos.find(r => r.id === rec.repoId);
                   if (!repo) return null;
                   return (
-                    <article key={idx} className="bg-bg-panel border border-border-main rounded-sm shadow-2xl relative overflow-hidden group hover:border-accent-blue transition-all">
+                    <article key={idx} className="glass-card rounded-2xl shadow-2xl relative overflow-hidden group hover:border-white/20 transition-all">
                       <div className="absolute top-0 right-0 p-4 z-10 flex flex-col items-end gap-2">
                         <div className="h-12 w-12 rounded-full border border-accent-green/30 bg-bg-dark flex flex-col items-center justify-center shadow-lg">
                           <span className="text-[8px] font-mono text-accent-green uppercase leading-none mb-0.5">FIT</span>
@@ -579,7 +579,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   const repo = repos.find(r => r.id === rec.repoId);
                   if (!repo) return null;
                   return (
-                    <div key={idx} className="bg-bg-panel border border-border-main rounded-sm hover:border-accent-blue transition-all group flex items-center overflow-hidden">
+                    <div key={idx} className="glass-card rounded-2xl hover:border-white/20 transition-all group flex items-center overflow-hidden">
                       <div className="w-20 h-20 bg-bg-dark flex flex-col items-center justify-center border-r border-border-main shrink-0">
                         <span className="text-[8px] font-mono text-accent-green uppercase mb-0.5">FIT</span>
                         <span className="font-bold text-accent-green text-xl">{rec.fitScore}</span>

@@ -56,8 +56,8 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-bg-dark custom-scrollbar">
-      <header className="bg-bg-panel/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
+    <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <header className="glass-header sticky top-0 z-50">
         <div className="px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors p-1.5 hover:bg-white/5 rounded-lg">
@@ -160,7 +160,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-bg-panel rounded-xl border border-border-main p-5 shadow-sm">
+            <div className="glass-card rounded-2xl p-5 shadow-xl">
               <h4 className="text-sm font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
                 Best For Use Cases
@@ -174,7 +174,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
                 ))}
               </ul>
             </div>
-            <div className="bg-bg-panel rounded-xl border border-border-main p-5 shadow-sm">
+            <div className="glass-card rounded-2xl p-5 shadow-xl">
               <h4 className="text-sm font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                 <Zap className="w-5 h-5" />
                 Integration Notes
@@ -206,7 +206,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
           </div>
 
           {repo.readme && (
-            <section className="bg-bg-panel rounded-xl border border-border-main p-6 shadow-sm">
+            <section className="glass-card rounded-2xl p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Database className="w-5 h-5 text-accent-blue" />
@@ -241,8 +241,8 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <section className="bg-bg-panel rounded-xl border border-border-main shadow-sm">
-            <div className="p-4 border-b border-border-main flex justify-between items-center bg-slate-800/30">
+          <section className="glass-card rounded-2xl shadow-xl">
+            <div className="p-4 border-b border-white/8 flex justify-between items-center">
               <h3 className="font-semibold text-sm text-white flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-accent-blue" />
                 Scoring Engine

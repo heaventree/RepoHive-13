@@ -47,8 +47,8 @@ export const ApiConfig: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-dark overflow-y-auto custom-scrollbar">
-      <div className="p-6 border-b border-border-main bg-bg-panel/50">
+    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+      <div className="glass-header p-6">
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-1 font-mono uppercase tracking-widest">
           <Globe className="w-4 h-4" /> Connectivity & Integration
         </div>
@@ -69,7 +69,7 @@ export const ApiConfig: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* API Key Card */}
-          <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Key className="w-24 h-24" />
             </div>
@@ -109,7 +109,7 @@ export const ApiConfig: React.FC = () => {
           </div>
 
           {/* Endpoint Card */}
-          <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Terminal className="w-24 h-24" />
             </div>
@@ -155,7 +155,7 @@ export const ApiConfig: React.FC = () => {
         </div>
 
         {/* Documentation Card */}
-        <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl">
+        <div className="glass-card rounded-2xl p-8 shadow-xl">
           <h3 className="text-lg font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-3 font-mono">
             <FileText className="w-6 h-6 text-accent-blue" /> Quick Start Guide
           </h3>

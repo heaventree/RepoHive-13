@@ -19,8 +19,8 @@ export const Monitoring: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-dark overflow-y-auto custom-scrollbar">
-      <div className="p-6 border-b border-border-main bg-bg-panel/50">
+    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+      <div className="glass-header p-6">
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-1 font-mono uppercase tracking-widest">
           <Activity className="w-4 h-4" /> System Telemetry
         </div>
@@ -30,7 +30,7 @@ export const Monitoring: React.FC = () => {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
-            <div key={i} className="bg-bg-panel border border-border-main p-5 rounded-sm shadow-sm">
+            <div key={i} className="glass-card rounded-2xl p-5 shadow-xl">
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-2 rounded-md bg-slate-800 border border-border-main ${stat.color}`}>
                   <stat.icon className="w-5 h-5" />
@@ -49,7 +49,7 @@ export const Monitoring: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-bg-panel border border-border-main rounded-sm p-6">
+          <div className="lg:col-span-2 glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-accent-blue" /> Ingestion Velocity
@@ -68,7 +68,7 @@ export const Monitoring: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-bg-panel border border-border-main rounded-sm p-6">
+          <div className="glass-card rounded-2xl p-6">
             <h3 className="text-base font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-accent-green" /> Node Health Distribution
             </h3>

@@ -216,8 +216,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-bg-dark relative overflow-hidden">
-      <div className="flex-none p-6 pb-4 flex items-end justify-between border-b border-border-main/50">
+    <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
+      <div className="glass-header flex-none p-6 pb-4 flex items-end justify-between">
         <div>
           <h2 className="text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
             <span className="text-accent-blue">~/</span>Repositories
@@ -263,7 +263,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         </div>
       </div>
 
-      <div className="flex-none px-6 py-3 mb-6 flex flex-col gap-3 bg-bg-dark border-b border-border-main/30">
+      <div className="flex-none px-6 py-3 mb-6 flex flex-col gap-3 border-b border-white/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5 mr-2 shadow-inner">
@@ -358,8 +358,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
       <div className="flex-1 overflow-auto px-6 pb-6 custom-scrollbar">
         {purposeRepo && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="bg-bg-panel border border-border-main rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-border-main flex items-center justify-between bg-bg-dark">
+            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                   <Rocket className="w-5 h-5 text-accent-blue" /> Purpose & Suitability Analysis
                 </h3>
@@ -440,8 +440,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
         {isFilterModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-bg-panel border border-border-main rounded-lg shadow-2xl w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-border-main flex items-center justify-between bg-bg-dark">
+            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+              <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                   <Filter className="w-5 h-5 text-accent-blue" /> Advanced Filters
                 </h3>
@@ -570,7 +570,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   <div 
                     key={repo.id}
                     onClick={() => onViewRepo(repo)}
-                    className="group hover:bg-[#253248] cursor-pointer transition-colors border-l-2 border-l-transparent hover:border-l-accent-blue"
+                    className="group hover:bg-white/5 cursor-pointer transition-colors border-l-2 border-l-transparent hover:border-l-accent-blue"
                   >
                     <div className="grid grid-cols-12 gap-4 items-center px-4 py-6">
                       <div className="col-span-4 flex flex-col gap-1 pl-2">
@@ -674,7 +674,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 <div 
                   key={repo.id}
                   onClick={() => onViewRepo(repo)}
-                  className="bg-bg-panel border border-border-main rounded-sm overflow-hidden group hover:border-accent-blue transition-all cursor-pointer flex flex-col"
+                  className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all cursor-pointer flex flex-col"
                 >
                   <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
                     <div className="flex justify-between items-start mb-4">

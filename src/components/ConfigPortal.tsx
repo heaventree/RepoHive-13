@@ -60,8 +60,8 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-dark overflow-y-auto custom-scrollbar relative">
-      <div className="p-6 border-b border-border-main bg-bg-panel/50 flex justify-between items-end">
+    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar relative">
+      <div className="glass-header p-6 flex justify-between items-end">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 mb-1 font-mono uppercase tracking-widest">
             <Settings className="w-4 h-4" /> System Configuration
@@ -93,7 +93,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Scoring Weights Card */}
-          <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Sliders className="w-24 h-24" />
             </div>
@@ -124,7 +124,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
 
           <div className="space-y-8">
             {/* Project Types Card */}
-            <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+            <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <LayoutGrid className="w-24 h-24" />
               </div>
@@ -167,7 +167,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
             </div>
 
             {/* Logic Visualizer Card */}
-            <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+            <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Zap className="w-24 h-24" />
               </div>
@@ -188,7 +188,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
         </div>
 
         {/* Scan Schedule Card */}
-        <div className="bg-bg-panel border border-border-main rounded-sm p-8 shadow-xl relative overflow-hidden group hover:border-accent-blue/30 transition-all">
+        <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Clock className="w-24 h-24" />
           </div>
