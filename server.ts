@@ -221,9 +221,50 @@ async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa",
     });
+
+    // Intercept Vite's HMR client script — prevents WebSocket crash on Replit.
+    // Even with hmr:false, Vite injects /@vite/client into HTML. That script
+    // tries to open a WebSocket, which Replit's proxy doesn't support. Return a
+    // stub module that implements the HMR API as no-ops so the app boots cleanly.
+    app.use((req, res, next) => {
+      if (req.path === "/@vite/client") {
+        res.setHeader("Content-Type", "application/javascript");
+        return res.send(`
+export function createHotContext() {
+  return {
+    accept: () => {},
+    dispose: () => {},
+    prune: () => {},
+    decline: () => {},
+    invalidate: () => {},
+    on: () => {},
+    off: () => {},
+    send: () => {},
+    data: {},
+  };
+}
+export function injectQuery(url) { return url; }
+export function updateStyle(id, content) {
+  let el = document.getElementById('vite-style-' + id);
+  if (!el) {
+    el = document.createElement('style');
+    el.id = 'vite-style-' + id;
+    document.head.appendChild(el);
+  }
+  el.textContent = content;
+}
+export function removeStyle(id) {
+  const el = document.getElementById('vite-style-' + id);
+  if (el) el.remove();
+}
+`);
+      }
+      next();
+    });
+
     app.use(vite.middlewares);
   } else {
     app.use(express.static(path.join(__dirname, "dist")));
