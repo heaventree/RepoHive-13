@@ -77,7 +77,7 @@ db.exec(`
 
 async function startServer() {
   const app = express();
-  const PORT = parseInt(process.env.PORT || "5000", 10);
+  const PORT = parseInt(process.env.PORT || "24678", 10);
 
   app.use(express.json());
 
@@ -290,7 +290,7 @@ export function removeStyle(id) {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

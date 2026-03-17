@@ -24,7 +24,7 @@ outputType = "webview"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "NODE_ENV=production tsx server.ts"
-waitForPort = 5000
+waitForPort = 24678
 
 [[ports]]
 localPort = 3000
