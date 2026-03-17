@@ -81,6 +81,114 @@ async function startServer() {
 
   app.use(express.json());
 
+  // --- Ingest helpers ---
+  function computeScore(stars: number, forks: number, issues: number, lastPush: string): number {
+    const popularity = Math.min(40, Math.round(Math.log10(stars + 1) * 16));
+    const forkScore  = Math.min(15, Math.round(Math.log10(forks + 1) * 7));
+    const issueRatio = stars > 0 ? Math.min(1, issues / (stars * 0.1)) : 1;
+    const issuePenalty = Math.round(issueRatio * 10);
+    const monthsOld = (Date.now() - new Date(lastPush).getTime()) / (1000 * 60 * 60 * 24 * 30);
+    const recency = monthsOld < 1 ? 20 : monthsOld < 6 ? 15 : monthsOld < 12 ? 10 : monthsOld < 24 ? 5 : 0;
+    return Math.max(0, Math.min(90, popularity + forkScore - issuePenalty + recency));
+  }
+
+  function inferCategory(language: string | null, topics: string[], description: string): string {
+    const all = [language, ...topics, description].join(' ').toLowerCase();
+    if (/react|vue|angular|svelte|frontend|ui|css|tailwind|component/.test(all)) return 'Frontend';
+    if (/api|server|backend|express|fastapi|django|rails|nest|hono/.test(all)) return 'Backend';
+    if (/ml|ai|llm|model|training|neural|pytorch|tensorflow|hugging/.test(all)) return 'AI/ML';
+    if (/devops|ci|cd|docker|kubernetes|terraform|deploy|infra|helm/.test(all)) return 'DevOps';
+    if (/database|sql|postgres|mongo|redis|sqlite|orm|prisma/.test(all)) return 'Database';
+    if (/cli|tool|utility|script|automation|workflow/.test(all)) return 'Tooling';
+    if (/mobile|ios|android|react-native|expo|flutter/.test(all)) return 'Mobile';
+    if (/security|auth|oauth|jwt|crypto|encrypt/.test(all)) return 'Security';
+    return 'General';
+  }
+
+  async function fetchGitHub(path: string) {
+    const headers: Record<string, string> = { 'User-Agent': 'RepoScout/2' };
+    if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const res = await fetch(`https://api.github.com${path}`, { headers });
+    if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
+    return res.json() as Promise<any>;
+  }
+
+  // POST /api/ingest
+  app.post("/api/ingest", async (req, res) => {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: "url is required" });
+
+    const match = url.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+    if (!match) return res.status(400).json({ error: "Not a valid GitHub URL" });
+    const [, owner, repoName] = match;
+
+    try {
+      const data = await fetchGitHub(`/repos/${owner}/${repoName}`);
+
+      const stars     = data.stargazers_count ?? 0;
+      const forks     = data.forks_count ?? 0;
+      const issues    = data.open_issues_count ?? 0;
+      const language  = data.language ?? null;
+      const license   = data.license?.spdx_id ?? data.license?.name ?? null;
+      const lastPush  = data.pushed_at ?? new Date().toISOString();
+      const desc      = data.description ?? '';
+      const topics    = data.topics ?? [];
+      const score     = computeScore(stars, forks, issues, lastPush);
+      const category  = inferCategory(language, topics, desc);
+
+      let readme = null;
+      try {
+        const rm = await fetchGitHub(`/repos/${owner}/${repoName}/readme`);
+        readme = Buffer.from(rm.content, 'base64').toString('utf8').slice(0, 5000);
+      } catch (_) {}
+
+      const aiAnalysis = {
+        category,
+        tags: [language, ...topics.slice(0, 4)].filter(Boolean) as string[],
+        summary: desc || `${owner}/${repoName}`,
+        useCases: topics.slice(0, 3).map((t: string) =>
+          t.split('-').map((w: string) => w[0]?.toUpperCase() + w.slice(1)).join(' ')
+        ).filter(Boolean),
+        integrationNotes: []
+      };
+
+      const id = `${owner}/${repoName}`;
+      const stmt = db.prepare(`
+        INSERT INTO repos (id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          stars=excluded.stars, forks=excluded.forks, issues=excluded.issues,
+          last_push=excluded.last_push, score=excluded.score,
+          readme=excluded.readme, ai_analysis=excluded.ai_analysis,
+          updated_at=CURRENT_TIMESTAMP
+      `);
+      stmt.run(id, owner, repoName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis));
+      db.prepare("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)").run(id, score, stars, issues);
+
+      console.log(`Ingested ${id} — score: ${score}, category: ${category}`);
+      res.json({ success: true, id, score, category });
+    } catch (err: any) {
+      console.error(`Ingest failed for ${owner}/${repoName}:`, err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/recommend
+  app.post("/api/recommend", (req, res) => {
+    const { brief = '', repos = [], constraints } = req.body;
+    const keywords = brief.toLowerCase().split(/\W+/).filter((w: string) => w.length > 3);
+    const scored = (repos as any[]).map(repo => {
+      let fit = repo.score ?? 0;
+      const text = [repo.id, repo.description, repo.language].join(' ').toLowerCase();
+      keywords.forEach((kw: string) => { if (text.includes(kw)) fit += 8; });
+      if (constraints?.language && repo.language?.toLowerCase() === constraints.language.toLowerCase()) fit += 15;
+      if (constraints?.minStars && repo.stars < constraints.minStars) fit = 0;
+      return { repoId: repo.id, fitScore: Math.min(99, fit), rationale: `Matches ${keywords.filter((k: string) => [repo.id, repo.description || '', repo.language || ''].join(' ').toLowerCase().includes(k)).join(', ') || 'general criteria'} in brief.`, warnings: (repo.open_issues_count > 500 ? ['High open issue count'] : []) };
+    });
+    scored.sort((a: any, b: any) => b.fitScore - a.fitScore);
+    res.json(scored.slice(0, 10));
+  });
+
   // API Routes
   app.get("/api/repos", (req, res) => {
     const repos = db.prepare("SELECT * FROM repos ORDER BY score DESC").all();
