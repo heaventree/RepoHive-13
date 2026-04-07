@@ -8,7 +8,7 @@ import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
-import { Bell, HelpCircle, Plus, Rocket, Database, Activity, ShieldCheck, Settings, Globe } from 'lucide-react';
+import { Bell, HelpCircle, Plus, Rocket, Database, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
@@ -43,6 +43,13 @@ export default function App() {
         return <ConfigPortal onBack={() => setActiveTab('library')} />;
       case 'api':
         return <ApiConfig />;
+      case 'appkillers':
+        return <Library
+          onViewRepo={setSelectedRepo}
+          onBulkIngest={() => setActiveTab('ingest')}
+          onGoToWorkspace={() => setActiveTab('projects')}
+          appKillersMode
+        />;
       default:
         return <Library 
           onViewRepo={setSelectedRepo} 
@@ -103,6 +110,16 @@ export default function App() {
                 className={`flex items-center gap-1.5 transition-colors ${activeTab === 'config' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
               >
                 <Settings className="w-4 h-4" /> System Config
+              </button>
+              <button
+                onClick={() => handleTabChange('appkillers')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
+                  activeTab === 'appkillers'
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.5)]'
+                    : 'bg-orange-500/10 text-orange-400 border-orange-500/40 hover:bg-orange-500/20 hover:shadow-[0_0_12px_rgba(249,115,22,0.3)]'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5" /> App Killers
               </button>
             </nav>
           </div>

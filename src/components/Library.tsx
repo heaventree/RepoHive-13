@@ -28,6 +28,7 @@ interface LibraryProps {
   onViewRepo: (repo: Repo) => void;
   onBulkIngest: () => void;
   onGoToWorkspace: () => void;
+  appKillersMode?: boolean;
 }
 
 const LinkIcon = ({ className }: { className?: string }) => (
@@ -42,7 +43,7 @@ const StatusIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace }) => {
+export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace, appKillersMode = false }) => {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
@@ -59,7 +60,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [isQuickAdding, setIsQuickAdding] = useState(false);
   const [quickAddStatus, setQuickAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
-  const [enterpriseOnly, setEnterpriseOnly] = useState(false);
+  const [enterpriseOnly, setEnterpriseOnly] = useState(appKillersMode);
 
   const fetchRepos = () => {
     setLoading(true);
@@ -344,18 +345,6 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            onClick={() => setEnterpriseOnly(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono border whitespace-nowrap transition-all ${
-              enterpriseOnly
-                ? 'bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.3)]'
-                : 'bg-slate-800/30 text-slate-500 border-slate-700/50 hover:border-violet-500/40 hover:text-violet-400'
-            }`}
-          >
-            <Building2 className="w-3 h-3" />
-            Enterprise
-          </button>
-          <div className="h-4 w-px bg-border-main mx-1" />
           <span className="text-xs font-bold text-slate-500 uppercase font-mono whitespace-nowrap mr-1">License:</span>
           {licenses.map(license => {
             const isActive = selectedLicense === license;
