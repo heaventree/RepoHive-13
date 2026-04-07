@@ -63,6 +63,10 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
   const [enterpriseOnly, setEnterpriseOnly] = useState(appKillersMode);
 
+  useEffect(() => {
+    setEnterpriseOnly(appKillersMode);
+  }, [appKillersMode]);
+
   const fetchRepos = () => {
     setLoading(true);
     fetch('/api/repos')
