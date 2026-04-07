@@ -378,6 +378,23 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
       </div>
 
       <div className="flex-1 overflow-auto px-6 pb-6 custom-scrollbar">
+
+        {appKillersMode && (
+          <div className="mb-5 rounded-xl border border-amber-500/20 px-5 py-4 flex items-start gap-4"
+            style={{ background: 'rgba(245,158,11,0.04)' }}>
+            <Flame className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-amber-300 font-bold text-sm mb-1">White-label ready — built to replace paid software</p>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                These repos have been flagged by our AI as production-grade, self-hostable open-source projects that can
+                directly replace a well-known commercial product out of the box. Each one ships with a permissive license
+                (MIT, Apache, BSD or similar) meaning you can fork, rebrand and deploy commercially with no royalties or
+                seat fees.
+              </p>
+            </div>
+          </div>
+        )}
+
         {purposeRepo && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <div className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
