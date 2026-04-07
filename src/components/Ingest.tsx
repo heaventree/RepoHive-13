@@ -6,7 +6,8 @@ import {
   Loader2,
   AlertCircle,
   RotateCcw,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 
 interface IngestProps {
@@ -19,6 +20,31 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   const [stream, setStream] = useState<any[]>([]);
 
   const repoCount = urls.split('\n').filter(u => u.trim().startsWith('http')).length;
+
+  const [cleaned, setCleaned] = useState(false);
+
+  const handleCleanPaste = () => {
+    // First: decode YouTube redirect URLs (youtube.com/redirect?q=<full-url>)
+    const decoded = urls.replace(
+      /https?:\/\/(?:www\.)?youtube\.com\/redirect\?[^\s]*/g,
+      (match) => {
+        try {
+          const q = new URL(match).searchParams.get('q');
+          return q ? decodeURIComponent(q) : match;
+        } catch {
+          return match;
+        }
+      }
+    );
+
+    // Then: extract all GitHub repo URLs, strip trailing dots (display truncation)
+    const matches = decoded.match(/https?:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/g) || [];
+    const valid = matches.map(url => url.replace(/\.+$/, ''));
+
+    setUrls([...new Set(valid)].join('\n'));
+    setCleaned(true);
+    setTimeout(() => setCleaned(false), 1800);
+  };
 
   const handleInitiate = async () => {
     const urlList = urls.split('\n').filter(u => u.trim().startsWith('http'));
@@ -186,6 +212,19 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                 <span className="text-xs font-mono text-slate-400 tabular-nums">
                   <span className="text-indigo-300 font-bold text-sm">{repoCount}</span> repos
                 </span>
+                <button
+                  onClick={handleCleanPaste}
+                  disabled={!urls.trim()}
+                  title="Extract GitHub URLs from messy paste"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                    cleaned
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 hover:border-violet-500/40'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {cleaned ? 'Cleaned!' : 'Clean'}
+                </button>
                 <button
                   onClick={() => setUrls('')}
                   title="Clear list"
