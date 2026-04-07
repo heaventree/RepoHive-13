@@ -115,8 +115,8 @@ export default function App() {
                 onClick={() => handleTabChange('appkillers')}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
                   activeTab === 'appkillers'
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-[0_0_16px_rgba(249,115,22,0.5)]'
-                    : 'bg-orange-500/10 text-orange-400 border-orange-500/40 hover:bg-orange-500/20 hover:shadow-[0_0_12px_rgba(249,115,22,0.3)]'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_14px_rgba(245,158,11,0.25)]'
+                    : 'bg-transparent text-amber-500/70 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/50'
                 }`}
               >
                 <Flame className="w-3.5 h-3.5" /> App Killers

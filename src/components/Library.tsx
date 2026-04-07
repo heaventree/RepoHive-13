@@ -20,7 +20,8 @@ import {
   Github,
   HelpCircle,
   ChevronRight,
-  Building2
+  Building2,
+  Flame
 } from 'lucide-react';
 import { Repo } from '../types';
 
@@ -147,6 +148,12 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
             matchesEnterprise = data.enterpriseTier === true;
           } catch { matchesEnterprise = false; }
+          // App Killers must have an open-source license
+          if (matchesEnterprise && appKillersMode) {
+            const lic = (repo.license || '').toUpperCase();
+            const openLicenses = ['MIT', 'APACHE', 'BSD', 'LGPL', 'MPL', 'ISC', 'AGPL', 'GPL'];
+            matchesEnterprise = openLicenses.some(l => lic.includes(l));
+          }
         }
 
         return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise;
@@ -589,9 +596,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate flex items-center gap-2">
                             {formatRepoName(repo.id)}
                             {aiData?.enterpriseTier && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-[9px] font-bold text-violet-300 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
-                                <Building2 className="w-2.5 h-2.5" />
-                                {aiData.comparableApp ? `vs ${aiData.comparableApp}` : 'Enterprise'}
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+                                <Flame className="w-2.5 h-2.5" />
+                                {aiData.comparableApp ? `vs ${aiData.comparableApp}` : 'App Killer'}
                               </span>
                             )}
                           </div>
@@ -695,9 +702,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 >
                   <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
                     {aiData?.enterpriseTier && (
-                      <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/10 border-b border-violet-500/20">
-                        <Building2 className="w-3 h-3 text-violet-400 flex-shrink-0" />
-                        <span className="text-[10px] font-bold text-violet-300 uppercase tracking-wider truncate">
+                      <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border-b border-amber-500/25">
+                        <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
                           Replaces {aiData.comparableApp || 'Paid SaaS'}
                         </span>
                       </div>
