@@ -425,6 +425,58 @@ Return ONLY valid JSON with this exact structure:
     }
   });
 
+  // Background sweep: re-analyze repos missing enterpriseTier field
+  let sweepStatus: { running: boolean; total: number; done: number; failed: number } = { running: false, total: 0, done: 0, failed: 0 };
+
+  app.get("/api/sweep/status", (_req, res) => {
+    res.json(sweepStatus);
+  });
+
+  app.post("/api/sweep", async (_req, res) => {
+    if (sweepStatus.running) return res.json({ message: 'Sweep already running', ...sweepStatus });
+
+    const allRepos: any[] = db.prepare("SELECT id, description, language, readme, ai_analysis FROM repos").all();
+    const needsUpdate = allRepos.filter(r => {
+      try {
+        const a = r.ai_analysis ? JSON.parse(r.ai_analysis) : {};
+        return typeof a.enterpriseTier === 'undefined';
+      } catch { return true; }
+    });
+
+    sweepStatus = { running: true, total: needsUpdate.length, done: 0, failed: 0 };
+    res.json({ message: `Sweep started for ${needsUpdate.length} repos`, total: needsUpdate.length });
+
+    // Run in background — do not await
+    (async () => {
+      for (const repo of needsUpdate) {
+        try {
+          let existing: any = {};
+          try { existing = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {}; } catch {}
+
+          const topics = existing.tags || [];
+          const category = existing.category || 'General';
+
+          const fresh = await deepseekAnalyze(repo.id, repo.description || '', repo.language, topics, repo.readme, category);
+          if (fresh) {
+            const merged = { ...existing, ...fresh };
+            db.prepare("UPDATE repos SET ai_analysis = ? WHERE id = ?")
+              .run(JSON.stringify(merged), repo.id);
+            console.log(`Sweep updated ${repo.id} → enterpriseTier: ${fresh.enterpriseTier}, replaces: ${fresh.comparableApp}`);
+          }
+          sweepStatus.done++;
+        } catch (err: any) {
+          console.warn(`Sweep failed for ${repo.id}: ${err.message}`);
+          sweepStatus.failed++;
+          sweepStatus.done++;
+        }
+        // Small pause to avoid rate-limiting
+        await new Promise(r => setTimeout(r, 200));
+      }
+      sweepStatus.running = false;
+      console.log(`Sweep complete — ${sweepStatus.total} processed, ${sweepStatus.failed} failed`);
+    })();
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
