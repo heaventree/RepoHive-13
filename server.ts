@@ -113,6 +113,27 @@ async function startServer() {
     return res.json() as Promise<any>;
   }
 
+  // Resolve a truncated repo name by searching GitHub for owner + partial name
+  async function resolveRepo(owner: string, partial: string): Promise<any | null> {
+    try {
+      const headers: Record<string, string> = { 'User-Agent': 'RepoScout/2' };
+      if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
+      const q = encodeURIComponent(`user:${owner} ${partial} in:name`);
+      const res = await fetch(`https://api.github.com/search/repositories?q=${q}&per_page=1&sort=stars`, { headers });
+      if (!res.ok) return null;
+      const data: any = await res.json();
+      const hit = data.items?.[0];
+      // Only accept if owner matches and repo name starts with the partial string
+      if (hit && hit.owner?.login?.toLowerCase() === owner.toLowerCase()
+               && hit.name?.toLowerCase().startsWith(partial.toLowerCase())) {
+        return hit;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   async function deepseekAnalyze(id: string, description: string, language: string | null, topics: string[], readme: string | null, fallbackCategory: string): Promise<any> {
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) return null;
@@ -174,7 +195,20 @@ Return ONLY valid JSON with this exact structure:
     const [, owner, repoName] = match;
 
     try {
-      const data = await fetchGitHub(`/repos/${owner}/${repoName}`);
+      let data: any;
+      try {
+        data = await fetchGitHub(`/repos/${owner}/${repoName}`);
+      } catch (err: any) {
+        if (err.message?.includes('404')) {
+          // Repo name may be truncated — try GitHub search to resolve it
+          const resolved = await resolveRepo(owner, repoName);
+          if (!resolved) throw err; // still fail if nothing found
+          console.log(`Resolved truncated "${owner}/${repoName}" → "${resolved.full_name}"`);
+          data = resolved;
+        } else {
+          throw err;
+        }
+      }
 
       // Always use GitHub's canonical casing to avoid duplicates
       const canonicalOwner = data.owner?.login ?? owner;

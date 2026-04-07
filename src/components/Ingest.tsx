@@ -23,24 +23,42 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
   const [cleaned, setCleaned] = useState(false);
 
-  const handleCleanPaste = () => {
-    // First: decode YouTube redirect URLs (youtube.com/redirect?q=<full-url>)
-    const decoded = urls.replace(
-      /https?:\/\/(?:www\.)?youtube\.com\/redirect\?[^\s]*/g,
+  function extractGitHubUrls(text: string): string[] {
+    // Decode YouTube redirect wrappers first
+    const decoded = text.replace(
+      /https?:\/\/(?:www\.)?youtube\.com\/redirect\?[^\s"']*/g,
       (match) => {
         try {
           const q = new URL(match).searchParams.get('q');
           return q ? decodeURIComponent(q) : match;
-        } catch {
-          return match;
-        }
+        } catch { return match; }
       }
     );
-
-    // Then: extract all GitHub repo URLs, strip trailing dots (display truncation)
     const matches = decoded.match(/https?:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/g) || [];
-    const valid = matches.map(url => url.replace(/\.+$/, ''));
+    return matches.map(u => u.replace(/\.+$/, ''));
+  }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const html = e.clipboardData.getData('text/html');
+    if (!html) return; // no HTML data — let browser handle plain text paste normally
+
+    // Parse the HTML and pull every href attribute
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const hrefs = Array.from(doc.querySelectorAll('a[href]'))
+      .map(a => (a as HTMLAnchorElement).href);
+
+    const fromHrefs = hrefs.flatMap(h => extractGitHubUrls(h));
+
+    if (fromHrefs.length === 0) return; // no GitHub links in HTML — fall back to plain text
+
+    e.preventDefault();
+    const existing = urls.trim() ? urls.trim().split('\n') : [];
+    const merged = [...new Set([...existing, ...fromHrefs])];
+    setUrls(merged.join('\n'));
+  };
+
+  const handleCleanPaste = () => {
+    const valid = extractGitHubUrls(urls);
     setUrls([...new Set(valid)].join('\n'));
     setCleaned(true);
     setTimeout(() => setCleaned(false), 1800);
@@ -254,6 +272,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               <textarea
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
+                onPaste={handlePaste}
                 className="custom-scrollbar w-full h-full min-h-64 text-slate-200 font-mono text-sm px-6 py-5 resize-none leading-7 placeholder-slate-600 outline-none"
                 style={{ background: 'transparent' }}
                 placeholder="https://github.com/facebook/react&#10;https://github.com/vercel/next.js&#10;https://github.com/torvalds/linux"
