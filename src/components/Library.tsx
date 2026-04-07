@@ -19,7 +19,8 @@ import {
   Star,
   Github,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  Building2
 } from 'lucide-react';
 import { Repo } from '../types';
 
@@ -58,6 +59,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [isQuickAdding, setIsQuickAdding] = useState(false);
   const [quickAddStatus, setQuickAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
+  const [enterpriseOnly, setEnterpriseOnly] = useState(false);
 
   const fetchRepos = () => {
     setLoading(true);
@@ -138,7 +140,15 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           } catch (e) {}
         }
         
-        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore;
+        let matchesEnterprise = true;
+        if (enterpriseOnly) {
+          try {
+            const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
+            matchesEnterprise = data.enterpriseTier === true;
+          } catch { matchesEnterprise = false; }
+        }
+
+        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise;
       })
       .sort((a, b) => {
         if (sortBy === 'latest') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
@@ -154,7 +164,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         
         return sortOrder === 'asc' ? comparison : -comparison;
       });
-  }, [repos, searchQuery, selectedLicense, selectedCategory, selectedLanguage, minScore, sortBy, sortOrder]);
+  }, [repos, searchQuery, selectedLicense, selectedCategory, selectedLanguage, minScore, sortBy, sortOrder, enterpriseOnly]);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -334,6 +344,18 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            onClick={() => setEnterpriseOnly(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono border whitespace-nowrap transition-all ${
+              enterpriseOnly
+                ? 'bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.3)]'
+                : 'bg-slate-800/30 text-slate-500 border-slate-700/50 hover:border-violet-500/40 hover:text-violet-400'
+            }`}
+          >
+            <Building2 className="w-3 h-3" />
+            Enterprise
+          </button>
+          <div className="h-4 w-px bg-border-main mx-1" />
           <span className="text-xs font-bold text-slate-500 uppercase font-mono whitespace-nowrap mr-1">License:</span>
           {licenses.map(license => {
             const isActive = selectedLicense === license;
@@ -575,8 +597,14 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                     <div className="grid grid-cols-12 gap-4 items-center px-4 py-6">
                       <div className="col-span-4 flex flex-col gap-1 pl-2">
                         <div className="min-w-0">
-                          <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate">
+                          <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate flex items-center gap-2">
                             {formatRepoName(repo.id)}
+                            {aiData?.enterpriseTier && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-[9px] font-bold text-violet-300 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+                                <Building2 className="w-2.5 h-2.5" />
+                                {aiData.comparableApp ? `vs ${aiData.comparableApp}` : 'Enterprise'}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-slate-500 font-mono mt-0.5 flex items-center gap-3">
                             <span>Updated {new Date(repo.last_push).toLocaleDateString()}</span>
@@ -677,7 +705,15 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all cursor-pointer flex flex-col"
                 >
                   <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
-                    <div className="flex justify-between items-start mb-4">
+                    {aiData?.enterpriseTier && (
+                      <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/10 border-b border-violet-500/20">
+                        <Building2 className="w-3 h-3 text-violet-400 flex-shrink-0" />
+                        <span className="text-[10px] font-bold text-violet-300 uppercase tracking-wider truncate">
+                          Replaces {aiData.comparableApp || 'Paid SaaS'}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex justify-between items-start mb-4 ${aiData?.enterpriseTier ? 'mt-7' : ''}`}>
                       <div className="flex flex-col">
                         <h4 className="text-lg font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate max-w-[180px]">
                           {formatRepoName(repo.id)}

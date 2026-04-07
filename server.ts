@@ -154,7 +154,9 @@ Return ONLY valid JSON with this exact structure:
   "useCases": ["3-5 specific use case strings"],
   "integrationNotes": [
     { "platform": "e.g. Next.js", "match": "Perfect Match or Good Fit", "description": "one sentence" }
-  ]
+  ],
+  "enterpriseTier": true or false — true if this repo is production-ready, self-hostable, and a credible open-source replacement for a known paid SaaS product (e.g. Coolify replaces Heroku/Vercel, Supabase replaces Firebase, Plausible replaces Google Analytics),
+  "comparableApp": "Name of the well-known paid product this replaces, or null if none"
 }`;
 
     try {
@@ -164,7 +166,7 @@ Return ONLY valid JSON with this exact structure:
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 600,
+          max_tokens: 800,
           temperature: 0.3
         })
       });
