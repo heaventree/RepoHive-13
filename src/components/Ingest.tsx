@@ -22,6 +22,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   const repoCount = urls.split('\n').filter(u => u.trim().startsWith('http')).length;
 
   const [cleaned, setCleaned] = useState(false);
+  const [cleanFailed, setCleanFailed] = useState(false);
 
   function extractGitHubUrls(text: string): string[] {
     // Decode YouTube redirect wrappers first
@@ -58,8 +59,14 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   };
 
   const handleCleanPaste = () => {
-    const valid = extractGitHubUrls(urls);
-    setUrls([...new Set(valid)].join('\n'));
+    const valid = [...new Set(extractGitHubUrls(urls))];
+    if (valid.length === 0) {
+      // Nothing extractable — don't wipe the list, just warn
+      setCleanFailed(true);
+      setTimeout(() => setCleanFailed(false), 1800);
+      return;
+    }
+    setUrls(valid.join('\n'));
     setCleaned(true);
     setTimeout(() => setCleaned(false), 1800);
   };
@@ -237,11 +244,13 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
                     cleaned
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : cleanFailed
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                       : 'bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 hover:border-violet-500/40'
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  {cleaned ? 'Cleaned!' : 'Clean'}
+                  {cleaned ? 'Cleaned!' : cleanFailed ? 'No URLs' : 'Clean'}
                 </button>
                 <button
                   onClick={() => setUrls('')}
