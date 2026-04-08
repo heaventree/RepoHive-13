@@ -1,5 +1,8 @@
 node_modules/
 build/
+*.db
+*.db-shm
+*.db-wal
 coverage/
 .DS_Store
 *.log
