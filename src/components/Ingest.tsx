@@ -145,8 +145,20 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   <p className="text-slate-500 text-xs mt-0.5">Real-time ingestion status</p>
                 </div>
               </div>
-              <div className="px-3 py-1.5 rounded-full text-xs font-bold font-mono border" style={{ background: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
-                {stream.filter(s => s.status !== 'COMPLETE' && s.status !== 'FAILED').length} active
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 rounded-full text-xs font-bold font-mono border" style={{ background: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
+                  {stream.filter(s => s.status !== 'COMPLETE' && s.status !== 'FAILED').length} active
+                </div>
+                {stream.filter(s => s.status === 'COMPLETE').length > 0 && (
+                  <div className="px-3 py-1.5 rounded-full text-xs font-bold font-mono border" style={{ background: 'rgba(59,130,246,0.1)', borderColor: 'rgba(59,130,246,0.3)', color: '#60a5fa' }}>
+                    {stream.filter(s => s.status === 'COMPLETE').length} added
+                  </div>
+                )}
+                {stream.filter(s => s.status === 'FAILED').length > 0 && (
+                  <div className="px-3 py-1.5 rounded-full text-xs font-bold font-mono border" style={{ background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)', color: '#f87171' }}>
+                    {stream.filter(s => s.status === 'FAILED').length} failed
+                  </div>
+                )}
               </div>
             </div>
 
