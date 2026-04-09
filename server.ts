@@ -67,6 +67,33 @@ async function generateEmbedding(text: string): Promise<number[] | null> {
   } catch { return null; }
 }
 
+// Expand a short brief into a richer description so the embedding
+// captures synonyms and related concepts (e.g. "CRM" → full feature list).
+async function expandBrief(brief: string): Promise<string> {
+  const words = brief.trim().split(/\s+/).length;
+  if (words > 20) return brief; // already detailed enough
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) return brief;
+  try {
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [{
+          role: 'user',
+          content: `Expand this software project description into 3-4 sentences covering what it does, its key features, typical use cases, and related technical concepts. Be specific and use relevant technical terminology. Project: "${brief}"`
+        }],
+        max_tokens: 200,
+        temperature: 0.2
+      })
+    });
+    const data = await res.json();
+    const expanded = data.choices?.[0]?.message?.content?.trim();
+    return expanded ? `${brief}\n\n${expanded}` : brief;
+  } catch { return brief; }
+}
+
 function buildEmbedText(repo: any, ai: any = {}): string {
   return [repo.name, repo.description, ai.summary, (ai.tags || []).join(' '), ai.category].filter(Boolean).join(' ');
 }
@@ -340,9 +367,11 @@ Return ONLY valid JSON with this exact structure:
 
     // ── Vector path ──────────────────────────────────────────────────────────
     if (embeddingCache.size > 0) {
-      const briefEmb = await generateEmbedding(brief);
+      // Expand short briefs so "CRM" becomes a full feature description
+      const queryText = await expandBrief(brief);
+      const briefEmb = await generateEmbedding(queryText);
       if (briefEmb) {
-        // Compute raw similarities for all repos that have embeddings
+        // Compute raw cosine similarities for all repos with embeddings
         const rawScored = repos
           .filter(r => embeddingCache.has(r.id))
           .map(repo => ({
@@ -352,31 +381,43 @@ Return ONLY valid JSON with this exact structure:
 
         rawScored.sort((a, b) => b.sim - a.sim);
         const top = rawScored.slice(0, 10);
+        const maxSim = top[0]?.sim ?? 0;
 
-        // Min-max normalise within the top-10 so the best result → 97,
-        // worst → ~55. This spreads scores meaningfully instead of all
-        // clustering in the 60s (cosine similarity rarely exceeds 0.85).
-        const maxSim = top[0]?.sim ?? 1;
-        const minSim = top[top.length - 1]?.sim ?? 0;
-        const simRange = maxSim - minSim || 1;
+        // Calibrate using absolute thresholds observed for gemini-embedding-001.
+        // This way a bad match genuinely shows a low score rather than being
+        // inflated to 97 by relative normalisation.
+        //   sim ≥ 0.82 → 95–97  (exceptional — concepts are very close)
+        //   sim ≥ 0.72 → 75–94  (strong)
+        //   sim ≥ 0.65 → 55–74  (moderate — worth a look)
+        //   sim < 0.65 → 30–54  (weak — library may not have a match)
+        const calibrate = (sim: number): number => {
+          if (sim >= 0.82) return Math.round(95 + ((sim - 0.82) / 0.18) * 2);   // 95–97
+          if (sim >= 0.72) return Math.round(75 + ((sim - 0.72) / 0.10) * 19);  // 75–93
+          if (sim >= 0.65) return Math.round(55 + ((sim - 0.65) / 0.07) * 19);  // 55–73
+          return Math.round(30 + ((sim - 0.50) / 0.15) * 24);                    // 30–53
+        };
+
+        const label = (sim: number) =>
+          sim >= 0.82 ? 'Strongest match' : sim >= 0.72 ? 'Strong match' : sim >= 0.65 ? 'Moderate match' : 'Weak match';
 
         const results = top.map(({ repo, sim }) => {
-          const normalised = (sim - minSim) / simRange;        // 0 → 1
-          const baseScore = Math.round(55 + normalised * 42);  // 55 → 97
+          const baseScore = calibrate(sim);
           const fitScore = Math.round(applyFilters(repo, baseScore));
           const pct = Math.round(sim * 100);
-          const rank = normalised >= 0.9 ? 'Strongest match' : normalised >= 0.6 ? 'Strong match' : 'Good match';
           return {
             repoId: repo.id,
             fitScore,
-            rationale: `${rank} · ${pct}% semantic similarity to your project brief.`,
-            warnings: repo.issues > 500 ? ['High open issue count'] : [],
+            rationale: `${label(sim)} · ${pct}% semantic similarity to your project brief.`,
+            warnings: [
+              ...(repo.issues > 500 ? ['High open issue count'] : []),
+              ...(sim < 0.65 ? ['Low confidence — library may lack a close match'] : [])
+            ],
             _mode: 'vector'
           };
         });
 
         results.sort((a, b) => b.fitScore - a.fitScore);
-        console.log(`Vector recommend: ${results.length} repos scored (top sim: ${Math.round(maxSim * 100)}%)`);
+        console.log(`Vector recommend: ${results.length} repos scored (top sim: ${Math.round(maxSim * 100)}%, expanded brief: ${queryText.length > brief.length})`);
         if (projectId) saveRecommendations(projectId, results);
         return res.json(results);
       }
