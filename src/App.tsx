@@ -34,7 +34,7 @@ export default function App() {
       case 'ingest':
         return <Ingest onComplete={() => setActiveTab('library')} />;
       case 'projects':
-        return <ProjectWorkspace setActiveTab={setActiveTab} />;
+        return <ProjectWorkspace setActiveTab={setActiveTab} setSelectedRepo={setSelectedRepo} />;
       case 'monitoring':
         return <Monitoring />;
       case 'policies':

@@ -26,9 +26,10 @@ import { Repo, Project } from '../types';
 
 interface ProjectWorkspaceProps {
   setActiveTab: (tab: string) => void;
+  setSelectedRepo: (repo: any) => void;
 }
 
-export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab }) => {
+export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab, setSelectedRepo }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -552,10 +553,10 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                       <ExternalLink className="w-3.5 h-3.5" /> GitHub
                     </a>
                     <button
-                      onClick={() => setActiveTab('library')}
+                      onClick={() => { setSelectedRepo(repo); setActiveTab('library'); }}
                       className="py-3 text-xs font-semibold text-accent-blue hover:bg-accent-blue/10 flex items-center justify-center gap-2 transition-all"
                     >
-                      <Zap className="w-3.5 h-3.5" /> View in Library
+                      <Zap className="w-3.5 h-3.5" /> View Details
                     </button>
                   </div>
                 </article>
