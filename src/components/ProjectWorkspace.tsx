@@ -42,6 +42,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const [isSaving, setIsSaving] = useState(false);
   const [recViewMode, setRecViewMode] = useState<'grid' | 'list'>('grid');
   const [error, setError] = useState<string | null>(null);
+  const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [embedStatus, setEmbedStatus] = useState<{ embedded: number; total: number; running: boolean } | null>(null);
   const [isEmbedding, setIsEmbedding] = useState(false);
 
@@ -143,6 +144,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
       if (!res.ok) throw new Error(await res.text());
       const recs = await res.json();
       setRecommendations(recs);
+      setHasAnalyzed(true);
     } catch (e: any) {
       setError(e.message || 'Analysis failed');
     }
@@ -278,7 +280,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 projects.map(p => (
                   <button
                     key={p.id}
-                    onClick={() => { setActiveProject(p); loadSavedRecommendations(p.id); }}
+                    onClick={() => { setActiveProject(p); setHasAnalyzed(false); loadSavedRecommendations(p.id); }}
                     className={`w-full text-left rounded-xl p-3 transition-all border ${
                       activeProject?.id === p.id
                         ? 'bg-accent-blue/10 border-accent-blue/30'
@@ -465,18 +467,41 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
         {/* Empty state */}
         {!isAnalyzing && recommendations.length === 0 && !error && (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
-              <Rocket className="w-9 h-9 text-slate-600" />
-            </div>
-            {activeProject ? (
+            {hasAnalyzed && activeProject ? (
+              /* Analysis ran but nothing passed the relevance floor */
               <>
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 border border-amber-500/20 bg-amber-500/5">
+                  <AlertTriangle className="w-9 h-9 text-amber-500/60" />
+                </div>
+                <p className="text-white font-semibold text-lg mb-2">No relevant repos found</p>
+                <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
+                  Your library doesn't contain any repos that match this project well enough to recommend.
+                  Try ingesting repos specifically related to this topic.
+                </p>
+                <button
+                  onClick={() => setActiveTab('ingest')}
+                  className="mt-5 flex items-center gap-2 bg-accent-blue/10 hover:bg-accent-blue/20 border border-accent-blue/30 text-accent-blue font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Ingest more repos
+                </button>
+              </>
+            ) : activeProject ? (
+              /* Project selected, not yet analyzed */
+              <>
+                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                  <Rocket className="w-9 h-9 text-slate-600" />
+                </div>
                 <p className="text-white font-semibold text-lg mb-2">No saved matches yet</p>
                 <p className="text-slate-500 text-sm max-w-xs">
-                  Run an analysis to find AI-matched repos. Results are saved automatically and will appear here next time.
+                  Run an analysis to find AI-matched repos. Results are saved automatically and reload next visit.
                 </p>
               </>
             ) : (
+              /* No project selected */
               <>
+                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                  <Rocket className="w-9 h-9 text-slate-600" />
+                </div>
                 <p className="text-white font-semibold text-lg mb-2">No project selected</p>
                 <p className="text-slate-500 text-sm max-w-xs">Select a project on the left or create a new one to get started.</p>
                 <button

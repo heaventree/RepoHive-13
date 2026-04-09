@@ -379,26 +379,40 @@ Return ONLY valid JSON with this exact structure:
             sim: cosineSimilarity(briefEmb, embeddingCache.get(repo.id)!)
           }));
 
-        rawScored.sort((a, b) => b.sim - a.sim);
-        const top = rawScored.slice(0, 10);
-        const maxSim = top[0]?.sim ?? 0;
+        // Hard minimum: exclude repos below this similarity floor entirely.
+        // Observed for gemini-embedding-001: unrelated content scores ~0.55–0.62,
+        // genuinely relevant content scores 0.65+. The 0.63 cutoff sits cleanly
+        // in the gap, so irrelevant results simply don't appear.
+        const SIM_FLOOR = 0.63;
 
-        // Calibrate using absolute thresholds observed for gemini-embedding-001.
-        // This way a bad match genuinely shows a low score rather than being
-        // inflated to 97 by relative normalisation.
-        //   sim ≥ 0.82 → 95–97  (exceptional — concepts are very close)
+        rawScored.sort((a, b) => b.sim - a.sim);
+        const qualifying = rawScored.filter(r => r.sim >= SIM_FLOOR);
+        const top = qualifying.slice(0, 10);
+        const maxSim = rawScored[0]?.sim ?? 0;
+
+        console.log(`Vector recommend: ${qualifying.length} repos above floor (top sim: ${Math.round(maxSim * 100)}%, expanded: ${queryText.length > brief.length})`);
+
+        // If nothing passes the floor, return an empty array — the frontend will
+        // tell the user their library lacks relevant repos for this topic.
+        if (top.length === 0) {
+          if (projectId) saveRecommendations(projectId, []);
+          return res.json([]);
+        }
+
+        // Calibrate using absolute thresholds for gemini-embedding-001.
+        //   sim ≥ 0.82 → 95–97  (exceptional)
         //   sim ≥ 0.72 → 75–94  (strong)
-        //   sim ≥ 0.65 → 55–74  (moderate — worth a look)
-        //   sim < 0.65 → 30–54  (weak — library may not have a match)
+        //   sim ≥ 0.65 → 55–74  (moderate)
+        //   sim ≥ 0.63 → 45–54  (low but above floor)
         const calibrate = (sim: number): number => {
-          if (sim >= 0.82) return Math.round(95 + ((sim - 0.82) / 0.18) * 2);   // 95–97
-          if (sim >= 0.72) return Math.round(75 + ((sim - 0.72) / 0.10) * 19);  // 75–93
-          if (sim >= 0.65) return Math.round(55 + ((sim - 0.65) / 0.07) * 19);  // 55–73
-          return Math.round(30 + ((sim - 0.50) / 0.15) * 24);                    // 30–53
+          if (sim >= 0.82) return Math.round(95 + ((sim - 0.82) / 0.18) * 2);
+          if (sim >= 0.72) return Math.round(75 + ((sim - 0.72) / 0.10) * 19);
+          if (sim >= 0.65) return Math.round(55 + ((sim - 0.65) / 0.07) * 19);
+          return Math.round(45 + ((sim - 0.63) / 0.02) * 9);  // 45–53
         };
 
         const label = (sim: number) =>
-          sim >= 0.82 ? 'Strongest match' : sim >= 0.72 ? 'Strong match' : sim >= 0.65 ? 'Moderate match' : 'Weak match';
+          sim >= 0.82 ? 'Strongest match' : sim >= 0.72 ? 'Strong match' : sim >= 0.65 ? 'Moderate match' : 'Closest match';
 
         const results = top.map(({ repo, sim }) => {
           const baseScore = calibrate(sim);
@@ -408,16 +422,12 @@ Return ONLY valid JSON with this exact structure:
             repoId: repo.id,
             fitScore,
             rationale: `${label(sim)} · ${pct}% semantic similarity to your project brief.`,
-            warnings: [
-              ...(repo.issues > 500 ? ['High open issue count'] : []),
-              ...(sim < 0.65 ? ['Low confidence — library may lack a close match'] : [])
-            ],
+            warnings: repo.issues > 500 ? ['High open issue count'] : [],
             _mode: 'vector'
           };
         });
 
         results.sort((a, b) => b.fitScore - a.fitScore);
-        console.log(`Vector recommend: ${results.length} repos scored (top sim: ${Math.round(maxSim * 100)}%, expanded brief: ${queryText.length > brief.length})`);
         if (projectId) saveRecommendations(projectId, results);
         return res.json(results);
       }
