@@ -342,23 +342,41 @@ Return ONLY valid JSON with this exact structure:
     if (embeddingCache.size > 0) {
       const briefEmb = await generateEmbedding(brief);
       if (briefEmb) {
-        const scored = repos
+        // Compute raw similarities for all repos that have embeddings
+        const rawScored = repos
           .filter(r => embeddingCache.has(r.id))
-          .map(repo => {
-            const sim = cosineSimilarity(briefEmb, embeddingCache.get(repo.id)!);
-            const fitScore = Math.round(applyFilters(repo, sim * 99));
-            const pct = Math.round(sim * 100);
-            return {
-              repoId: repo.id,
-              fitScore,
-              rationale: `${pct}% semantic match to your brief via vector similarity.`,
-              warnings: repo.issues > 500 ? ['High open issue count'] : [],
-              _mode: 'vector'
-            };
-          });
-        scored.sort((a, b) => b.fitScore - a.fitScore);
-        const results = scored.slice(0, 10);
-        console.log(`Vector recommend: ${results.length} repos scored`);
+          .map(repo => ({
+            repo,
+            sim: cosineSimilarity(briefEmb, embeddingCache.get(repo.id)!)
+          }));
+
+        rawScored.sort((a, b) => b.sim - a.sim);
+        const top = rawScored.slice(0, 10);
+
+        // Min-max normalise within the top-10 so the best result → 97,
+        // worst → ~55. This spreads scores meaningfully instead of all
+        // clustering in the 60s (cosine similarity rarely exceeds 0.85).
+        const maxSim = top[0]?.sim ?? 1;
+        const minSim = top[top.length - 1]?.sim ?? 0;
+        const simRange = maxSim - minSim || 1;
+
+        const results = top.map(({ repo, sim }) => {
+          const normalised = (sim - minSim) / simRange;        // 0 → 1
+          const baseScore = Math.round(55 + normalised * 42);  // 55 → 97
+          const fitScore = Math.round(applyFilters(repo, baseScore));
+          const pct = Math.round(sim * 100);
+          const rank = normalised >= 0.9 ? 'Strongest match' : normalised >= 0.6 ? 'Strong match' : 'Good match';
+          return {
+            repoId: repo.id,
+            fitScore,
+            rationale: `${rank} · ${pct}% semantic similarity to your project brief.`,
+            warnings: repo.issues > 500 ? ['High open issue count'] : [],
+            _mode: 'vector'
+          };
+        });
+
+        results.sort((a, b) => b.fitScore - a.fitScore);
+        console.log(`Vector recommend: ${results.length} repos scored (top sim: ${Math.round(maxSim * 100)}%)`);
         if (projectId) saveRecommendations(projectId, results);
         return res.json(results);
       }
