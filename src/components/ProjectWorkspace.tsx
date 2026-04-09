@@ -18,7 +18,9 @@ import {
   Sparkles,
   ChevronRight,
   GitFork,
-  Zap
+  Zap,
+  Database,
+  Cpu
 } from 'lucide-react';
 import { Repo, Project } from '../types';
 
@@ -39,6 +41,8 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const [isSaving, setIsSaving] = useState(false);
   const [recViewMode, setRecViewMode] = useState<'grid' | 'list'>('grid');
   const [error, setError] = useState<string | null>(null);
+  const [embedStatus, setEmbedStatus] = useState<{ embedded: number; total: number; running: boolean } | null>(null);
+  const [isEmbedding, setIsEmbedding] = useState(false);
 
   const fetchProjects = () => {
     fetch('/api/projects').then(res => res.json()).then(data => {
@@ -53,10 +57,27 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
     });
   };
 
+  const fetchEmbedStatus = () => {
+    fetch('/api/embed/status').then(r => r.json()).then(setEmbedStatus).catch(() => {});
+  };
+
+  const handleBuildIndex = async () => {
+    setIsEmbedding(true);
+    await fetch('/api/embed/sweep', { method: 'POST' });
+    // Poll until done
+    const poll = setInterval(() => {
+      fetch('/api/embed/status').then(r => r.json()).then(s => {
+        setEmbedStatus(s);
+        if (!s.running) { clearInterval(poll); setIsEmbedding(false); }
+      });
+    }, 2000);
+  };
+
   useEffect(() => {
     fetch('/api/repos').then(res => res.json()).then(setRepos);
     fetchProjects();
     fetchConfig();
+    fetchEmbedStatus();
   }, []);
 
   useEffect(() => {
@@ -299,14 +320,53 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             )}
 
             {/* Stats */}
-            <div className="border-t border-white/8 p-4 flex-shrink-0 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
-                <div className="text-xl font-bold text-white">{repos.length}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Repos Indexed</div>
+            <div className="border-t border-white/8 p-4 flex-shrink-0 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                  <div className="text-xl font-bold text-white">{repos.length}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Repos Indexed</div>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                  <div className="text-xl font-bold text-emerald-400">{recommendations.length > 0 ? recommendations.length : '—'}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Last Matches</div>
+                </div>
               </div>
-              <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
-                <div className="text-xl font-bold text-emerald-400">{recommendations.length > 0 ? recommendations.length : '—'}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Matches Found</div>
+
+              {/* Vector index status */}
+              <div className="rounded-xl border p-3 space-y-2" style={{ background: 'rgba(59,130,246,0.04)', borderColor: 'rgba(59,130,246,0.15)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Database className="w-3.5 h-3.5 text-accent-blue" />
+                    <span className="text-[10px] font-bold text-accent-blue uppercase tracking-wider">Vector Index</span>
+                  </div>
+                  {embedStatus && (
+                    <span className="text-[10px] text-slate-400 font-mono">{embedStatus.embedded}/{embedStatus.total}</span>
+                  )}
+                </div>
+                {embedStatus && embedStatus.total > 0 && (
+                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-1.5 rounded-full bg-accent-blue transition-all duration-500"
+                      style={{ width: `${Math.round((embedStatus.embedded / embedStatus.total) * 100)}%` }}
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={handleBuildIndex}
+                  disabled={isEmbedding || embedStatus?.embedded === embedStatus?.total}
+                  className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                    embedStatus?.embedded === embedStatus?.total
+                      ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5 cursor-default'
+                      : 'border-accent-blue/30 text-accent-blue bg-accent-blue/10 hover:bg-accent-blue/20'
+                  }`}
+                >
+                  {isEmbedding
+                    ? <><Cpu className="w-3 h-3 animate-pulse" /> Building…</>
+                    : embedStatus?.embedded === embedStatus?.total
+                    ? <><CheckCircle className="w-3 h-3" /> Index Ready</>
+                    : <><Database className="w-3 h-3" /> Build Vector Index</>
+                  }
+                </button>
               </div>
             </div>
           </>
@@ -345,10 +405,17 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 <ListIcon className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20">
-              <div className="w-2 h-2 rounded-full bg-accent-blue animate-pulse" />
-              <span className="text-xs font-semibold text-accent-blue">Live Engine</span>
-            </div>
+            {recommendations.length > 0 && recommendations[0]._mode === 'vector' ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20">
+                <Cpu className="w-3.5 h-3.5 text-accent-blue" />
+                <span className="text-xs font-semibold text-accent-blue">Vector Search</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
+                <span className="text-xs font-semibold text-slate-400">Keyword Search</span>
+              </div>
+            )}
           </div>
         </div>
 

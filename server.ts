@@ -35,11 +35,51 @@ db.exec(`
 `);
 
 // Safety check for existing databases
-try {
-  db.exec("ALTER TABLE repos ADD COLUMN ai_analysis TEXT");
-} catch (e) {
-  // Column likely already exists
+try { db.exec("ALTER TABLE repos ADD COLUMN ai_analysis TEXT"); } catch {}
+try { db.exec("ALTER TABLE repos ADD COLUMN enterpriseTier INTEGER DEFAULT 0"); } catch {}
+try { db.exec("ALTER TABLE repos ADD COLUMN comparableApp TEXT"); } catch {}
+try { db.exec("ALTER TABLE repos ADD COLUMN embedding TEXT"); } catch {}
+
+// ── Vector helpers ──────────────────────────────────────────────────────────
+const embeddingCache = new Map<string, number[]>();
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { dot += a[i]*b[i]; na += a[i]*a[i]; nb += b[i]*b[i]; }
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom === 0 ? 0 : dot / denom;
 }
+
+async function generateEmbedding(text: string): Promise<number[] | null> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'models/gemini-embedding-001', content: { parts: [{ text: text.slice(0, 4000) }] } })
+      }
+    );
+    const data = await res.json();
+    return data.embedding?.values ?? null;
+  } catch { return null; }
+}
+
+function buildEmbedText(repo: any, ai: any = {}): string {
+  return [repo.name, repo.description, ai.summary, (ai.tags || []).join(' '), ai.category].filter(Boolean).join(' ');
+}
+
+function loadEmbeddingCache() {
+  const rows = db.prepare("SELECT id, embedding FROM repos WHERE embedding IS NOT NULL").all() as any[];
+  embeddingCache.clear();
+  for (const row of rows) {
+    try { embeddingCache.set(row.id, JSON.parse(row.embedding)); } catch {}
+  }
+  console.log(`Vector cache: ${embeddingCache.size} embeddings loaded`);
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS snapshots (
@@ -80,6 +120,9 @@ async function startServer() {
   const PORT = parseInt(process.env.PORT || "24678", 10);
 
   app.use(express.json());
+
+  // Load vector cache on startup
+  loadEmbeddingCache();
 
   // --- Ingest helpers ---
   function computeScore(stars: number, forks: number, issues: number, lastPush: string): number {
@@ -271,18 +314,55 @@ Return ONLY valid JSON with this exact structure:
     }
   });
 
-  // POST /api/recommend
-  app.post("/api/recommend", (req, res) => {
+  // POST /api/recommend — vector search with keyword fallback
+  app.post("/api/recommend", async (req, res) => {
     const { brief = '', constraints } = req.body;
     const repos = db.prepare("SELECT id, owner, name, url, stars, forks, issues, language, license, last_push, description, score FROM repos").all() as any[];
+
+    const applyFilters = (repo: any, rawScore: number) => {
+      if (constraints?.minStars && repo.stars < constraints.minStars) return 0;
+      if (constraints?.language && repo.language?.toLowerCase() !== constraints.language.toLowerCase()) rawScore *= 0.6;
+      return rawScore;
+    };
+
+    // ── Vector path ──────────────────────────────────────────────────────────
+    if (embeddingCache.size > 0) {
+      const briefEmb = await generateEmbedding(brief);
+      if (briefEmb) {
+        const scored = repos
+          .filter(r => embeddingCache.has(r.id))
+          .map(repo => {
+            const sim = cosineSimilarity(briefEmb, embeddingCache.get(repo.id)!);
+            const fitScore = Math.round(applyFilters(repo, sim * 99));
+            const pct = Math.round(sim * 100);
+            return {
+              repoId: repo.id,
+              fitScore,
+              rationale: `${pct}% semantic match to your brief via vector similarity.`,
+              warnings: repo.issues > 500 ? ['High open issue count'] : [],
+              _mode: 'vector'
+            };
+          });
+        scored.sort((a, b) => b.fitScore - a.fitScore);
+        console.log(`Vector recommend: ${scored.length} repos scored`);
+        return res.json(scored.slice(0, 10));
+      }
+    }
+
+    // ── Keyword fallback ─────────────────────────────────────────────────────
     const keywords = brief.toLowerCase().split(/\W+/).filter((w: string) => w.length > 3);
     const scored = repos.map(repo => {
       let fit = repo.score ?? 0;
       const text = [repo.id, repo.description, repo.language].join(' ').toLowerCase();
       keywords.forEach((kw: string) => { if (text.includes(kw)) fit += 8; });
-      if (constraints?.language && repo.language?.toLowerCase() === constraints.language.toLowerCase()) fit += 15;
-      if (constraints?.minStars && repo.stars < constraints.minStars) fit = 0;
-      return { repoId: repo.id, fitScore: Math.min(99, fit), rationale: `Matches ${keywords.filter((k: string) => [repo.id, repo.description || '', repo.language || ''].join(' ').toLowerCase().includes(k)).join(', ') || 'general criteria'} in brief.`, warnings: (repo.open_issues_count > 500 ? ['High open issue count'] : []) };
+      const matches = keywords.filter((k: string) => text.includes(k));
+      return {
+        repoId: repo.id,
+        fitScore: Math.round(applyFilters(repo, Math.min(99, fit))),
+        rationale: `Keyword match on: ${matches.join(', ') || 'general criteria'}.`,
+        warnings: repo.issues > 500 ? ['High open issue count'] : [],
+        _mode: 'keyword'
+      };
     });
     scored.sort((a: any, b: any) => b.fitScore - a.fitScore);
     res.json(scored.slice(0, 10));
@@ -321,6 +401,15 @@ Return ONLY valid JSON with this exact structure:
         .run(id, score, stars, issues);
 
       res.json({ success: true, id });
+
+      // Generate embedding asynchronously (don't block the response)
+      const embedText = buildEmbedText({ name, description }, aiAnalysis || {});
+      generateEmbedding(embedText).then(emb => {
+        if (emb) {
+          db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), id);
+          embeddingCache.set(id, emb);
+        }
+      }).catch(() => {});
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -477,6 +566,47 @@ Return ONLY valid JSON with this exact structure:
       console.log(`Sweep complete — ${sweepStatus.total} processed, ${sweepStatus.failed} failed`);
     })();
   });
+
+  // ── Embedding sweep endpoints ────────────────────────────────────────────────
+  let embedSweepStatus = { running: false, total: 0, done: 0, failed: 0 };
+
+  app.get("/api/embed/status", (_req, res) => {
+    const total = (db.prepare("SELECT COUNT(*) as c FROM repos").get() as any).c;
+    res.json({ ...embedSweepStatus, embedded: embeddingCache.size, total });
+  });
+
+  app.post("/api/embed/sweep", async (_req, res) => {
+    if (embedSweepStatus.running) return res.json({ message: 'Embed sweep already running', ...embedSweepStatus });
+
+    const repos: any[] = db.prepare("SELECT id, name, description, ai_analysis FROM repos WHERE embedding IS NULL").all();
+    embedSweepStatus = { running: true, total: repos.length, done: 0, failed: 0 };
+    res.json({ message: `Embedding sweep started for ${repos.length} repos`, total: repos.length });
+
+    (async () => {
+      for (const repo of repos) {
+        try {
+          let ai: any = {};
+          try { ai = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {}; } catch {}
+          const text = buildEmbedText(repo, ai);
+          const emb = await generateEmbedding(text);
+          if (emb) {
+            db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), repo.id);
+            embeddingCache.set(repo.id, emb);
+            console.log(`Embedded ${repo.id} (cache: ${embeddingCache.size})`);
+          }
+          embedSweepStatus.done++;
+        } catch (e: any) {
+          console.warn(`Embed failed for ${repo.id}: ${e.message}`);
+          embedSweepStatus.failed++;
+          embedSweepStatus.done++;
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
+      embedSweepStatus.running = false;
+      console.log(`Embedding sweep complete — ${embeddingCache.size} total in cache`);
+    })();
+  });
+  // ─────────────────────────────────────────────────────────────────────────────
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
