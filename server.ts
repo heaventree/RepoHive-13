@@ -273,9 +273,10 @@ Return ONLY valid JSON with this exact structure:
 
   // POST /api/recommend
   app.post("/api/recommend", (req, res) => {
-    const { brief = '', repos = [], constraints } = req.body;
+    const { brief = '', constraints } = req.body;
+    const repos = db.prepare("SELECT id, owner, name, url, stars, forks, issues, language, license, last_push, description, score FROM repos").all() as any[];
     const keywords = brief.toLowerCase().split(/\W+/).filter((w: string) => w.length > 3);
-    const scored = (repos as any[]).map(repo => {
+    const scored = repos.map(repo => {
       let fit = repo.score ?? 0;
       const text = [repo.id, repo.description, repo.language].join(' ').toLowerCase();
       keywords.forEach((kw: string) => { if (text.includes(kw)) fit += 8; });

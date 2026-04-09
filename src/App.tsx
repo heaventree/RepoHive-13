@@ -8,7 +8,7 @@ import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
-import { Bell, HelpCircle, Plus, Rocket, Database, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, Database, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
@@ -126,19 +126,6 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3 flex-none justify-end">
-          {activeTab === 'projects' && (
-            <button 
-              onClick={() => {
-                // We need a way to trigger isCreating in ProjectWorkspace
-                // For now, let's just use a custom event or pass a prop
-                window.dispatchEvent(new CustomEvent('trigger-create-project'));
-              }}
-              className="flex items-center gap-2 bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-sm transition-all shadow-lg shadow-blue-500/10 uppercase tracking-wider mr-2"
-            >
-              <Plus className="w-4 h-4" />
-              New Project
-            </button>
-          )}
           <div className="flex items-center gap-2 px-3 py-1 bg-bg-dark/30 rounded-full border border-border-main/50 mr-2">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75"></span>
