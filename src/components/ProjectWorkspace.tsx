@@ -44,7 +44,6 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const [error, setError] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [embedStatus, setEmbedStatus] = useState<{ embedded: number; total: number; running: boolean } | null>(null);
-  const [isEmbedding, setIsEmbedding] = useState(false);
 
   const fetchProjects = () => {
     fetch('/api/projects').then(res => res.json()).then(data => {
@@ -66,23 +65,14 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
     fetch('/api/embed/status').then(r => r.json()).then(setEmbedStatus).catch(() => {});
   };
 
-  const handleBuildIndex = async () => {
-    setIsEmbedding(true);
-    await fetch('/api/embed/sweep', { method: 'POST' });
-    // Poll until done
-    const poll = setInterval(() => {
-      fetch('/api/embed/status').then(r => r.json()).then(s => {
-        setEmbedStatus(s);
-        if (!s.running) { clearInterval(poll); setIsEmbedding(false); }
-      });
-    }, 2000);
-  };
-
   useEffect(() => {
     fetch('/api/repos').then(res => res.json()).then(setRepos);
     fetchProjects();
     fetchConfig();
     fetchEmbedStatus();
+    // Poll embed status every 5s so progress bar updates during ingest
+    const poll = setInterval(fetchEmbedStatus, 5000);
+    return () => clearInterval(poll);
   }, []);
 
   useEffect(() => {
@@ -351,7 +341,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 </div>
               </div>
 
-              {/* Vector index status */}
+              {/* Vector index status — auto-updates as repos are ingested */}
               <div className="rounded-xl border p-3 space-y-2" style={{ background: 'rgba(59,130,246,0.04)', borderColor: 'rgba(59,130,246,0.15)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
@@ -370,22 +360,16 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     />
                   </div>
                 )}
-                <button
-                  onClick={handleBuildIndex}
-                  disabled={isEmbedding || embedStatus?.embedded === embedStatus?.total}
-                  className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                    embedStatus?.embedded === embedStatus?.total
-                      ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5 cursor-default'
-                      : 'border-accent-blue/30 text-accent-blue bg-accent-blue/10 hover:bg-accent-blue/20'
-                  }`}
-                >
-                  {isEmbedding
-                    ? <><Cpu className="w-3 h-3 animate-pulse" /> Building…</>
-                    : embedStatus?.embedded === embedStatus?.total
-                    ? <><CheckCircle className="w-3 h-3" /> Index Ready</>
-                    : <><Database className="w-3 h-3" /> Build Vector Index</>
+                <div className={`flex items-center justify-center gap-1.5 py-1 text-[10px] font-semibold ${
+                  embedStatus?.embedded === embedStatus?.total
+                    ? 'text-emerald-400'
+                    : 'text-accent-blue'
+                }`}>
+                  {embedStatus?.embedded === embedStatus?.total
+                    ? <><CheckCircle className="w-3 h-3" /> Index ready — auto-updates on ingest</>
+                    : <><Cpu className="w-3 h-3 animate-pulse" /> Embedding new repos automatically…</>
                   }
-                </button>
+                </div>
               </div>
             </div>
           </>

@@ -348,6 +348,16 @@ Return ONLY valid JSON with this exact structure:
 
       console.log(`Ingested ${id} — score: ${score}, category: ${category}`);
       res.json({ success: true, id, score, category });
+
+      // Auto-embed after ingest — don't block the response
+      const embedText = buildEmbedText({ name: canonicalName, description: desc }, aiAnalysis);
+      generateEmbedding(embedText).then(emb => {
+        if (emb) {
+          db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), id);
+          embeddingCache.set(id, emb);
+          console.log(`Auto-embedded ${id} (cache: ${embeddingCache.size})`);
+        }
+      }).catch(() => {});
     } catch (err: any) {
       console.error(`Ingest failed for ${owner}/${repoName}:`, err.message);
       res.status(500).json({ error: err.message });
