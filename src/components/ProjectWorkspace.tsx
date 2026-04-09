@@ -515,7 +515,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   </div>
 
                   {/* Header */}
-                  <div className="p-5 border-b border-white/8 min-h-[108px]">
+                  <div className="p-5 border-b border-white/8 min-h-[136px]">
                     <p className="text-[11px] text-slate-500 font-mono mb-1">{repo.id}</p>
                     <h4 className="text-base font-bold text-white group-hover:text-accent-blue transition-colors pr-12">{repo.name}</h4>
                     <p className="text-sm text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">{repo.description}</p>
