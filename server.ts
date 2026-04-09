@@ -109,6 +109,19 @@ db.exec(`
     FOREIGN KEY(repo_id) REFERENCES repos(id)
   );
 
+  CREATE TABLE IF NOT EXISTS project_recommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    repo_id TEXT NOT NULL,
+    fit_score INTEGER,
+    rationale TEXT,
+    mode TEXT,
+    saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(project_id, repo_id),
+    FOREIGN KEY(project_id) REFERENCES projects(id),
+    FOREIGN KEY(repo_id) REFERENCES repos(id)
+  );
+
   CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -316,7 +329,7 @@ Return ONLY valid JSON with this exact structure:
 
   // POST /api/recommend — vector search with keyword fallback
   app.post("/api/recommend", async (req, res) => {
-    const { brief = '', constraints } = req.body;
+    const { brief = '', constraints, projectId } = req.body;
     const repos = db.prepare("SELECT id, owner, name, url, stars, forks, issues, language, license, last_push, description, score FROM repos").all() as any[];
 
     const applyFilters = (repo: any, rawScore: number) => {
@@ -344,8 +357,10 @@ Return ONLY valid JSON with this exact structure:
             };
           });
         scored.sort((a, b) => b.fitScore - a.fitScore);
-        console.log(`Vector recommend: ${scored.length} repos scored`);
-        return res.json(scored.slice(0, 10));
+        const results = scored.slice(0, 10);
+        console.log(`Vector recommend: ${results.length} repos scored`);
+        if (projectId) saveRecommendations(projectId, results);
+        return res.json(results);
       }
     }
 
@@ -365,8 +380,25 @@ Return ONLY valid JSON with this exact structure:
       };
     });
     scored.sort((a: any, b: any) => b.fitScore - a.fitScore);
-    res.json(scored.slice(0, 10));
+    const kwResults = scored.slice(0, 10);
+    if (projectId) saveRecommendations(projectId, kwResults);
+    res.json(kwResults);
   });
+
+  function saveRecommendations(projectId: number, recs: any[]) {
+    const stmt = db.prepare(`
+      INSERT INTO project_recommendations (project_id, repo_id, fit_score, rationale, mode)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(project_id, repo_id) DO UPDATE SET
+        fit_score=excluded.fit_score,
+        rationale=excluded.rationale,
+        mode=excluded.mode,
+        saved_at=CURRENT_TIMESTAMP
+    `);
+    for (const r of recs) {
+      try { stmt.run(projectId, r.repoId, r.fitScore, r.rationale, r._mode); } catch {}
+    }
+  }
 
   // API Routes
   app.get("/api/repos", (req, res) => {
@@ -455,6 +487,29 @@ Return ONLY valid JSON with this exact structure:
     const { repo_id, notes } = req.body;
     db.prepare("INSERT OR REPLACE INTO pinned_repos (project_id, repo_id, notes) VALUES (?, ?, ?)")
       .run(req.params.id, repo_id, notes);
+    res.json({ success: true });
+  });
+
+  app.get("/api/projects/:id/recommendations", (req, res) => {
+    const recs = db.prepare(`
+      SELECT pr.repo_id, pr.fit_score, pr.rationale, pr.mode, pr.saved_at
+      FROM project_recommendations pr
+      WHERE pr.project_id = ?
+      ORDER BY pr.fit_score DESC
+    `).all(req.params.id) as any[];
+    res.json(recs.map(r => ({
+      repoId: r.repo_id,
+      fitScore: r.fit_score,
+      rationale: r.rationale,
+      _mode: r.mode,
+      savedAt: r.saved_at,
+      warnings: []
+    })));
+  });
+
+  app.delete("/api/projects/:id/recommendations/:repoId(*)", (req, res) => {
+    db.prepare("DELETE FROM project_recommendations WHERE project_id = ? AND repo_id = ?")
+      .run(req.params.id, req.params.repoId);
     res.json({ success: true });
   });
 

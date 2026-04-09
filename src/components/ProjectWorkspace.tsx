@@ -47,7 +47,10 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const fetchProjects = () => {
     fetch('/api/projects').then(res => res.json()).then(data => {
       setProjects(data);
-      if (data.length > 0 && !activeProject) setActiveProject(data[0]);
+      if (data.length > 0 && !activeProject) {
+        setActiveProject(data[0]);
+        loadSavedRecommendations(data[0].id);
+      }
     });
   };
 
@@ -116,6 +119,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
     setNewProject({ name: '', description: '', types: [] });
   };
 
+  const loadSavedRecommendations = (projectId: number) => {
+    fetch(`/api/projects/${projectId}/recommendations`)
+      .then(r => r.json())
+      .then(recs => setRecommendations(recs))
+      .catch(() => {});
+  };
+
   const handleAnalyze = async () => {
     if (!brief || !activeProject) return;
     setIsAnalyzing(true);
@@ -127,7 +137,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
       const res = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, constraints })
+        body: JSON.stringify({ brief, constraints, projectId: activeProject.id })
       });
       if (!res.ok) throw new Error(await res.text());
       const recs = await res.json();
@@ -136,6 +146,12 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
       setError(e.message || 'Analysis failed');
     }
     setIsAnalyzing(false);
+  };
+
+  const handleRemoveRecommendation = async (repoId: string) => {
+    if (!activeProject) return;
+    await fetch(`/api/projects/${activeProject.id}/recommendations/${encodeURIComponent(repoId)}`, { method: 'DELETE' });
+    setRecommendations(prev => prev.filter(r => r.repoId !== repoId));
   };
 
   const getLicenseColor = (license: string) => {
@@ -261,7 +277,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 projects.map(p => (
                   <button
                     key={p.id}
-                    onClick={() => { setActiveProject(p); setRecommendations([]); }}
+                    onClick={() => { setActiveProject(p); loadSavedRecommendations(p.id); }}
                     className={`w-full text-left rounded-xl p-3 transition-all border ${
                       activeProject?.id === p.id
                         ? 'bg-accent-blue/10 border-accent-blue/30'
@@ -328,7 +344,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
                   <div className="text-xl font-bold text-emerald-400">{recommendations.length > 0 ? recommendations.length : '—'}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Last Matches</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">Saved Matches</div>
                 </div>
               </div>
 
@@ -451,19 +467,24 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
               <Rocket className="w-9 h-9 text-slate-600" />
             </div>
-            <p className="text-white font-semibold text-lg mb-2">Ready to Analyse</p>
-            <p className="text-slate-500 text-sm max-w-xs">
-              {activeProject
-                ? 'Add a brief in the left panel and click Run Analysis to see AI-matched repos.'
-                : 'Select a project on the left or create a new one to get started.'}
-            </p>
-            {!activeProject && (
-              <button
-                onClick={() => setIsCreating(true)}
-                className="mt-6 bg-accent-blue hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/10"
-              >
-                + New Project
-              </button>
+            {activeProject ? (
+              <>
+                <p className="text-white font-semibold text-lg mb-2">No saved matches yet</p>
+                <p className="text-slate-500 text-sm max-w-xs">
+                  Run an analysis to find AI-matched repos. Results are saved automatically and will appear here next time.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-white font-semibold text-lg mb-2">No project selected</p>
+                <p className="text-slate-500 text-sm max-w-xs">Select a project on the left or create a new one to get started.</p>
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="mt-6 bg-accent-blue hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/10"
+                >
+                  + New Project
+                </button>
+              </>
             )}
           </div>
         )}
@@ -476,6 +497,14 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               if (!repo) return null;
               return (
                 <article key={idx} className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all relative">
+                  {/* Remove button */}
+                  <button
+                    onClick={() => handleRemoveRecommendation(rec.repoId)}
+                    title="Remove from saved results"
+                    className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full bg-slate-800/80 border border-white/10 flex items-center justify-center text-slate-400 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                   {/* Fit score badge */}
                   <div className="absolute top-4 right-4 z-10">
                     <div className="w-11 h-11 rounded-full border border-emerald-500/30 bg-bg-dark flex flex-col items-center justify-center shadow-lg">
@@ -565,6 +594,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     <a href={repo.url} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors">
                       <ExternalLink className="w-4 h-4" />
                     </a>
+                    <button
+                      onClick={() => handleRemoveRecommendation(rec.repoId)}
+                      title="Remove from saved results"
+                      className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-full border border-white/10 flex items-center justify-center text-slate-500 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               );
