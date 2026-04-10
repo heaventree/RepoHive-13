@@ -8,7 +8,7 @@ import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, Database, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
@@ -62,84 +62,112 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-bg-dark">
       {/* Header */}
-      <header className="h-16 flex-none bg-bg-panel border-b border-border-main flex items-center justify-between px-4 z-30 shadow-sm">
-        <div className="flex items-center gap-4 flex-none">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-white text-bg-dark flex items-center justify-center font-bold text-base rounded-sm font-mono">RS</div>
-            <h1 className="font-bold text-base tracking-tight text-white">RepoScout</h1>
-          </div>
-          <div className="h-5 w-px bg-border-main mx-1"></div>
-          <div className="text-sm font-mono text-slate-500">v2.1.0</div>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-4">
-          <div className="flex items-center gap-8">
-            <nav className="flex gap-8 text-xs font-bold uppercase tracking-wider text-slate-500">
-              <button 
-                onClick={() => handleTabChange('library')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'library' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <Database className="w-4 h-4" /> Library
-              </button>
-              <button 
-                onClick={() => handleTabChange('projects')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'projects' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <Rocket className="w-4 h-4" /> Projects
-              </button>
-              <button 
-                onClick={() => handleTabChange('monitoring')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'monitoring' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <Activity className="w-4 h-4" /> Monitoring
-              </button>
-              <button 
-                onClick={() => handleTabChange('policies')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'policies' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <ShieldCheck className="w-4 h-4" /> Policies
-              </button>
-              <button 
-                onClick={() => handleTabChange('api')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'api' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <Globe className="w-4 h-4" /> API
-              </button>
-              <button 
-                onClick={() => handleTabChange('config')}
-                className={`flex items-center gap-1.5 transition-colors ${activeTab === 'config' ? 'text-accent-blue border-b-2 border-accent-blue pb-0.5' : 'hover:text-white'}`}
-              >
-                <Settings className="w-4 h-4" /> System Config
-              </button>
-              <button
-                onClick={() => handleTabChange('appkillers')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
-                  activeTab === 'appkillers'
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-[0_0_14px_rgba(245,158,11,0.25)]'
-                    : 'bg-transparent text-amber-500/70 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/50'
-                }`}
-              >
-                <Flame className="w-3.5 h-3.5" /> App Killers
-              </button>
-            </nav>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 flex-none justify-end">
-          <div className="flex items-center gap-2 px-3 py-1 bg-bg-dark/30 rounded-full border border-border-main/50 mr-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-green"></span>
-            </span>
-            <span className="text-xs font-bold text-slate-400 font-mono uppercase tracking-wider">API: Online</span>
-          </div>
-          <button className="text-slate-500 hover:text-white transition-colors"><Bell className="w-6 h-6" /></button>
-          <button className="text-slate-500 hover:text-white transition-colors"><HelpCircle className="w-6 h-6" /></button>
-          <div className="h-5 w-px bg-border-main mx-1"></div>
+      <header
+        className="h-14 flex-none flex items-center justify-between px-5 z-30 relative"
+        style={{
+          background: 'rgba(15,23,42,0.82)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 1px 0 0 rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.4)'
+        }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 flex-none">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-sm border border-border-main flex items-center justify-center text-sm font-mono font-bold shadow-md">
-              AD
+            <div
+              className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
+            >
+              RS
             </div>
+            <span className="font-bold text-sm tracking-tight text-white">RepoScout</span>
+          </div>
+          <span
+            className="text-[10px] font-mono text-slate-600 px-1.5 py-0.5 rounded border"
+            style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}
+          >
+            v2.1.0
+          </span>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {[
+            { id: 'library',    icon: LayoutGrid,  label: 'Library' },
+            { id: 'projects',   icon: Rocket,       label: 'Projects' },
+            { id: 'monitoring', icon: Activity,     label: 'Monitoring' },
+            { id: 'policies',   icon: ShieldCheck,  label: 'Policies' },
+            { id: 'api',        icon: Globe,        label: 'API' },
+            { id: 'config',     icon: Settings,     label: 'System Config' },
+          ].map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => handleTabChange(id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-150 ${
+                activeTab === id
+                  ? 'bg-accent-blue/15 text-accent-blue'
+                  : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          ))}
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
+
+          {/* App Killers */}
+          <button
+            onClick={() => handleTabChange('appkillers')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-150 border ${
+              activeTab === 'appkillers'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-[0_0_16px_rgba(245,158,11,0.2)]'
+                : 'text-amber-500/60 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5" />
+            App Killers
+          </button>
+        </nav>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-2 flex-none">
+          {/* API status */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase tracking-wider text-emerald-400"
+            style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            </span>
+            API: Online
+          </div>
+
+          <div className="w-px h-4 bg-white/8 mx-1" />
+
+          {/* Icon buttons */}
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-all"
+          >
+            <Bell className="w-4 h-4" />
+          </button>
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/5 transition-all"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-4 bg-white/8 mx-1" />
+
+          {/* Avatar */}
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
+          >
+            AD
           </div>
         </div>
       </header>
