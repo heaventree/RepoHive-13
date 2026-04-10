@@ -92,7 +92,7 @@ export default function App() {
         </div>
 
         {/* Nav */}
-        <nav className="flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+        <nav className="flex items-center gap-0.5 flex-1 justify-center mx-4">
           {[
             { id: 'library',    icon: LayoutGrid,  label: 'Library' },
             { id: 'projects',   icon: Rocket,       label: 'Projects' },
@@ -104,7 +104,7 @@ export default function App() {
             <button
               key={id}
               onClick={() => handleTabChange(id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-150 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 ${
                 activeTab === id
                   ? 'bg-accent-blue/15 text-accent-blue'
                   : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'
@@ -121,7 +121,7 @@ export default function App() {
           {/* App Killers */}
           <button
             onClick={() => handleTabChange('appkillers')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-150 border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 border ${
               activeTab === 'appkillers'
                 ? 'bg-amber-500/15 text-amber-300 border-amber-500/40 shadow-[0_0_16px_rgba(245,158,11,0.2)]'
                 : 'text-amber-500/60 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40'
