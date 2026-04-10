@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RepoScout Pricing | Sentinel Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#2d3449",
+                      "inverse-surface": "#dae2fd",
+                      "on-surface-variant": "#c2c6d6",
+                      "primary-fixed": "#d8e2ff",
+                      "on-tertiary": "#003824",
+                      "error": "#ffb4ab",
+                      "surface-container-lowest": "#060e20",
+                      "surface-container-high": "#222a3d",
+                      "on-error": "#690005",
+                      "surface-dim": "#0b1326",
+                      "background": "#0b1326",
+                      "secondary": "#c3c0ff",
+                      "surface-variant": "#2d3449",
+                      "on-primary-fixed": "#001a42",
+                      "primary-container": "#4d8eff",
+                      "on-secondary-fixed": "#0f0069",
+                      "primary": "#adc6ff",
+                      "surface-bright": "#31394d",
+                      "on-secondary-container": "#b3b1ff",
+                      "outline": "#8c909f",
+                      "on-primary-container": "#00285d",
+                      "on-primary-fixed-variant": "#004395",
+                      "on-error-container": "#ffdad6",
+                      "surface": "#0b1326",
+                      "on-tertiary-container": "#00311f",
+                      "tertiary-container": "#00a572",
+                      "outline-variant": "#424754",
+                      "inverse-on-surface": "#283044",
+                      "primary-fixed-dim": "#adc6ff",
+                      "surface-container": "#171f33",
+                      "error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "surface-tint": "#adc6ff",
+                      "secondary-fixed-dim": "#c3c0ff",
+                      "on-secondary-fixed-variant": "#3323cc",
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary-fixed": "#002113",
+                      "secondary-fixed": "#e2dfff",
+                      "tertiary-fixed": "#6ffbbe",
+                      "secondary-container": "#3626ce",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "on-background": "#dae2fd",
+                      "on-secondary": "#1d00a5",
+                      "on-surface": "#dae2fd",
+                      "inverse-primary": "#005ac2",
+                      "tertiary": "#4edea3",
+                      "on-primary": "#002e6a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Space Grotesk"],
+                      "body": ["Inter"],
+                      "label": ["Space Grotesk"]
+              }
+            },
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1326;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .orb {
+            position: fixed;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+<!-- Atmospheric Background Orbs -->
+<div class="orb w-[500px] h-[500px] bg-indigo-600 top-[-10%] left-[-10%]"></div>
+<div class="orb w-[600px] h-[600px] bg-violet-800 bottom-[-20%] right-[-10%]"></div>
+<!-- TopNavBar -->
+<nav class="sticky top-4 flex justify-between items-center px-6 py-3 w-full z-50 bg-slate-900/82 backdrop-blur-xl rounded-full mt-4 mx-auto max-w-7xl border border-white/10 shadow-2xl shadow-blue-900/20 font-['Space_Grotesk'] tracking-tight">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(77,142,255,0.5)]">RS</span>
+<div class="hidden md:flex gap-1">
+<a class="text-slate-400 hover:text-slate-100 transition-colors px-4 py-1" href="#">Dashboard</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors px-4 py-1" href="#">Exploration</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors px-4 py-1" href="#">Archives</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors px-4 py-1" href="#">Signals</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-slate-100 transition-all scale-95 duration-200" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-slate-100 transition-all scale-95 duration-200" data-icon="settings">settings</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-white/10">
+<img alt="User profile" data-alt="Professional studio portrait of a software engineer with neutral expression and soft lighting against dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS899UJg82RFRirFl3_LbzTl9xxU2ZdLlyixKH98wss4TEzqJrBWtUvL-D-3vo52NWZuQEeq5SCd73CGeacdGVusmwtLH7aHLLb51csQY7tEyrXUEjh8ESgfAGjzKHeTYv5YyClqM17jkTYf3Fn-kzybbHlSJci_aMeqlLA0-_pQ7rzaCoxQYBmq3EcbYnbj0OUQVE1j64K8EUZNpbd5uoxxJyOLlMZOCJOkTbG_bneFFoqhrU0YDeAtX2A4A15KxVhpvF13GhC0A"/>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-6 pt-24 pb-32">
+<!-- Header & Toggle -->
+<header class="text-center mb-20">
+<div class="inline-block mb-4">
+<span class="font-headline text-[10px] tracking-[0.2em] uppercase text-primary border border-primary/20 px-3 py-1 rounded-full bg-primary/5">Global Infrastructure Pricing</span>
+</div>
+<h1 class="font-headline text-5xl md:text-7xl font-black tracking-tight mb-8">
+                The Cost of <span class="text-primary">Intelligence</span>
+</h1>
+<div class="flex flex-col items-center gap-6">
+<p class="max-w-2xl text-on-surface-variant font-body leading-relaxed">
+                    Access high-fidelity open source reconnaissance tools. From lone operators to global conglomerates, our tiered infrastructure scales with your data intensity.
+                </p>
+<!-- Toggle -->
+<div class="flex items-center gap-4 p-1.5 glass-card rounded-full">
+<button class="px-6 py-2 rounded-full font-headline text-xs font-bold tracking-widest uppercase bg-primary-container text-on-primary-container">Monthly</button>
+<button class="px-6 py-2 rounded-full font-headline text-xs font-bold tracking-widest uppercase text-slate-400 hover:text-slate-200 transition-colors">Annual (-20%)</button>
+</div>
+</div>
+</header>
+<!-- Pricing Cards Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+<!-- Free Tier -->
+<div class="glass-card rounded-xl p-10 flex flex-col transition-all duration-300 hover:bg-white/5 border border-white/5">
+<div class="mb-8">
+<h3 class="font-headline text-xs tracking-widest uppercase text-slate-400 mb-2">Tier_01</h3>
+<h4 class="font-headline text-3xl font-bold tracking-tight">Free</h4>
+</div>
+<div class="mb-10">
+<span class="font-headline text-4xl font-black tracking-tighter">$0</span>
+<span class="text-slate-500 font-label text-xs uppercase tracking-widest">/ Month</span>
+</div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        1,000 Signal Requests
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        Public Repository Access
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        2 Active Watchlists
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-600">
+<span class="material-symbols-outlined text-lg" data-icon="cancel">cancel</span>
+                        Priority Node Routing
+                    </li>
+<li class="flex items-center gap-3 text-sm text-slate-600">
+<span class="material-symbols-outlined text-lg" data-icon="cancel">cancel</span>
+                        Deep Scan Intelligence
+                    </li>
+</ul>
+<button class="w-full py-4 rounded-xl font-headline text-sm font-bold tracking-widest uppercase bg-surface-container-highest text-primary hover:bg-surface-variant transition-all">Initialize Node</button>
+</div>
+<!-- Pro Tier (Recommended) -->
+<div class="relative glass-card rounded-xl p-10 flex flex-col border-2 border-primary/30 shadow-[0_0_24px_rgba(77,142,255,0.25)] scale-105 z-10">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-container px-4 py-1 rounded-full">
+<span class="font-headline text-[10px] font-black tracking-widest uppercase text-on-primary-container">Recommended</span>
+</div>
+<div class="mb-8">
+<h3 class="font-headline text-xs tracking-widest uppercase text-primary mb-2">Tier_02</h3>
+<h4 class="font-headline text-3xl font-bold tracking-tight">Pro</h4>
+</div>
+<div class="mb-10">
+<span class="font-headline text-4xl font-black tracking-tighter">$49</span>
+<span class="text-slate-500 font-label text-xs uppercase tracking-widest">/ Month</span>
+</div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        50,000 Signal Requests
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Private Repository Support
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Unlimited Watchlists
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Priority Node Routing
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Basic Sentiment Analysis
+                    </li>
+</ul>
+<button class="w-full py-4 rounded-xl font-headline text-sm font-bold tracking-widest uppercase bg-primary-container text-on-primary-container hover:shadow-[0_0_15px_rgba(77,142,255,0.4)] transition-all">Elevate Access</button>
+</div>
+<!-- Enterprise Tier -->
+<div class="glass-card rounded-xl p-10 flex flex-col transition-all duration-300 hover:bg-white/5 border border-white/5">
+<div class="mb-8">
+<h3 class="font-headline text-xs tracking-widest uppercase text-slate-400 mb-2">Tier_03</h3>
+<h4 class="font-headline text-3xl font-bold tracking-tight">Enterprise</h4>
+</div>
+<div class="mb-10">
+<span class="font-headline text-4xl font-black tracking-tighter">Custom</span>
+<span class="text-slate-500 font-label text-xs uppercase tracking-widest">/ Managed</span>
+</div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        Unlimited Signals
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        Dedicated Infrastructure
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        24/7 Security Operations
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        API White-labeling
+                    </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="check_circle">check_circle</span>
+                        Deep Scan Intelligence
+                    </li>
+</ul>
+<button class="w-full py-4 rounded-xl font-headline text-sm font-bold tracking-widest uppercase border border-primary/20 text-primary hover:bg-primary/5 transition-all">Talk to us</button>
+</div>
+</div>
+<!-- Infrastructure Status Card -->
+<div class="mt-24 glass-card rounded-xl p-1 w-full max-w-4xl mx-auto overflow-hidden">
+<div class="flex flex-col md:flex-row items-center gap-8 p-8 bg-surface-container-low rounded-[inherit]">
+<div class="flex-shrink-0 w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="hub">hub</span>
+</div>
+<div class="flex-grow">
+<h5 class="font-headline text-lg font-bold mb-1">Grid Operational Stability</h5>
+<p class="text-on-surface-variant text-sm">All nodes reporting nominal performance. Latency at 4ms global average.</p>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
+<span class="font-label text-xs uppercase tracking-widest text-tertiary">Live_Pulse</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-slate-950 w-full border-t border-white/5 font-['Space_Grotesk'] text-[10px] tracking-widest uppercase mt-32">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-8 px-12 py-16 max-w-7xl mx-auto">
+<div class="col-span-2 lg:col-span-1">
+<span class="text-slate-400 font-bold block mb-4">RS_SENTINEL_ARCHIVE</span>
+<p class="text-slate-600 normal-case tracking-normal mb-4 font-body text-xs">Forging the future of open-source intelligence through atmospheric data environments.</p>
+</div>
+<div>
+<h6 class="text-slate-500 mb-6">Protocols</h6>
+<ul class="space-y-3">
+<li><a class="text-slate-600 hover:text-blue-300 transition-colors" href="#">Privacy Protocol</a></li>
+<li><a class="text-slate-600 hover:text-blue-300 transition-colors" href="#">Terms of Engagement</a></li>
+</ul>
+</div>
+<div>
+<h6 class="text-slate-500 mb-6">Infrastructure</h6>
+<ul class="space-y-3">
+<li><a class="text-slate-600 hover:text-blue-300 transition-colors" href="#">System Status</a></li>
+<li><a class="text-slate-600 hover:text-blue-300 transition-colors" href="#">API Docs</a></li>
+</ul>
+</div>
+<div class="col-span-2 lg:col-span-4 mt-8 flex justify-between items-center border-t border-white/5 pt-8">
+<span class="text-slate-500">© 2024 REPOSCOUT SENTINEL ARCHIVE</span>
+<div class="flex gap-6">
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:text-primary transition-colors" data-icon="terminal">terminal</span>
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:text-primary transition-colors" data-icon="database">database</span>
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:text-primary transition-colors" data-icon="shield">shield</span>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RepoScout Onboarding | Sentinel Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#2d3449",
+                        "inverse-surface": "#dae2fd",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary": "#003824",
+                        "error": "#ffb4ab",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-high": "#222a3d",
+                        "on-error": "#690005",
+                        "surface-dim": "#0b1326",
+                        "background": "#0b1326",
+                        "secondary": "#c3c0ff",
+                        "surface-variant": "#2d3449",
+                        "on-primary-fixed": "#001a42",
+                        "primary-container": "#4d8eff",
+                        "on-secondary-fixed": "#0f0069",
+                        "primary": "#adc6ff",
+                        "surface-bright": "#31394d",
+                        "on-secondary-container": "#b3b1ff",
+                        "outline": "#8c909f",
+                        "on-primary-container": "#00285d",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#0b1326",
+                        "on-tertiary-container": "#00311f",
+                        "tertiary-container": "#00a572",
+                        "outline-variant": "#424754",
+                        "inverse-on-surface": "#283044",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container": "#171f33",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-tint": "#adc6ff",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-secondary-fixed-variant": "#3323cc",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary-fixed": "#002113",
+                        "secondary-fixed": "#e2dfff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-container": "#3626ce",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-background": "#dae2fd",
+                        "on-secondary": "#1d00a5",
+                        "on-surface": "#dae2fd",
+                        "inverse-primary": "#005ac2",
+                        "tertiary": "#4edea3",
+                        "on-primary": "#002e6a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0b1326;
+            font-family: 'Inter', sans-serif;
+            color: #dae2fd;
+        }
+        .atmospheric-bg {
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.08) 0%, transparent 40%);
+        }
+    </style>
+</head>
+<body class="min-h-screen atmospheric-bg flex flex-col items-center justify-center p-6 md:p-12 overflow-x-hidden">
+<!-- Background Orbs (Sentinel Archive Aesthetic) -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+<div class="absolute top-[-10%] left-[-5%] w-[40rem] h-[40rem] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-10%] right-[-5%] w-[50rem] h-[50rem] bg-secondary/10 rounded-full blur-[120px]"></div>
+</div>
+<!-- Header Section (Contextual Logo) -->
+<div class="mb-12 text-center z-10">
+<h1 class="text-3xl font-headline font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(77,142,255,0.5)] tracking-tight">RS</h1>
+<p class="font-label text-[10px] tracking-[0.2em] uppercase mt-2 text-primary">Sentinel Archive Onboarding</p>
+</div>
+<div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 z-10">
+<!-- Step 1: Connect GitHub (Centered Glass Card) -->
+<section class="flex flex-col">
+<div class="font-label text-[11px] tracking-widest text-outline uppercase mb-4 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                PHASE_01: Identity_Handshake
+            </div>
+<div class="bg-slate-900/82 backdrop-blur-xl border border-white/10 rounded-xl p-8 flex flex-col h-full shadow-2xl shadow-blue-900/20">
+<div class="mb-8">
+<h2 class="text-2xl font-headline font-bold text-on-surface tracking-tight mb-2">Connect Repository Access</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed">Establish a secure conduit between RepoScout and your development environment to begin intelligence extraction.</p>
+</div>
+<div class="space-y-6 flex-grow">
+<!-- OAuth Action -->
+<button class="w-full group bg-surface-container-high hover:bg-surface-variant border border-outline-variant/30 transition-all duration-300 py-4 px-6 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="terminal">terminal</span>
+<div class="text-left">
+<p class="text-sm font-headline font-bold text-on-surface">Connect via GitHub OAuth</p>
+<p class="font-label text-[10px] text-outline uppercase">Fast_Protocol_Secure</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="relative flex items-center py-2">
+<div class="flex-grow border-t border-outline-variant/20"></div>
+<span class="flex-shrink mx-4 font-label text-[10px] text-outline uppercase tracking-widest">OR_MANUAL_ENTRY</span>
+<div class="flex-grow border-t border-outline-variant/20"></div>
+</div>
+<!-- PAT Form -->
+<div class="space-y-4">
+<div>
+<label class="font-label text-[10px] text-primary uppercase tracking-wider mb-2 block">Personal_Access_Token</label>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border border-outline-variant/30 rounded-md px-4 py-3 text-sm text-on-surface focus:outline-none focus:border-primary/40 focus:ring-0 transition-all font-mono" placeholder="ghp_************************************" type="password"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline text-lg" data-icon="key">key</span>
+</div>
+</div>
+<div class="flex items-start gap-3 p-3 bg-primary-container/5 rounded-md border border-primary-container/10">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5" data-icon="info">info</span>
+<p class="text-[11px] text-on-surface-variant leading-tight">RepoScout requires <code class="text-primary">repo</code> and <code class="text-primary">read:org</code> scopes to analyze private intelligence nodes.</p>
+</div>
+</div>
+</div>
+<div class="mt-12 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-400 text-sm" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label text-[10px] text-emerald-400 uppercase tracking-widest">256_BIT_ENCRYPTION_ACTIVE</span>
+</div>
+<button class="bg-primary-container text-on-primary-container font-headline font-bold px-8 py-3 rounded-full hover:shadow-[0_0_15px_rgba(77,142,255,0.4)] transition-all transform active:scale-95">Establish Link</button>
+</div>
+</div>
+</section>
+<!-- Step 2: First Ingest (Visual/Technical Focus) -->
+<section class="flex flex-col">
+<div class="font-label text-[11px] tracking-widest text-outline uppercase mb-4 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                PHASE_02: Signal_Acquisition
+            </div>
+<div class="bg-slate-950 border border-white/5 rounded-xl p-8 flex flex-col h-full relative overflow-hidden">
+<!-- Abstract Data Background Decoration -->
+<div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none select-none font-mono text-[8px] leading-none text-on-surface text-right">
+                    01010110 11010101<br/>INGEST_READY<br/>NODE_MAP_04<br/>01101011 00110101
+                </div>
+<div class="mb-8 relative z-10">
+<h2 class="text-2xl font-headline font-bold text-on-surface tracking-tight mb-2">First Intelligence Ingest</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed">Target a repository for automated deep-scan analysis. RepoScout will index architecture, signals, and security vulnerabilities.</p>
+</div>
+<div class="space-y-8 z-10">
+<!-- URL Input with Technical Density -->
+<div class="p-6 bg-surface-container rounded-lg border border-outline-variant/10 relative">
+<div class="flex justify-between items-center mb-4">
+<span class="font-label text-[10px] text-tertiary uppercase tracking-widest">Target_Endpoint</span>
+<span class="material-symbols-outlined text-tertiary text-lg" data-icon="hub">hub</span>
+</div>
+<div class="flex gap-2">
+<div class="flex-grow bg-surface-container-lowest border border-outline-variant/30 rounded px-4 py-3 flex items-center">
+<span class="text-outline font-mono text-xs mr-2">https://github.com/</span>
+<input class="bg-transparent border-none p-0 text-sm font-headline font-medium text-primary-container focus:ring-0 w-full" readonly="" type="text" value="facebook/react-native"/>
+</div>
+<button class="bg-tertiary-container text-on-tertiary-container font-headline font-bold px-6 py-3 rounded hover:bg-tertiary transition-colors flex items-center gap-2">
+                                Try it
+                                <span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</button>
+</div>
+<div class="mt-4 flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-container-high rounded border border-outline-variant/20 font-label text-[9px] text-on-surface-variant tracking-wider uppercase">Auto_Deep_Scan</span>
+<span class="px-2 py-1 bg-surface-container-high rounded border border-outline-variant/20 font-label text-[9px] text-on-surface-variant tracking-wider uppercase">Signal_Extraction</span>
+<span class="px-2 py-1 bg-surface-container-high rounded border border-outline-variant/20 font-label text-[9px] text-on-surface-variant tracking-wider uppercase">Vulnerability_Report</span>
+</div>
+</div>
+<!-- Analysis Preview Card -->
+<div class="bg-surface-container-low rounded-lg border border-white/5 overflow-hidden">
+<div class="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-error"></div>
+<span class="font-label text-[9px] text-outline uppercase tracking-tighter">Live_Extraction_Preview</span>
+</div>
+<span class="font-mono text-[9px] text-outline/40">BUFFER: 104.2MB</span>
+</div>
+<div class="p-4 font-mono text-[11px] text-on-surface-variant space-y-1 opacity-80">
+<p class="text-tertiary">&gt;&gt; Initializing Sentinel Probe...</p>
+<p class="text-on-surface-variant">&gt;&gt; Indexing 4,821 source files</p>
+<p class="text-on-surface-variant">&gt;&gt; Identifying ARCH_V4 patterns</p>
+<p class="text-on-surface-variant">&gt;&gt; Found 12 dependency signals</p>
+<p class="text-primary animate-pulse">&gt;&gt; Extraction standing by...</p>
+</div>
+</div>
+</div>
+<!-- Footer Visual -->
+<div class="mt-auto pt-10 flex justify-between items-end">
+<div class="flex flex-col gap-1">
+<p class="font-label text-[10px] text-outline uppercase">Operational_Status</p>
+<div class="flex items-center gap-3">
+<div class="h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full w-2/3 bg-primary"></div>
+</div>
+<span class="font-mono text-[10px] text-primary">66%</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label text-[10px] text-outline uppercase">Last_Update</p>
+<p class="font-mono text-[10px] text-on-surface">T-04:22:11</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Background Elements for Depth -->
+<div class="fixed bottom-10 left-10 opacity-20 pointer-events-none hidden lg:block">
+<img class="w-64 h-64 object-contain" data-alt="Abstract wireframe 3D grid representing a complex data repository network in deep blue and indigo tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBla3RDCxzUfVY6qgLugwaGGnqrwF_S521EqD7pb9ijO6kG8z-h2YmOGXyL0B5ZzKFl436nqCLAtsdfHwyPj44DDqhfaizEHzpKORarPG6p1gd_0HwQs0gwsxEIjkRx1X-wsln7vlpDuuKKXBFmBG5JBH_cjSp61P4EzfSqE2SYyEK72z9d3-bqwLhC2EinO3-ZqyVTBrzq5HLyRBiLYK5HKs4dh9cVl1c_UqyTGly90BU-bjIOnHbDGml83Eh_Y6Fs1NMt3v5yviY"/>
+</div>
+<!-- Universal Footer (From JSON Mapping) -->
+<footer class="w-full mt-24 z-10 border-t border-white/5">
+<div class="grid grid-cols-2 gap-8 px-12 py-16 max-w-7xl mx-auto">
+<div class="flex flex-col gap-4">
+<span class="text-slate-400 font-bold font-headline">RS</span>
+<p class="text-slate-500 font-label text-[10px] tracking-widest uppercase">© 2024 REPOSCOUT SENTINEL ARCHIVE</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<a class="text-slate-600 hover:text-blue-300 font-label text-[10px] tracking-widest uppercase transition-colors" href="#">Privacy Protocol</a>
+<a class="text-slate-600 hover:text-blue-300 font-label text-[10px] tracking-widest uppercase transition-colors" href="#">Terms of Engagement</a>
+<a class="text-slate-600 hover:text-blue-300 font-label text-[10px] tracking-widest uppercase transition-colors" href="#">System Status</a>
+<a class="text-slate-600 hover:text-blue-300 font-label text-[10px] tracking-widest uppercase transition-colors" href="#">API Docs</a>
+</div>
+</div>
+</footer>
+</body></html>

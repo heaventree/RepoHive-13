@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#2d3449",
+                    "inverse-surface": "#dae2fd",
+                    "on-surface-variant": "#c2c6d6",
+                    "primary-fixed": "#d8e2ff",
+                    "on-tertiary": "#003824",
+                    "error": "#ffb4ab",
+                    "surface-container-lowest": "#060e20",
+                    "surface-container-high": "#222a3d",
+                    "on-error": "#690005",
+                    "surface-dim": "#0b1326",
+                    "background": "#0b1326",
+                    "secondary": "#c3c0ff",
+                    "surface-variant": "#2d3449",
+                    "on-primary-fixed": "#001a42",
+                    "primary-container": "#4d8eff",
+                    "on-secondary-fixed": "#0f0069",
+                    "primary": "#adc6ff",
+                    "surface-bright": "#31394d",
+                    "on-secondary-container": "#b3b1ff",
+                    "outline": "#8c909f",
+                    "on-primary-container": "#00285d",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-error-container": "#ffdad6",
+                    "surface": "#0b1326",
+                    "on-tertiary-container": "#00311f",
+                    "tertiary-container": "#00a572",
+                    "outline-variant": "#424754",
+                    "inverse-on-surface": "#283044",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-container": "#171f33",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-tint": "#adc6ff",
+                    "secondary-fixed-dim": "#c3c0ff",
+                    "on-secondary-fixed-variant": "#3323cc",
+                    "surface-container-low": "#131b2e",
+                    "on-tertiary-fixed": "#002113",
+                    "secondary-fixed": "#e2dfff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "secondary-container": "#3626ce",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-background": "#dae2fd",
+                    "on-secondary": "#1d00a5",
+                    "on-surface": "#dae2fd",
+                    "inverse-primary": "#005ac2",
+                    "tertiary": "#4edea3",
+                    "on-primary": "#002e6a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Inter"],
+                    "label": ["Space Grotesk"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b1326; color: #c2c6d6; margin: 0; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .font-label { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .bg-orb-indigo { background: radial-gradient(circle, rgba(79, 70, 229, 0.12) 0%, transparent 70%); }
+        .bg-orb-violet { background: radial-gradient(circle, rgba(124, 58, 237, 0.10) 0%, transparent 70%); }
+        .bg-orb-cyan { background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%); }
+    </style>
+</head>
+<body class="bg-background selection:bg-primary/30 text-on-surface antialiased overflow-x-hidden">
+<!-- Ambient Orbs -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute -top-24 -left-24 w-[600px] h-[600px] bg-orb-indigo"></div>
+<div class="absolute top-1/2 -right-48 w-[800px] h-[800px] bg-orb-violet"></div>
+<div class="absolute -bottom-48 left-1/4 w-[700px] h-[700px] bg-orb-cyan"></div>
+</div>
+<!-- Navigation -->
+<nav class="sticky top-4 flex justify-between items-center px-6 py-3 w-full z-50 bg-slate-900/82 backdrop-blur-xl rounded-full mt-4 mx-auto max-w-7xl border border-white/10 shadow-2xl shadow-blue-900/20 font-['Space_Grotesk'] tracking-tight">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(77,142,255,0.5)]">RS</span>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="#">Dashboard</a>
+<a class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-4 py-1 rounded-full shadow-[0_0_15px_rgba(77,142,255,0.2)]" href="#">Exploration</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="#">Archives</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors" href="#">Signals</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400 hover:text-slate-100 cursor-pointer transition-all hover:bg-white/5 p-2 rounded-full">notifications</span>
+<span class="material-symbols-outlined text-slate-400 hover:text-slate-100 cursor-pointer transition-all hover:bg-white/5 p-2 rounded-full">settings</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-white/20">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional male software developer in a dark studio setting with soft cinematic blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS9qGk_iKsbjwxl8Mdz66Ed5vMrOcZubjWkSaaH1c_10XMU7FOCTx_keKhGV4y-PUIZTS0GQi1_2x8zqSALRW5N_VENW8EuhNTnnll3_751TVF1zR92HomwnX1m_rxsj5gCxCj_F_npp-PEcmkIfdLpl_JmnrpY9UJmPB5BTQnZmvbTejUq6gVlYOJdAalfmUvdK62K8MbW0fY2aOj-tHMuTV6JuyOlPpSM4Rbq4okfIGwhrM58lF5LHCnmeOaopv9yRgJRdKFsgg"/>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative pt-24 pb-32 px-6 flex flex-col items-center text-center z-10">
+<div class="max-w-4xl mx-auto mb-16">
+<div class="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full bg-surface-container-high border border-outline-variant/20">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label text-[10px] tracking-widest uppercase text-on-surface-variant">System Status: Active</span>
+</div>
+<h1 class="text-6xl md:text-8xl font-headline font-black text-on-surface tracking-tighter leading-[0.95] mb-8">
+                Your OSS intelligence layer. <br/>
+<span class="text-on-surface-variant/50">Know what to build, what to buy, what to kill.</span>
+</h1>
+<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+<button class="px-8 py-4 bg-primary-container text-on-primary-container font-headline font-bold rounded-full transition-transform active:scale-95 shadow-[0_0_20px_rgba(77,142,255,0.3)]">
+                    Start free
+                </button>
+<button class="px-8 py-4 bg-transparent border border-outline-variant/30 text-primary font-headline font-bold rounded-full transition-all hover:bg-white/5 active:scale-95">
+                    See it live
+                </button>
+</div>
+</div>
+<!-- Hero Visual Fragment -->
+<div class="w-full max-w-5xl mx-auto px-4 perspective-1000">
+<div class="relative bg-surface-container-lowest/80 backdrop-blur-3xl rounded-xl border border-white/5 p-1 shadow-2xl">
+<div class="bg-surface-container-low rounded-[calc(1rem-4px)] p-6 overflow-hidden">
+<div class="flex items-center justify-between mb-8 border-b border-outline-variant/10 pb-4">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error-container"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary-container"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+</div>
+<div class="font-label text-[10px] tracking-widest text-on-surface-variant uppercase">Sentinel_Interface_v1.0.4</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+<div class="space-y-4">
+<h3 class="font-headline font-bold text-error flex items-center gap-2">
+<span class="material-symbols-outlined">warning</span> APP KILLERS
+                            </h3>
+<div class="space-y-2">
+<div class="bg-error-container/10 border border-error/20 p-4 rounded-lg flex justify-between items-center group hover:bg-error-container/20 transition-all">
+<div>
+<div class="text-xs text-on-surface-variant font-label uppercase tracking-wider mb-1">Sentry replacement</div>
+<div class="font-headline font-bold text-on-surface">GlitchTip</div>
+</div>
+<span class="material-symbols-outlined text-error opacity-0 group-hover:opacity-100 transition-opacity">dangerous</span>
+</div>
+<div class="bg-surface-container-high/50 border border-outline-variant/10 p-4 rounded-lg flex justify-between items-center">
+<div>
+<div class="text-xs text-on-surface-variant font-label uppercase tracking-wider mb-1">Intercom replacement</div>
+<div class="font-headline font-bold text-on-surface">Chatwoot</div>
+</div>
+<span class="px-2 py-1 bg-tertiary/10 text-tertiary text-[10px] rounded border border-tertiary/20">STABLE</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-highest/30 rounded-xl p-6 border border-outline-variant/10">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div>
+<h4 class="font-headline font-bold text-on-surface">Intelligence Node</h4>
+<p class="text-xs text-on-surface-variant">Scanning GitHub Mainframe...</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full w-2/3 bg-primary-container"></div>
+</div>
+<div class="flex justify-between text-[10px] font-mono text-on-surface-variant">
+<span>VULNERABILITY_SCAN</span>
+<span>67% COMPLETE</span>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/10 text-[10px] font-mono leading-relaxed text-blue-300/60">
+                                    &gt; Analysing repository metadata...<br/>
+                                    &gt; identified 14 active maintainers...<br/>
+                                    &gt; sustainability score: 8.9/10
+                                </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Feature: Bulk Ingest -->
+<section class="py-24 px-6 z-10 relative">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+<div class="order-2 md:order-1">
+<div class="relative rounded-xl overflow-hidden shadow-2xl">
+<img alt="Cybersecurity hardware" class="w-full aspect-video object-cover" data-alt="minimalist overhead shot of high-tech server circuit boards with glowing blue integrated circuits and sleek hardware design" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTmi3BrZksAUkr1O0n_j_xun8FiW_4yXzYgTrHTXNkDVLIfYRUvBTBEhXadYaUMegtGjrSbWnQrnP-4Xrdq3SygmCSG3PBIBjBupNX1JWliiPhAaUVfNrjgWi15g6_FyvThl1UVqObNJKE-hwctKEaZKEt-z2CgFaAETNbcqwM7Dvpmd2u2YrEJneP1PESSK3cVeGxfRzK2mJjr2lMFWnwchHecPqhkpOo8hi4UGDiKF_PDCZdQaa-9Kay1HW3eMrAWGtDAOqWN7w"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<div class="absolute bottom-6 left-6 right-6 p-4 bg-slate-900/60 backdrop-blur-md rounded-lg border border-white/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">link</span>
+<span class="text-sm font-mono text-blue-300">https://github.com/microsoft/vscode</span>
+</div>
+</div>
+</div>
+</div>
+<div class="order-1 md:order-2 space-y-6">
+<div class="font-label text-xs tracking-widest uppercase text-primary">Data Acquisition</div>
+<h2 class="text-4xl md:text-5xl font-headline font-bold text-on-surface tracking-tight">Bulk Ingest. <br/><span class="text-primary-fixed-dim">From URL to Archive.</span></h2>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                    Point our engine at any GitHub organization or individual repository. Our distributed node network scrapes metadata, commit history, and issue velocity in seconds. No API tokens required for public data.
+                </p>
+<div class="flex flex-col gap-4">
+<div class="flex items-start gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
+<span class="material-symbols-outlined text-tertiary">speed</span>
+<div>
+<div class="font-headline font-bold text-on-surface">1,000+ Repos/Min</div>
+<p class="text-sm text-on-surface-variant">High-concurrency ingestion pipeline for enterprise scale.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature: AI Analysis -->
+<section class="py-24 px-6 z-10 relative bg-surface-container-lowest/50">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+<div class="space-y-6">
+<div class="font-label text-xs tracking-widest uppercase text-tertiary">Intelligence Layer</div>
+<h2 class="text-4xl md:text-5xl font-headline font-bold text-on-surface tracking-tight">AI Analysis. <br/><span class="text-tertiary-fixed-dim">Hybrid Vector Search.</span></h2>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                    Leverage DeepSeek for deep code logic extraction and Gemini for large-context architectural mapping. Our vector database indexes repository intent, making "find a React-based CRM with MIT license" a simple natural language query.
+                </p>
+<ul class="space-y-4">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Semantic code search across 50M+ lines
+                    </li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Sentiment analysis on issue discussions
+                    </li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Automated licensing risk assessment
+                    </li>
+</ul>
+</div>
+<div class="relative">
+<div class="absolute -inset-4 bg-tertiary/5 blur-3xl rounded-full"></div>
+<div class="relative bg-surface-container rounded-xl p-8 border border-outline-variant/20 shadow-2xl">
+<div class="grid grid-cols-3 gap-2 mb-8">
+<div class="h-2 rounded-full bg-tertiary/20"></div>
+<div class="h-2 rounded-full bg-tertiary"></div>
+<div class="h-2 rounded-full bg-tertiary/40"></div>
+</div>
+<div class="space-y-4 font-mono text-xs">
+<div class="text-on-surface-variant">&gt; QUERY: "Enterprise-ready auth system"</div>
+<div class="p-3 rounded bg-surface-container-highest border-l-2 border-tertiary text-on-surface">
+                            MATCH: <span class="text-tertiary">SuperTokens</span> (Score: 0.98)
+                            <div class="mt-1 text-[10px] text-on-surface-variant">Reason: High commit velocity, SOC2 compliant patterns identified.</div>
+</div>
+<div class="p-3 rounded bg-surface-container-high/40 border-l-2 border-outline-variant text-on-surface-variant">
+                            MATCH: <span class="text-on-surface">Auth.js</span> (Score: 0.91)
+                            <div class="mt-1 text-[10px]">Reason: Vast community, though issue resolution slowing in Q3.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature: App Killers -->
+<section class="py-24 px-6 z-10 relative">
+<div class="max-w-4xl mx-auto text-center mb-16">
+<div class="font-label text-xs tracking-widest uppercase text-error-container mb-4">Strategic Disruption</div>
+<h2 class="text-4xl md:text-6xl font-headline font-black text-on-surface tracking-tighter">The App Killers.</h2>
+<p class="text-on-surface-variant text-lg mt-4">
+                Stop overpaying for SaaS. We identify the precise open-source alternatives that match—or exceed—the capabilities of your current vendor stack.
+            </p>
+</div>
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Killer Card 1 -->
+<div class="group bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 hover:border-error/30 transition-all">
+<div class="w-12 h-12 rounded-lg bg-error-container/10 flex items-center justify-center mb-6 text-error">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div class="text-xs font-label text-error uppercase mb-2">Google Analytics Killer</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface mb-4">Plausible</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                    Lightweight, privacy-first analytics. No cookies, fully GDPR/CCPA compliant. Automated ingestion ready.
+                </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+<span class="text-[10px] font-mono text-on-surface-variant">SAVINGS: $49/mo</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors">arrow_forward</span>
+</div>
+</div>
+<!-- Killer Card 2 -->
+<div class="group bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 hover:border-error/30 transition-all">
+<div class="w-12 h-12 rounded-lg bg-error-container/10 flex items-center justify-center mb-6 text-error">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div class="text-xs font-label text-error uppercase mb-2">Firebase Killer</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface mb-4">Supabase</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                    The open source Firebase alternative. Build in a weekend, scale to millions. Postgres-powered.
+                </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+<span class="text-[10px] font-mono text-on-surface-variant">SAVINGS: $200+/mo</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors">arrow_forward</span>
+</div>
+</div>
+<!-- Killer Card 3 -->
+<div class="group bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 hover:border-error/30 transition-all">
+<div class="w-12 h-12 rounded-lg bg-error-container/10 flex items-center justify-center mb-6 text-error">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div class="text-xs font-label text-error uppercase mb-2">Slack Killer</div>
+<h3 class="text-2xl font-headline font-bold text-on-surface mb-4">Mattermost</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+                    Highly secure, open source collaboration platform for technical teams. Self-host for total control.
+                </p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+<span class="text-[10px] font-mono text-on-surface-variant">SAVINGS: $15/user</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-error transition-colors">arrow_forward</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Preview -->
+<section class="py-32 px-6 z-10 relative">
+<div class="max-w-7xl mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">
+<div class="max-w-xl">
+<div class="font-label text-xs tracking-widest uppercase text-primary mb-4">Scaling Intelligence</div>
+<h2 class="text-4xl md:text-5xl font-headline font-black text-on-surface tracking-tight leading-none">Choose your node power.</h2>
+</div>
+<div class="flex bg-surface-container rounded-full p-1 border border-outline-variant/20">
+<button class="px-6 py-2 rounded-full bg-primary-container text-on-primary-container text-xs font-bold font-label">MONTHLY</button>
+<button class="px-6 py-2 rounded-full text-on-surface-variant text-xs font-bold font-label">ANNUAL (-20%)</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Tier 1 -->
+<div class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 flex flex-col">
+<div class="text-on-surface font-headline font-bold text-xl mb-2">Hobbyist</div>
+<div class="text-4xl font-headline font-black text-on-surface mb-6">$0<span class="text-sm text-on-surface-variant font-normal">/mo</span></div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> 5 Repository Scans/Day</li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> Basic Intelligence Reports</li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> Public Archive Access</li>
+</ul>
+<button class="w-full py-3 rounded-full border border-outline-variant text-on-surface font-bold text-sm hover:bg-white/5 transition-all">Get Started</button>
+</div>
+<!-- Tier 2 (Featured) -->
+<div class="bg-surface-container p-8 rounded-xl border-2 border-primary-container/40 flex flex-col relative scale-105 shadow-2xl shadow-primary-container/10">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary-container text-on-primary-container px-4 py-1 rounded-full text-[10px] font-black font-label tracking-widest">MOST POPULAR</div>
+<div class="text-on-surface font-headline font-bold text-xl mb-2">Professional</div>
+<div class="text-4xl font-headline font-black text-on-surface mb-6">$49<span class="text-sm text-on-surface-variant font-normal">/mo</span></div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface"><span class="material-symbols-outlined text-primary text-sm">check</span> Unlimited Bulk Ingest</li>
+<li class="flex items-center gap-3 text-sm text-on-surface"><span class="material-symbols-outlined text-primary text-sm">check</span> DeepSeek AI Analysis</li>
+<li class="flex items-center gap-3 text-sm text-on-surface"><span class="material-symbols-outlined text-primary text-sm">check</span> Priority Signal Alerts</li>
+<li class="flex items-center gap-3 text-sm text-on-surface"><span class="material-symbols-outlined text-primary text-sm">check</span> App Killer Comparison engine</li>
+</ul>
+<button class="w-full py-3 rounded-full bg-primary-container text-on-primary-container font-bold text-sm shadow-[0_0_15px_rgba(77,142,255,0.4)]">Go Pro</button>
+</div>
+<!-- Tier 3 -->
+<div class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 flex flex-col">
+<div class="text-on-surface font-headline font-bold text-xl mb-2">Sentinel</div>
+<div class="text-4xl font-headline font-black text-on-surface mb-6">$199<span class="text-sm text-on-surface-variant font-normal">/mo</span></div>
+<ul class="space-y-4 mb-12 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> Full Archive Export</li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> Custom Vector Indexing</li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> API Access</li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant"><span class="material-symbols-outlined text-primary text-sm">check</span> Dedicated Security Audit</li>
+</ul>
+<button class="w-full py-3 rounded-full border border-outline-variant text-on-surface font-bold text-sm hover:bg-white/5 transition-all">Contact Sales</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-slate-950 z-10 relative mt-20">
+<div class="grid grid-cols-2 gap-8 px-12 py-16 max-w-7xl mx-auto border-t border-white/5">
+<div class="col-span-2 md:col-span-1 space-y-4">
+<div class="text-slate-400 font-bold text-2xl font-headline">RS</div>
+<p class="font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-slate-500">© 2024 REPOSCOUT SENTINEL ARCHIVE</p>
+<div class="flex gap-4">
+<a class="text-slate-600 hover:text-blue-300 transition-all font-label text-[10px] tracking-widest uppercase" href="#">Twitter</a>
+<a class="text-slate-600 hover:text-blue-300 transition-all font-label text-[10px] tracking-widest uppercase" href="#">GitHub</a>
+</div>
+</div>
+<div class="col-span-2 md:col-span-1 grid grid-cols-2 gap-8">
+<div class="flex flex-col gap-3">
+<a class="font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-slate-600 hover:text-blue-300 transition-all" href="#">Privacy Protocol</a>
+<a class="font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-slate-600 hover:text-blue-300 transition-all" href="#">Terms of Engagement</a>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-slate-600 hover:text-blue-300 transition-all" href="#">System Status</a>
+<a class="font-['Space_Grotesk'] text-[10px] tracking-widest uppercase text-slate-600 hover:text-blue-300 transition-all" href="#">API Docs</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
