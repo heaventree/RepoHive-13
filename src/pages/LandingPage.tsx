@@ -62,20 +62,32 @@ function HeroTerminal() {
           </div>
           <div className="space-y-2.5">
             {[
-              { kills: 'Sentry replacement', name: 'GlitchTip', badge: 'VERIFIED' },
-              { kills: 'Intercom replacement', name: 'Chatwoot', badge: 'STABLE' },
-              { kills: 'Firebase replacement', name: 'Supabase', badge: 'STABLE' },
+              { kills: 'Sentry replacement', name: 'GlitchTip', badge: 'VERIFIED', delay: '0.10s', highlight: true },
+              { kills: 'Intercom replacement', name: 'Chatwoot', badge: 'STABLE', delay: '0.25s', highlight: false },
+              { kills: 'Firebase replacement', name: 'Supabase', badge: 'STABLE', delay: '0.40s', highlight: false },
             ].map((item) => (
               <div
                 key={item.name}
-                className="flex items-center justify-between p-3.5 rounded-lg group transition-all"
+                className="flex items-center justify-between p-3.5 rounded-lg group cursor-default"
                 style={{
-                  background: item.kills.includes('Sentry')
-                    ? 'rgba(147,0,10,0.10)'
-                    : 'rgba(34,42,61,0.50)',
-                  border: item.kills.includes('Sentry')
-                    ? '1px solid rgba(255,180,171,0.20)'
-                    : '1px solid rgba(66,71,84,0.10)',
+                  background: item.highlight ? 'rgba(147,0,10,0.10)' : 'rgba(34,42,61,0.50)',
+                  border: item.highlight ? '1px solid rgba(255,180,171,0.20)' : '1px solid rgba(66,71,84,0.10)',
+                  animation: `card-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) ${item.delay} both`,
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = 'translateY(-2px)';
+                  el.style.boxShadow = item.highlight
+                    ? '0 6px 20px rgba(147,0,10,0.20)'
+                    : '0 6px 20px rgba(0,0,0,0.25)';
+                  el.style.borderColor = item.highlight ? 'rgba(255,180,171,0.40)' : 'rgba(66,71,84,0.30)';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = 'translateY(0)';
+                  el.style.boxShadow = 'none';
+                  el.style.borderColor = item.highlight ? 'rgba(255,180,171,0.20)' : 'rgba(66,71,84,0.10)';
                 }}
               >
                 <div>
@@ -86,7 +98,14 @@ function HeroTerminal() {
                 </div>
                 <span
                   className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded"
-                  style={{ background: 'rgba(78,222,163,0.10)', color: TERTIARY, border: `1px solid rgba(78,222,163,0.20)` }}
+                  style={{
+                    background: 'rgba(78,222,163,0.10)',
+                    color: TERTIARY,
+                    border: `1px solid rgba(78,222,163,0.20)`,
+                    animation: item.badge === 'VERIFIED'
+                      ? 'badge-glow-pulse 2.2s ease-in-out 0.8s infinite'
+                      : undefined,
+                  }}
                 >
                   {item.badge}
                 </span>
