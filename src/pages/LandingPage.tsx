@@ -199,8 +199,7 @@ export function LandingPage() {
 
               {/* Headline — controlled size */}
               <h1
-                className="font-mono font-black text-white leading-[1.05] tracking-tight mb-5"
-                style={{ fontSize: 'clamp(2rem, 3.8vw, 3.25rem)' }}
+                className="font-mono font-black text-white tracking-tight text-[36px] mb-[25px]"
               >
                 All your bookmarked repos.
                 <br />
