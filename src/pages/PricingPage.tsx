@@ -4,15 +4,14 @@ import { Check, X, Zap } from 'lucide-react';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 
-/* ── Stitch-faithful palette ── */
-const PRIMARY        = '#adc6ff'; // periwinkle — text highlights
-const PRIMARY_CTR    = '#4d8eff'; // vivid blue — buttons / active
-const ON_PRIMARY_CTR = '#00285d'; // dark navy — text on blue buttons
-const TERTIARY       = '#4edea3'; // emerald — checkmarks
+/* ── Stitch palette ── */
+const PRIMARY        = '#adc6ff';
+const PRIMARY_CTR    = '#4d8eff';
+const ON_PRIMARY_CTR = '#00285d';
+const TERTIARY       = '#4edea3';
 const GLASS_BG       = 'rgba(15,23,42,0.82)';
 const GLASS_BORDER   = 'rgba(255,255,255,0.06)';
-const SURFACE_LOW    = '#131b2e';
-const SURFACE_CTR    = '#171f33';
+const SURFACE_HIGH   = '#222a3d';
 
 function Orbs() {
   return (
@@ -27,67 +26,95 @@ function Orbs() {
 
 const PLANS = [
   {
-    tier: 'TIER_01',
-    name: 'Free',
+    tier: 'FREE',
+    name: 'Explorer',
     monthlyPrice: 0,
     annualPrice: 0,
-    cta: 'Initialize Node',
+    cta: 'Start Free',
     ctaStyle: 'ghost' as const,
-    desc: 'For individuals exploring OSS intelligence.',
+    desc: 'For devs who want to try RepoScout before committing.',
+    note: null,
     features: [
-      { label: '50 repos ingested', included: true },
-      { label: 'Basic AI analysis', included: true },
-      { label: 'App Killers view', included: true },
-      { label: 'Public repos only', included: true },
-      { label: 'Vector semantic search', included: false },
-      { label: 'Project workspaces', included: false },
-      { label: 'API access', included: false },
-      { label: 'Private repos', included: false },
+      { label: '25 repos in your library',                     included: true },
+      { label: 'AI analysis on all your repos',                included: true },
+      { label: 'Plain-English semantic search',                included: true },
+      { label: 'Public repos only',                            included: true },
+      { label: 'Pre-loaded App Killers library (370+ repos)',  included: false },
+      { label: 'Staleness monitoring & alerts',                included: false },
+      { label: 'API key for IDE integration',                  included: false },
+      { label: 'Project workspaces',                           included: false },
     ],
   },
   {
-    tier: 'TIER_02',
-    name: 'Pro',
-    monthlyPrice: 49,
-    annualPrice: 39,
-    cta: 'Elevate Access',
+    tier: 'SOLO',
+    name: 'Solo',
+    monthlyPrice: 19,
+    annualPrice: 15,
+    cta: 'Go Solo',
     ctaStyle: 'primary' as const,
     featured: true,
-    desc: 'For engineering teams running serious build vs buy analysis.',
+    desc: 'For individual devs and designers with serious repo habits.',
+    note: 'Includes ~$1–2/month in AI costs per 1,000 repos analysed.',
     features: [
-      { label: 'Unlimited bulk ingest', included: true },
-      { label: 'DeepSeek AI analysis', included: true },
-      { label: 'App Killers engine', included: true },
-      { label: 'Public + private repos', included: true },
-      { label: 'Gemini vector search', included: true },
-      { label: 'Project workspaces', included: true },
-      { label: 'API access', included: true },
-      { label: 'Priority support', included: false },
+      { label: '1,000 repos in your library',                  included: true },
+      { label: 'AI analysis + weekly re-analysis',             included: true },
+      { label: 'Plain-English semantic search',                included: true },
+      { label: 'Public + private repos',                       included: true },
+      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Staleness monitoring & alerts',                included: true },
+      { label: '1 API key for IDE integration',                included: true },
+      { label: 'Project workspaces',                           included: true },
     ],
   },
   {
-    tier: 'TIER_03',
-    name: 'Enterprise',
-    monthlyPrice: null,
-    annualPrice: null,
-    cta: 'Talk to Us',
+    tier: 'STUDIO',
+    name: 'Studio',
+    monthlyPrice: 49,
+    annualPrice: 39,
+    cta: 'Go Studio',
     ctaStyle: 'ghost' as const,
-    desc: 'For enterprises with custom data and compliance requirements.',
+    desc: 'For dev teams sharing a curated repo intelligence layer.',
+    note: 'Up to 25 seats. Shared library pool, each member can add repos.',
     features: [
-      { label: 'Everything in Pro', included: true },
-      { label: 'Custom vector indexing', included: true },
-      { label: 'Dedicated infrastructure', included: true },
-      { label: 'Gemini vector search', included: true },
-      { label: 'Project workspaces', included: true },
-      { label: 'SSO + SCIM provisioning', included: true },
-      { label: 'API white-labeling', included: true },
-      { label: 'Priority support + SLA', included: true },
+      { label: '10,000 repos shared library',                  included: true },
+      { label: 'AI analysis + daily re-analysis',              included: true },
+      { label: 'Plain-English semantic search',                included: true },
+      { label: 'Public + private repos',                       included: true },
+      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Staleness monitoring & alerts',                included: true },
+      { label: '25 API keys (one per seat)',                   included: true },
+      { label: 'Project workspaces + team collaboration',      included: true },
     ],
+  },
+];
+
+/* ── Small FAQ for trust ── */
+const FAQS = [
+  {
+    q: 'Is there really no credit card for the free plan?',
+    a: 'Correct — Explorer is free indefinitely. 25 repos, full AI analysis, no time limit.',
+  },
+  {
+    q: 'What counts as a "repo" in my library?',
+    a: 'Any GitHub repository you add via URL. Pre-loaded App Killers repos don\'t count against your limit.',
+  },
+  {
+    q: 'What does "weekly re-analysis" mean?',
+    a: 'RepoScout checks your repos every week for staleness signals: archive status, last commit date, star velocity, license changes, open CVEs.',
+  },
+  {
+    q: 'Which IDEs does the API support?',
+    a: 'Any tool that supports custom HTTP calls — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Full API docs ship with your key.',
+  },
+  {
+    q: 'Can I upgrade or downgrade at any time?',
+    a: 'Yes. Upgrade immediately, downgrade at end of billing period. No contracts, cancel anytime.',
   },
 ];
 
 export function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
@@ -102,20 +129,21 @@ export function PricingPage() {
             <div className="inline-block mb-6">
               <span
                 className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full"
-                style={{ color: PRIMARY, border: `1px solid rgba(173,198,255,0.2)`, background: 'rgba(173,198,255,0.05)' }}
+                style={{ color: PRIMARY, border: `1px solid rgba(173,198,255,0.20)`, background: 'rgba(173,198,255,0.05)' }}
               >
-                Global Infrastructure Pricing
+                Simple, honest pricing
               </span>
             </div>
             <h1
               className="font-mono font-black tracking-tight leading-tight mb-6"
               style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
             >
-              The Cost of{' '}
-              <span style={{ color: PRIMARY }}>Intelligence</span>
+              Your repo library.
+              <br />
+              <span style={{ color: PRIMARY }}>Your price point.</span>
             </h1>
             <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
-              From lone operators to global engineering orgs. Tier up as your data intensity scales.
+              Free forever for individuals getting started. Solo for serious devs. Studio for teams who need a shared intelligence layer.
             </p>
 
             {/* Billing toggle */}
@@ -150,7 +178,7 @@ export function PricingPage() {
               return (
                 <div
                   key={plan.tier}
-                  className={`relative flex flex-col transition-all duration-300 rounded-xl p-10 ${
+                  className={`relative flex flex-col rounded-xl p-10 transition-all duration-300 ${
                     isFeatured ? 'scale-105 z-10' : 'hover:bg-white/[0.02]'
                   }`}
                   style={{
@@ -160,9 +188,7 @@ export function PricingPage() {
                     border: isFeatured
                       ? `2px solid rgba(173,198,255,0.30)`
                       : `1px solid rgba(255,255,255,0.05)`,
-                    boxShadow: isFeatured
-                      ? '0 0 24px rgba(77,142,255,0.25)'
-                      : 'none',
+                    boxShadow: isFeatured ? '0 0 24px rgba(77,142,255,0.25)' : 'none',
                   }}
                 >
                   {isFeatured && (
@@ -171,12 +197,12 @@ export function PricingPage() {
                       style={{ background: PRIMARY_CTR }}
                     >
                       <span className="font-mono text-[10px] font-black tracking-widest uppercase" style={{ color: ON_PRIMARY_CTR }}>
-                        Recommended
+                        Most Popular
                       </span>
                     </div>
                   )}
 
-                  {/* Tier label */}
+                  {/* Tier label + name */}
                   <div className="mb-8">
                     <h3
                       className="font-mono text-xs tracking-widest uppercase mb-2"
@@ -185,36 +211,34 @@ export function PricingPage() {
                       {plan.tier}
                     </h3>
                     <h4 className="font-mono text-3xl font-bold tracking-tight text-white">{plan.name}</h4>
+                    <p className="text-xs leading-relaxed mt-2" style={{ color: '#8c909f' }}>{plan.desc}</p>
                   </div>
 
                   {/* Price */}
-                  <div className="mb-10">
-                    {price === null ? (
-                      <>
-                        <span className="font-mono text-4xl font-black tracking-tighter text-white">Custom</span>
-                        <span className="font-mono text-xs uppercase tracking-widest text-slate-500 ml-2">/ managed</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-mono text-5xl font-black tracking-tighter text-white">${price}</span>
-                        <span className="font-mono text-xs uppercase tracking-widest text-slate-500 ml-2">/ month</span>
-                        {billing === 'annual' && price > 0 && (
-                          <div className="text-[10px] font-mono mt-1" style={{ color: TERTIARY }}>
-                            Billed annually — ${price * 12}/yr
-                          </div>
-                        )}
-                      </>
+                  <div className="mb-8">
+                    <span className="font-mono font-black tracking-tighter text-white" style={{ fontSize: '3.5rem', lineHeight: 1 }}>
+                      {price === 0 ? 'Free' : `$${price}`}
+                    </span>
+                    {price > 0 && (
+                      <span className="font-mono text-xs uppercase tracking-widest ml-2" style={{ color: '#8c909f' }}>
+                        / month {billing === 'annual' ? '· billed annually' : ''}
+                      </span>
+                    )}
+                    {plan.note && (
+                      <p className="text-[10px] font-mono mt-2 leading-relaxed" style={{ color: '#424754' }}>
+                        {plan.note}
+                      </p>
                     )}
                   </div>
 
                   {/* Features */}
-                  <ul className="space-y-4 mb-12 flex-grow">
+                  <ul className="space-y-4 mb-10 flex-grow">
                     {plan.features.map((f) => (
-                      <li key={f.label} className={`flex items-center gap-3 text-sm ${f.included ? (isFeatured ? 'text-white' : '#c2c6d6') : 'text-slate-600'}`}>
+                      <li key={f.label} className="flex items-start gap-3 text-sm">
                         {f.included ? (
-                          <Check className="w-[18px] h-[18px] flex-none" style={{ color: TERTIARY }} />
+                          <Check className="w-[18px] h-[18px] flex-none mt-0.5" style={{ color: TERTIARY }} />
                         ) : (
-                          <X className="w-[18px] h-[18px] flex-none text-slate-700" />
+                          <X className="w-[18px] h-[18px] flex-none mt-0.5 text-slate-700" />
                         )}
                         <span style={{ color: f.included ? (isFeatured ? '#dae2fd' : '#c2c6d6') : '#475569' }}>
                           {f.label}
@@ -225,11 +249,11 @@ export function PricingPage() {
 
                   {/* CTA */}
                   <Link
-                    to={price === null ? '#' : '/sign-up'}
+                    to="/sign-up"
                     className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
                     style={plan.ctaStyle === 'primary'
-                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.4)' }
-                      : { background: '#2d3449', color: PRIMARY }
+                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
+                      : { background: SURFACE_HIGH, color: PRIMARY }
                     }
                   >
                     {plan.cta}
@@ -239,29 +263,81 @@ export function PricingPage() {
             })}
           </div>
 
-          {/* ── System status bar ── */}
+          {/* ── Cost transparency callout ── */}
+          <div
+            className="mt-12 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            style={{ background: 'rgba(78,222,163,0.05)', border: '1px solid rgba(78,222,163,0.15)' }}
+          >
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(78,222,163,0.10)' }}>
+              <Zap className="w-5 h-5" style={{ color: TERTIARY }} />
+            </div>
+            <div>
+              <p className="text-sm font-mono font-bold" style={{ color: TERTIARY }}>Honest AI cost transparency</p>
+              <p className="text-xs leading-relaxed mt-1" style={{ color: '#c2c6d6' }}>
+                We've analysed 374 repos to date. Total AI cost: ~$0.35 (DeepSeek + Gemini embeddings). A Solo user adding 1,000 repos generates roughly $1–2 in AI costs per month.
+                Our pricing covers this comfortably — and we'll never throttle you silently.
+              </p>
+            </div>
+          </div>
+
+          {/* ── FAQ ── */}
+          <div className="mt-24">
+            <h2 className="font-mono font-black text-white text-3xl text-center mb-12 tracking-tight">
+              Common questions
+            </h2>
+            <div className="max-w-3xl mx-auto space-y-3">
+              {FAQS.map((faq, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl overflow-hidden transition-all"
+                  style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
+                >
+                  <button
+                    className="w-full text-left px-6 py-5 flex items-center justify-between gap-4"
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  >
+                    <span className="font-mono font-bold text-white text-sm">{faq.q}</span>
+                    <span
+                      className="text-xl flex-none transition-transform duration-200"
+                      style={{
+                        color: PRIMARY,
+                        transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
+                      }}
+                    >
+                      +
+                    </span>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-6 pb-5 text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── System status ── */}
           <div
             className="mt-16 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
             style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
           >
             <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center flex-none"
-                style={{ background: `rgba(78,222,163,0.1)`, border: `1px solid rgba(78,222,163,0.2)` }}
-              >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none"
+                style={{ background: 'rgba(78,222,163,0.10)', border: `1px solid rgba(78,222,163,0.20)` }}>
                 <Zap className="w-5 h-5" style={{ color: TERTIARY }} />
               </div>
               <div>
-                <div className="text-sm font-mono font-bold text-white">Grid Operational Stability</div>
-                <div className="text-xs text-slate-500 mt-0.5">All nodes reporting nominal performance. Latency at 4ms global average.</div>
+                <div className="text-sm font-mono font-bold text-white">Infrastructure Operational</div>
+                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
               </div>
             </div>
             <div
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider whitespace-nowrap"
-              style={{ background: 'rgba(78,222,163,0.1)', border: '1px solid rgba(78,222,163,0.2)', color: TERTIARY }}
+              style={{ background: 'rgba(78,222,163,0.10)', border: '1px solid rgba(78,222,163,0.20)', color: TERTIARY }}
             >
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: TERTIARY }} />
-              Live_Pulse
+              All Systems Live
             </div>
           </div>
 
