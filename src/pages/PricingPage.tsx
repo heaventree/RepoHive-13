@@ -263,19 +263,18 @@ export function PricingPage() {
             })}
           </div>
 
-          {/* ── Cost transparency callout ── */}
+          {/* ── Value callout ── */}
           <div
             className="mt-12 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: 'rgba(78,222,163,0.05)', border: '1px solid rgba(78,222,163,0.15)' }}
+            style={{ background: 'rgba(77,142,255,0.05)', border: '1px solid rgba(77,142,255,0.15)' }}
           >
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(78,222,163,0.10)' }}>
-              <Zap className="w-5 h-5" style={{ color: TERTIARY }} />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(77,142,255,0.10)' }}>
+              <Zap className="w-5 h-5" style={{ color: PRIMARY_CTR }} />
             </div>
             <div>
-              <p className="text-sm font-mono font-bold" style={{ color: TERTIARY }}>Honest AI cost transparency</p>
+              <p className="text-sm font-mono font-bold" style={{ color: PRIMARY }}>No analysis limits, no hidden throttles</p>
               <p className="text-xs leading-relaxed mt-1" style={{ color: '#c2c6d6' }}>
-                We've analysed 374 repos to date. Total AI cost: ~$0.35 (DeepSeek + Gemini embeddings). A Solo user adding 1,000 repos generates roughly $1–2 in AI costs per month.
-                Our pricing covers this comfortably — and we'll never throttle you silently.
+                Every repo you add gets full AI analysis, weekly staleness monitoring, and vector search indexing — included in your plan, no add-ons required. What you see is what you get.
               </p>
             </div>
           </div>
