@@ -178,6 +178,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   const handleDismissSummary = () => {
     setSummary(null);
     setStream([]);
+    setUrls('');
     removeTimers.current.forEach(t => clearTimeout(t));
     removeTimers.current.clear();
   };
