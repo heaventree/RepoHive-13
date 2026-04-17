@@ -72,36 +72,38 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
   };
 
   const handleInitiate = async () => {
-    const urlList = urls.split('\n').filter(u => u.trim().startsWith('http'));
+    const urlList = [...new Set(urls.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')))];
     if (urlList.length === 0) return;
 
     setIsScanning(true);
-    setStream([]);
+    setStream(urlList.map(url => ({ id: url.split('/').slice(-2).join('/'), status: 'FETCHING', progress: 10 })));
 
-    for (const url of urlList) {
+    const CONCURRENCY = 5;
+
+    const processUrl = async (url: string) => {
       const id = url.split('/').slice(-2).join('/');
-      setStream(prev => [{ id, status: 'FETCHING', progress: 10 }, ...prev]);
-
+      setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'ANALYZING', progress: 40 } : item));
       try {
-        setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'ANALYZING', progress: 40 } : item));
-
         const res = await fetch('/api/ingest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
-
         if (!res.ok) {
           const err = await res.json().catch(() => ({ error: res.statusText }));
           throw new Error(err.error || res.statusText);
         }
-
         setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'SCORING', progress: 80 } : item));
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 200));
         setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'COMPLETE', progress: 100 } : item));
       } catch (error: any) {
         setStream(prev => prev.map(item => item.id === id ? { ...item, status: 'FAILED', error: error.message, progress: 0 } : item));
       }
+    };
+
+    // Process in parallel batches of CONCURRENCY
+    for (let i = 0; i < urlList.length; i += CONCURRENCY) {
+      await Promise.all(urlList.slice(i, i + CONCURRENCY).map(processUrl));
     }
 
     setIsScanning(false);
