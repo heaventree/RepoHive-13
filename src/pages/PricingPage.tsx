@@ -32,7 +32,7 @@ const PLANS = [
     annualPrice: 0,
     cta: 'Start Free',
     ctaStyle: 'ghost' as const,
-    desc: 'For devs who want to try RepoScout before committing.',
+    desc: 'For devs who want to try RepoHive before committing.',
     note: null,
     features: [
       { label: '25 repos in your library',                     included: true },
@@ -100,7 +100,7 @@ const FAQS = [
   },
   {
     q: 'What does "weekly re-analysis" mean?',
-    a: 'RepoScout checks your repos every week for staleness signals: archive status, last commit date, star velocity, license changes, open CVEs.',
+    a: 'RepoHive checks your repos every week for staleness signals: archive status, last commit date, star velocity, license changes, open CVEs.',
   },
   {
     q: 'Which IDEs does the API support?',

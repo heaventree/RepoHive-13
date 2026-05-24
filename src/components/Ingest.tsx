@@ -104,7 +104,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
   /* ── Main scan ── */
   const handleInitiate = async () => {
-    const urlList = [...new Set(urls.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')))];
+    const urlList = [...new Set<string>(urls.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')))];
     if (urlList.length === 0) return;
 
     // Clear any lingering timers from previous run

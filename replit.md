@@ -1,4 +1,4 @@
-# RepoScout — Replit Setup
+# RepoHive — Replit Setup
 
 ## Overview
 GitHub repository scouting tool. Paste GitHub URLs, get AI-analyzed repo cards with scores, tags, and integration notes. Built on Vite + React + Express + SQLite.
@@ -6,7 +6,7 @@ GitHub repository scouting tool. Paste GitHub URLs, get AI-analyzed repo cards w
 ## Architecture
 - **Frontend**: React + TypeScript + Tailwind CSS v4 (built to `dist/`)
 - **Backend**: Express on port 5000, serving static `dist/` in production
-- **Database**: SQLite (`reposcout.db`) — persistent across restarts
+- **Database**: SQLite (`repohive.db`) — persistent across restarts
 - **AI**: Gemini API (server-side only, via `GEMINI_API_KEY` secret)
 - **GitHub**: GitHub API (server-side only, via `GITHUB_TOKEN` secret)
 

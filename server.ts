@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import net from "net";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, "reposcout.db");
+const dbPath = path.join(__dirname, "repohive.db");
 const db = new Database(dbPath);
 
 console.log(`Database initialized at: ${dbPath}`);
@@ -189,7 +189,7 @@ async function startServer() {
   }
 
   async function fetchGitHub(path: string) {
-    const headers: Record<string, string> = { 'User-Agent': 'RepoScout/2' };
+    const headers: Record<string, string> = { 'User-Agent': 'RepoHive/2' };
     if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
     const res = await fetch(`https://api.github.com${path}`, { headers });
     if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
@@ -199,7 +199,7 @@ async function startServer() {
   // Resolve a truncated repo name by searching GitHub for owner + partial name
   async function resolveRepo(owner: string, partial: string): Promise<any | null> {
     try {
-      const headers: Record<string, string> = { 'User-Agent': 'RepoScout/2' };
+      const headers: Record<string, string> = { 'User-Agent': 'RepoHive/2' };
       if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
       const q = encodeURIComponent(`user:${owner} ${partial} in:name`);
       const res = await fetch(`https://api.github.com/search/repositories?q=${q}&per_page=1&sort=stars`, { headers });

@@ -14,9 +14,9 @@ export function MarketingFooter() {
               className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
               style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
             >
-              RS
+              RH
             </div>
-            <span className="font-bold text-sm text-white font-mono">RepoScout</span>
+            <span className="font-bold text-sm text-white font-mono">RepoHive</span>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">
             OSS intelligence for engineering teams that care about what they ship.
@@ -62,7 +62,7 @@ export function MarketingFooter() {
         className="border-t px-6 py-4 flex items-center justify-between max-w-7xl mx-auto"
         style={{ borderColor: 'rgba(255,255,255,0.04)' }}
       >
-        <span className="text-[10px] font-mono text-slate-700">© 2025 RepoScout. All rights reserved.</span>
+        <span className="text-[10px] font-mono text-slate-700">© 2025 RepoHive. All rights reserved.</span>
         <span className="text-[10px] font-mono text-slate-700">Built for engineers, by engineers.</span>
       </div>
     </footer>

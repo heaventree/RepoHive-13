@@ -116,7 +116,7 @@ function AnimatedHeroCard() {
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#febc2e' }} />
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#28c840' }} />
         <span className="ml-3 text-[9px] font-mono uppercase tracking-widest" style={{ color: '#424754' }}>
-          reposcout / workspace
+          repohive / workspace
         </span>
         <span
           className="ml-auto text-[9px] font-mono px-2 py-0.5 rounded"
@@ -254,7 +254,7 @@ function Orbs() {
 /* ── Pain points ── */
 const PAIN_POINTS = [
   { icon: <BookmarkX className="w-6 h-6" />, title: 'Stop losing repos in your bookmarks',    desc: "You've saved hundreds of great repos across browser bookmarks, GitHub stars, Notion pages, and random text files. You never find them when you need them.", color: '#ff6b6b' },
-  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived, abandoned, license-changed, security issue. RepoScout monitors your list and alerts you before you build on a foundation that crumbles.",     color: AMBER },
+  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived, abandoned, license-changed, security issue. RepoHive monitors your list and alerts you before you build on a foundation that crumbles.",     color: AMBER },
   { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your own curated list first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
 ];
 
@@ -264,7 +264,7 @@ const FEATURES = [
   { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Updated weekly.',                             color: PRIMARY_CTR },
   { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '370+ pre-loaded OSS alternatives to expensive SaaS tools. Available on Solo and Studio as a curated starting point.',                color: AMBER },
   { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos, license changes, dropped stars, and security flags. Know before your team does.',                   color: TERTIARY },
-  { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoScout to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
+  { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoHive to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
   { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Add a project and get AI-curated recommendations.',                        color: '#60a5fa' },
 ];
 
@@ -476,7 +476,7 @@ export function LandingPage() {
                 <span style={{ color: 'rgba(192,132,252,0.60)' }}>inside every tool you use.</span>
               </h2>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                One API key. Connect RepoScout to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your own curated list.
+                One API key. Connect RepoHive to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your own curated list.
               </p>
               <div className="space-y-3 pt-2">
                 {[
@@ -505,7 +505,7 @@ export function LandingPage() {
               <div className="p-4 rounded-lg font-mono text-xs space-y-1"
                 style={{ background: '#020810', border: '1px solid rgba(77,142,255,0.15)' }}>
                 <div style={{ color: '#424754' }}># Example API call</div>
-                <div><span style={{ color: '#c084fc' }}>GET</span> <span style={{ color: PRIMARY }}>api.reposcout.io/v1/search</span></div>
+                <div><span style={{ color: '#c084fc' }}>GET</span> <span style={{ color: PRIMARY }}>api.repohive.cloud/v1/search</span></div>
                 <div style={{ color: '#8c909f' }}>  ?q=auth+library+nextjs&amp;scope=my_repos</div>
                 <div style={{ color: TERTIARY }}># Returns your curated list first</div>
               </div>

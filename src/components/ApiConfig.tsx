@@ -61,7 +61,7 @@ export const ApiConfig: React.FC = () => {
           <div>
             <h4 className="text-lg font-bold text-white mb-2">Connect Your AI Coding Agents</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-mono">
-              RepoScout acts as a private, curated library for your AI coding assistants. You can connect tools like <span className="text-white font-bold">Lovable, Replit, Bolt, or Cursor</span> directly to your repository list. 
+              RepoHive acts as a private, curated library for your AI coding assistants. You can connect tools like <span className="text-white font-bold">Lovable, Replit, Bolt, or Cursor</span> directly to your repository list. 
               By providing your API key, these agents can "read" your library to find the best components and logic to use when building your projects.
             </p>
           </div>
