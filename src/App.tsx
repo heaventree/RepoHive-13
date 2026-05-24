@@ -9,6 +9,8 @@ import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
 import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { UserButton } from '@clerk/react';
+import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
@@ -163,12 +165,16 @@ export default function App() {
           <div className="w-px h-4 bg-white/8 mx-1" />
 
           {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
-          >
-            AD
-          </div>
+          {AUTH_ENABLED ? (
+            <UserButton afterSignOutUrl="/" />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
+            >
+              AD
+            </div>
+          )}
         </div>
       </header>
 

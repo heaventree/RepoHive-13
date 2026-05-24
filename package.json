@@ -11,8 +11,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.61.5",
     "@clerk/express": "^2.1.4",
+    "@clerk/react": "^6.7.1",
     "@libsql/client": "^0.17.3",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",

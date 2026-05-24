@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Flame } from 'lucide-react';
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { AUTH_ENABLED } from '../../auth';
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -66,19 +68,51 @@ export function MarketingNav() {
 
         {/* CTA */}
         <div className="flex items-center gap-2">
-          <Link
-            to="/sign-in"
-            className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/sign-up"
-            className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
-          >
-            Start Free
-          </Link>
+          {AUTH_ENABLED ? (
+            <>
+              <Show when="signed-out">
+                <SignInButton mode="modal">
+                  <button className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+                  >
+                    Start Free
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Link
+                  to="/app"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+                >
+                  Open App
+                </Link>
+                <UserButton afterSignOutUrl="/" />
+              </Show>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/sign-in"
+                className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/sign-up"
+                className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+              >
+                Start Free
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
