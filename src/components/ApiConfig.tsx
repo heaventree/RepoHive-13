@@ -13,31 +13,45 @@ import {
   Activity
 } from 'lucide-react';
 
+interface ApiKey {
+  id: number;
+  name: string;
+  key_prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+}
+
 export const ApiConfig: React.FC = () => {
+  // The full key is only ever returned once, at creation. After that we can
+  // only show the masked prefix from the list.
   const [externalApiKey, setExternalApiKey] = useState('');
+  const [keys, setKeys] = useState<ApiKey[]>([]);
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/config')
+  const loadKeys = () => {
+    fetch('/api/keys')
       .then(res => res.json())
-      .then(data => {
-        if (data.external_api_key) setExternalApiKey(data.external_api_key);
-      });
-  }, []);
+      .then(data => { if (Array.isArray(data)) setKeys(data); })
+      .catch(() => {});
+  };
+
+  useEffect(loadKeys, []);
 
   const generateApiKey = async () => {
     setIsGenerating(true);
-    const newKey = 'rs_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
-    await fetch('/api/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'external_api_key', value: newKey })
-    });
-    
-    setExternalApiKey(newKey);
-    setIsGenerating(false);
+    try {
+      const res = await fetch('/api/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'IDE integration' })
+      });
+      const data = await res.json();
+      if (data.key) setExternalApiKey(data.key);
+      loadKeys();
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -82,7 +96,11 @@ export const ApiConfig: React.FC = () => {
                 <label className="text-xs uppercase font-bold text-slate-500 font-mono tracking-widest">Your API Key</label>
                 <div className="flex gap-2">
                   <div className="flex-1 bg-bg-dark border border-border-main p-3 rounded font-mono text-sm text-accent-blue break-all shadow-inner min-h-[44px] flex items-center">
-                    {externalApiKey || <span className="text-slate-600 italic">No key generated yet</span>}
+                    {externalApiKey
+                      ? externalApiKey
+                      : keys.length > 0
+                        ? <span className="text-slate-400">{keys[0].key_prefix}{'•'.repeat(24)}</span>
+                        : <span className="text-slate-600 italic">No key generated yet</span>}
                   </div>
                   <button 
                     onClick={generateApiKey}
@@ -102,7 +120,7 @@ export const ApiConfig: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-[10px] text-slate-500 font-mono mt-1 italic">
-                  Warning: Generating a new key will immediately invalidate the previous one.
+                  Copy your key now — for security it is only shown once. You can revoke it any time.
                 </p>
               </div>
             </div>
