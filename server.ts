@@ -1,44 +1,92 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
-import net from "net";
+import { all, get, run, execScript } from "./db";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, "repohive.db");
-const db = new Database(dbPath);
 
-console.log(`Database initialized at: ${dbPath}`);
+// ── Schema ───────────────────────────────────────────────────────────────────
+async function initSchema() {
+  await execScript(`
+    CREATE TABLE IF NOT EXISTS repos (
+      id TEXT PRIMARY KEY,
+      owner TEXT,
+      name TEXT,
+      url TEXT UNIQUE,
+      status TEXT DEFAULT 'ACTIVE',
+      score INTEGER DEFAULT 0,
+      language TEXT,
+      license TEXT,
+      stars INTEGER DEFAULT 0,
+      forks INTEGER DEFAULT 0,
+      issues INTEGER DEFAULT 0,
+      last_push TEXT,
+      description TEXT,
+      readme TEXT,
+      ai_analysis TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
 
-// Initialize Database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS repos (
-    id TEXT PRIMARY KEY,
-    owner TEXT,
-    name TEXT,
-    url TEXT UNIQUE,
-    status TEXT DEFAULT 'ACTIVE',
-    score INTEGER DEFAULT 0,
-    language TEXT,
-    license TEXT,
-    stars INTEGER DEFAULT 0,
-    forks INTEGER DEFAULT 0,
-    issues INTEGER DEFAULT 0,
-    last_push TEXT,
-    description TEXT,
-    readme TEXT,
-    ai_analysis TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+    CREATE TABLE IF NOT EXISTS snapshots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      repo_id TEXT,
+      score INTEGER,
+      stars INTEGER,
+      issues INTEGER,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(repo_id) REFERENCES repos(id)
+    );
 
-// Safety check for existing databases
-try { db.exec("ALTER TABLE repos ADD COLUMN ai_analysis TEXT"); } catch {}
-try { db.exec("ALTER TABLE repos ADD COLUMN enterpriseTier INTEGER DEFAULT 0"); } catch {}
-try { db.exec("ALTER TABLE repos ADD COLUMN comparableApp TEXT"); } catch {}
-try { db.exec("ALTER TABLE repos ADD COLUMN embedding TEXT"); } catch {}
+    CREATE TABLE IF NOT EXISTS projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      description TEXT,
+      constraints TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS pinned_repos (
+      project_id INTEGER,
+      repo_id TEXT,
+      notes TEXT,
+      PRIMARY KEY(project_id, repo_id),
+      FOREIGN KEY(project_id) REFERENCES projects(id),
+      FOREIGN KEY(repo_id) REFERENCES repos(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS project_recommendations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      repo_id TEXT NOT NULL,
+      fit_score INTEGER,
+      rationale TEXT,
+      mode TEXT,
+      saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(project_id, repo_id),
+      FOREIGN KEY(project_id) REFERENCES projects(id),
+      FOREIGN KEY(repo_id) REFERENCES repos(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+  `);
+
+  // Additive migrations for databases created by older versions.
+  const migrations = [
+    "ALTER TABLE repos ADD COLUMN ai_analysis TEXT",
+    "ALTER TABLE repos ADD COLUMN enterpriseTier INTEGER DEFAULT 0",
+    "ALTER TABLE repos ADD COLUMN comparableApp TEXT",
+    "ALTER TABLE repos ADD COLUMN embedding TEXT",
+  ];
+  for (const m of migrations) {
+    try { await run(m); } catch {}
+  }
+}
 
 // ── Vector helpers ──────────────────────────────────────────────────────────
 const embeddingCache = new Map<string, number[]>();
@@ -98,8 +146,8 @@ function buildEmbedText(repo: any, ai: any = {}): string {
   return [repo.name, repo.description, ai.summary, (ai.tags || []).join(' '), ai.category].filter(Boolean).join(' ');
 }
 
-function loadEmbeddingCache() {
-  const rows = db.prepare("SELECT id, embedding FROM repos WHERE embedding IS NOT NULL").all() as any[];
+async function loadEmbeddingCache() {
+  const rows = await all<any>("SELECT id, embedding FROM repos WHERE embedding IS NOT NULL");
   embeddingCache.clear();
   for (const row of rows) {
     try { embeddingCache.set(row.id, JSON.parse(row.embedding)); } catch {}
@@ -108,61 +156,15 @@ function loadEmbeddingCache() {
 }
 // ────────────────────────────────────────────────────────────────────────────
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS snapshots (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    repo_id TEXT,
-    score INTEGER,
-    stars INTEGER,
-    issues INTEGER,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(repo_id) REFERENCES repos(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    description TEXT,
-    constraints TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS pinned_repos (
-    project_id INTEGER,
-    repo_id TEXT,
-    notes TEXT,
-    PRIMARY KEY(project_id, repo_id),
-    FOREIGN KEY(project_id) REFERENCES projects(id),
-    FOREIGN KEY(repo_id) REFERENCES repos(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS project_recommendations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER NOT NULL,
-    repo_id TEXT NOT NULL,
-    fit_score INTEGER,
-    rationale TEXT,
-    mode TEXT,
-    saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(project_id, repo_id),
-    FOREIGN KEY(project_id) REFERENCES projects(id),
-    FOREIGN KEY(repo_id) REFERENCES repos(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS config (
-    key TEXT PRIMARY KEY,
-    value TEXT
-  );
-`);
-
 async function startServer() {
   const app = express();
   const PORT = parseInt(process.env.PORT || "24678", 10);
 
   app.use(express.json());
 
-  // Load vector cache on startup
-  loadEmbeddingCache();
+  // Initialize schema and load the vector cache on startup
+  await initSchema();
+  await loadEmbeddingCache();
 
   // --- Ingest helpers ---
   function computeScore(stars: number, forks: number, issues: number, lastPush: string): number {
@@ -301,7 +303,7 @@ Return ONLY valid JSON with this exact structure:
       const id = `${canonicalOwner}/${canonicalName}`;
 
       // Check for duplicates
-      const existing = db.prepare('SELECT id FROM repos WHERE id = ?').get(id);
+      const existing = await get('SELECT id FROM repos WHERE id = ?', [id]);
       if (existing) return res.status(409).json({ error: `Repo ${id} already exists in library` });
 
       const stars     = data.stargazers_count ?? 0;
@@ -334,7 +336,7 @@ Return ONLY valid JSON with this exact structure:
       const aiResult = await deepseekAnalyze(id, desc, language, topics, readme, category);
       const aiAnalysis = aiResult ?? fallbackAnalysis;
 
-      const stmt = db.prepare(`
+      await run(`
         INSERT INTO repos (id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
@@ -342,18 +344,17 @@ Return ONLY valid JSON with this exact structure:
           last_push=excluded.last_push, score=excluded.score,
           readme=excluded.readme, ai_analysis=excluded.ai_analysis,
           updated_at=CURRENT_TIMESTAMP
-      `);
-      stmt.run(id, canonicalOwner, canonicalName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis));
-      db.prepare("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)").run(id, score, stars, issues);
+      `, [id, canonicalOwner, canonicalName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis)]);
+      await run("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)", [id, score, stars, issues]);
 
       console.log(`Ingested ${id} — score: ${score}, category: ${category}`);
       res.json({ success: true, id, score, category });
 
       // Auto-embed after ingest — don't block the response
       const embedText = buildEmbedText({ name: canonicalName, description: desc }, aiAnalysis);
-      generateEmbedding(embedText).then(emb => {
+      generateEmbedding(embedText).then(async emb => {
         if (emb) {
-          db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), id);
+          await run("UPDATE repos SET embedding = ? WHERE id = ?", [JSON.stringify(emb), id]);
           embeddingCache.set(id, emb);
           console.log(`Auto-embedded ${id} (cache: ${embeddingCache.size})`);
         }
@@ -367,7 +368,7 @@ Return ONLY valid JSON with this exact structure:
   // POST /api/recommend — vector search with keyword fallback
   app.post("/api/recommend", async (req, res) => {
     const { brief = '', constraints, projectId } = req.body;
-    const repos = db.prepare("SELECT id, owner, name, url, stars, forks, issues, language, license, last_push, description, score FROM repos").all() as any[];
+    const repos = await all<any>("SELECT id, owner, name, url, stars, forks, issues, language, license, last_push, description, score FROM repos");
 
     const applyFilters = (repo: any, rawScore: number) => {
       if (constraints?.minStars && repo.stars < constraints.minStars) return 0;
@@ -405,7 +406,7 @@ Return ONLY valid JSON with this exact structure:
         // If nothing passes the floor, return an empty array — the frontend will
         // tell the user their library lacks relevant repos for this topic.
         if (top.length === 0) {
-          if (projectId) saveRecommendations(projectId, []);
+          if (projectId) await saveRecommendations(projectId, []);
           return res.json([]);
         }
 
@@ -438,7 +439,7 @@ Return ONLY valid JSON with this exact structure:
         });
 
         results.sort((a, b) => b.fitScore - a.fitScore);
-        if (projectId) saveRecommendations(projectId, results);
+        if (projectId) await saveRecommendations(projectId, results);
         return res.json(results);
       }
     }
@@ -460,39 +461,40 @@ Return ONLY valid JSON with this exact structure:
     });
     scored.sort((a: any, b: any) => b.fitScore - a.fitScore);
     const kwResults = scored.slice(0, 10);
-    if (projectId) saveRecommendations(projectId, kwResults);
+    if (projectId) await saveRecommendations(projectId, kwResults);
     res.json(kwResults);
   });
 
-  function saveRecommendations(projectId: number, recs: any[]) {
-    const stmt = db.prepare(`
-      INSERT INTO project_recommendations (project_id, repo_id, fit_score, rationale, mode)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(project_id, repo_id) DO UPDATE SET
-        fit_score=excluded.fit_score,
-        rationale=excluded.rationale,
-        mode=excluded.mode,
-        saved_at=CURRENT_TIMESTAMP
-    `);
+  async function saveRecommendations(projectId: number, recs: any[]) {
     for (const r of recs) {
-      try { stmt.run(projectId, r.repoId, r.fitScore, r.rationale, r._mode); } catch {}
+      try {
+        await run(`
+          INSERT INTO project_recommendations (project_id, repo_id, fit_score, rationale, mode)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(project_id, repo_id) DO UPDATE SET
+            fit_score=excluded.fit_score,
+            rationale=excluded.rationale,
+            mode=excluded.mode,
+            saved_at=CURRENT_TIMESTAMP
+        `, [projectId, r.repoId, r.fitScore, r.rationale, r._mode]);
+      } catch {}
     }
   }
 
   // API Routes
-  app.get("/api/repos", (req, res) => {
-    const repos = db.prepare("SELECT * FROM repos ORDER BY score DESC").all();
+  app.get("/api/repos", async (req, res) => {
+    const repos = await all("SELECT * FROM repos ORDER BY score DESC");
     console.log(`Fetching repos: found ${repos.length} records`);
     res.json(repos);
   });
 
-  app.post("/api/repos", (req, res) => {
+  app.post("/api/repos", async (req, res) => {
     const { owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, aiAnalysis } = req.body;
     const id = `${owner}/${name}`;
     console.log(`Attempting to save repo: ${id}`);
-    
+
     try {
-      const stmt = db.prepare(`
+      await run(`
         INSERT INTO repos (id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
@@ -504,20 +506,18 @@ Return ONLY valid JSON with this exact structure:
           readme=excluded.readme,
           ai_analysis=excluded.ai_analysis,
           updated_at=CURRENT_TIMESTAMP
-      `);
-      stmt.run(id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, JSON.stringify(aiAnalysis));
-      
+      `, [id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, JSON.stringify(aiAnalysis)]);
+
       // Create snapshot
-      db.prepare("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)")
-        .run(id, score, stars, issues);
+      await run("INSERT INTO snapshots (repo_id, score, stars, issues) VALUES (?, ?, ?, ?)", [id, score, stars, issues]);
 
       res.json({ success: true, id });
 
       // Generate embedding asynchronously (don't block the response)
       const embedText = buildEmbedText({ name, description }, aiAnalysis || {});
-      generateEmbedding(embedText).then(emb => {
+      generateEmbedding(embedText).then(async emb => {
         if (emb) {
-          db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), id);
+          await run("UPDATE repos SET embedding = ? WHERE id = ?", [JSON.stringify(emb), id]);
           embeddingCache.set(id, emb);
         }
       }).catch(() => {});
@@ -526,56 +526,53 @@ Return ONLY valid JSON with this exact structure:
     }
   });
 
-  app.get("/api/repos/:owner/:name", (req, res) => {
+  app.get("/api/repos/:owner/:name", async (req, res) => {
     const id = `${req.params.owner}/${req.params.name}`;
-    const repo = db.prepare("SELECT * FROM repos WHERE id = ?").get(id);
-    const snapshots = db.prepare("SELECT * FROM snapshots WHERE repo_id = ? ORDER BY timestamp DESC LIMIT 10").all(id);
+    const repo = await get("SELECT * FROM repos WHERE id = ?", [id]);
+    const snapshots = await all("SELECT * FROM snapshots WHERE repo_id = ? ORDER BY timestamp DESC LIMIT 10", [id]);
     res.json({ ...repo, snapshots });
   });
 
-  app.get("/api/projects", (req, res) => {
-    const projects = db.prepare("SELECT * FROM projects").all();
+  app.get("/api/projects", async (req, res) => {
+    const projects = await all("SELECT * FROM projects");
     res.json(projects);
   });
 
-  app.post("/api/projects", (req, res) => {
+  app.post("/api/projects", async (req, res) => {
     const { name, description, constraints } = req.body;
-    const result = db.prepare("INSERT INTO projects (name, description, constraints) VALUES (?, ?, ?)")
-      .run(name, description, JSON.stringify(constraints));
+    const result = await run("INSERT INTO projects (name, description, constraints) VALUES (?, ?, ?)", [name, description, JSON.stringify(constraints)]);
     res.json({ id: result.lastInsertRowid });
   });
 
-  app.put("/api/projects/:id", (req, res) => {
+  app.put("/api/projects/:id", async (req, res) => {
     const { name, description, constraints } = req.body;
-    db.prepare("UPDATE projects SET name = ?, description = ?, constraints = ? WHERE id = ?")
-      .run(name, description, JSON.stringify(constraints), req.params.id);
+    await run("UPDATE projects SET name = ?, description = ?, constraints = ? WHERE id = ?", [name, description, JSON.stringify(constraints), req.params.id]);
     res.json({ success: true });
   });
 
-  app.get("/api/projects/:id/pinned", (req, res) => {
-    const pinned = db.prepare(`
-      SELECT r.*, p.notes 
-      FROM repos r 
-      JOIN pinned_repos p ON r.id = p.repo_id 
+  app.get("/api/projects/:id/pinned", async (req, res) => {
+    const pinned = await all(`
+      SELECT r.*, p.notes
+      FROM repos r
+      JOIN pinned_repos p ON r.id = p.repo_id
       WHERE p.project_id = ?
-    `).all(req.params.id);
+    `, [req.params.id]);
     res.json(pinned);
   });
 
-  app.post("/api/projects/:id/pin", (req, res) => {
+  app.post("/api/projects/:id/pin", async (req, res) => {
     const { repo_id, notes } = req.body;
-    db.prepare("INSERT OR REPLACE INTO pinned_repos (project_id, repo_id, notes) VALUES (?, ?, ?)")
-      .run(req.params.id, repo_id, notes);
+    await run("INSERT OR REPLACE INTO pinned_repos (project_id, repo_id, notes) VALUES (?, ?, ?)", [req.params.id, repo_id, notes]);
     res.json({ success: true });
   });
 
-  app.get("/api/projects/:id/recommendations", (req, res) => {
-    const recs = db.prepare(`
+  app.get("/api/projects/:id/recommendations", async (req, res) => {
+    const recs = await all<any>(`
       SELECT pr.repo_id, pr.fit_score, pr.rationale, pr.mode, pr.saved_at
       FROM project_recommendations pr
       WHERE pr.project_id = ?
       ORDER BY pr.fit_score DESC
-    `).all(req.params.id) as any[];
+    `, [req.params.id]);
     res.json(recs.map(r => ({
       repoId: r.repo_id,
       fitScore: r.fit_score,
@@ -586,14 +583,13 @@ Return ONLY valid JSON with this exact structure:
     })));
   });
 
-  app.delete("/api/projects/:id/recommendations/:repoId(*)", (req, res) => {
-    db.prepare("DELETE FROM project_recommendations WHERE project_id = ? AND repo_id = ?")
-      .run(req.params.id, req.params.repoId);
+  app.delete("/api/projects/:id/recommendations/:repoId(*)", async (req, res) => {
+    await run("DELETE FROM project_recommendations WHERE project_id = ? AND repo_id = ?", [req.params.id, req.params.repoId]);
     res.json({ success: true });
   });
 
-  app.get("/api/config", (req, res) => {
-    const config = db.prepare("SELECT * FROM config").all();
+  app.get("/api/config", async (req, res) => {
+    const config = await all<any>("SELECT * FROM config");
     const configMap = config.reduce((acc: any, curr: any) => {
       acc[curr.key] = JSON.parse(curr.value);
       return acc;
@@ -601,19 +597,18 @@ Return ONLY valid JSON with this exact structure:
     res.json(configMap);
   });
 
-  app.post("/api/config", (req, res) => {
+  app.post("/api/config", async (req, res) => {
     const { key, value } = req.body;
-    db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)")
-      .run(key, JSON.stringify(value));
+    await run("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)", [key, JSON.stringify(value)]);
     res.json({ success: true });
   });
 
   // External API for agents (e.g., Replit)
-  app.get("/api/external/repos", (req, res) => {
+  app.get("/api/external/repos", async (req, res) => {
     const { q, minScore, limit = 20, apiKey } = req.query;
-    
+
     // Validate API Key
-    const storedKey = db.prepare("SELECT value FROM config WHERE key = ?").get("external_api_key");
+    const storedKey = await get<any>("SELECT value FROM config WHERE key = ?", ["external_api_key"]);
     if (!storedKey || JSON.parse(storedKey.value) !== apiKey) {
       return res.status(401).json({ error: "Invalid or missing API Key" });
     }
@@ -636,7 +631,7 @@ Return ONLY valid JSON with this exact structure:
     params.push(parseInt(limit as string));
 
     try {
-      const repos = db.prepare(query).all(...params);
+      const repos = await all<any>(query, params);
       res.json({
         count: repos.length,
         repos: repos.map((r: any) => ({
@@ -659,7 +654,7 @@ Return ONLY valid JSON with this exact structure:
   app.post("/api/sweep", async (_req, res) => {
     if (sweepStatus.running) return res.json({ message: 'Sweep already running', ...sweepStatus });
 
-    const allRepos: any[] = db.prepare("SELECT id, description, language, readme, ai_analysis FROM repos").all();
+    const allRepos = await all<any>("SELECT id, description, language, readme, ai_analysis FROM repos");
     const needsUpdate = allRepos.filter(r => {
       try {
         const a = r.ai_analysis ? JSON.parse(r.ai_analysis) : {};
@@ -683,8 +678,7 @@ Return ONLY valid JSON with this exact structure:
           const fresh = await deepseekAnalyze(repo.id, repo.description || '', repo.language, topics, repo.readme, category);
           if (fresh) {
             const merged = { ...existing, ...fresh };
-            db.prepare("UPDATE repos SET ai_analysis = ? WHERE id = ?")
-              .run(JSON.stringify(merged), repo.id);
+            await run("UPDATE repos SET ai_analysis = ? WHERE id = ?", [JSON.stringify(merged), repo.id]);
             console.log(`Sweep updated ${repo.id} → enterpriseTier: ${fresh.enterpriseTier}, replaces: ${fresh.comparableApp}`);
           }
           sweepStatus.done++;
@@ -704,15 +698,15 @@ Return ONLY valid JSON with this exact structure:
   // ── Embedding sweep endpoints ────────────────────────────────────────────────
   let embedSweepStatus = { running: false, total: 0, done: 0, failed: 0 };
 
-  app.get("/api/embed/status", (_req, res) => {
-    const total = (db.prepare("SELECT COUNT(*) as c FROM repos").get() as any).c;
+  app.get("/api/embed/status", async (_req, res) => {
+    const total = (await get<any>("SELECT COUNT(*) as c FROM repos"))?.c ?? 0;
     res.json({ ...embedSweepStatus, embedded: embeddingCache.size, total });
   });
 
   app.post("/api/embed/sweep", async (_req, res) => {
     if (embedSweepStatus.running) return res.json({ message: 'Embed sweep already running', ...embedSweepStatus });
 
-    const repos: any[] = db.prepare("SELECT id, name, description, ai_analysis FROM repos WHERE embedding IS NULL").all();
+    const repos = await all<any>("SELECT id, name, description, ai_analysis FROM repos WHERE embedding IS NULL");
     embedSweepStatus = { running: true, total: repos.length, done: 0, failed: 0 };
     res.json({ message: `Embedding sweep started for ${repos.length} repos`, total: repos.length });
 
@@ -724,7 +718,7 @@ Return ONLY valid JSON with this exact structure:
           const text = buildEmbedText(repo, ai);
           const emb = await generateEmbedding(text);
           if (emb) {
-            db.prepare("UPDATE repos SET embedding = ? WHERE id = ?").run(JSON.stringify(emb), repo.id);
+            await run("UPDATE repos SET embedding = ? WHERE id = ?", [JSON.stringify(emb), repo.id]);
             embeddingCache.set(repo.id, emb);
             console.log(`Embedded ${repo.id} (cache: ${embeddingCache.size})`);
           }
