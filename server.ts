@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { clerkMiddleware, getAuth } from "@clerk/express";
 import { all, get, run, execScript } from "./db";
+import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,6 +15,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_ENABLED = Boolean(process.env.CLERK_SECRET_KEY);
 const DEV_TENANT = "dev-tenant";
 const DEV_USER = "dev-user";
+
+// Preloaded "App Killers" repos live under this reserved tenant with
+// source='library'. On upgrade to a plan with preloadedLibrary=true they are
+// copied into the subscriber's own library (see copyLibraryToTenant).
+const LIBRARY_TENANT = "__library__";
 
 // Resolve the calling tenant. tenant_id is the Clerk org (Studio teams) when an
 // org is active, otherwise the user id (personal Free/Solo accounts).
@@ -28,6 +34,123 @@ const ck = (tenantId: string, id: string) => `${tenantId}::${id}`;
 
 function sha256(s: string): string {
   return crypto.createHash("sha256").update(s).digest("hex");
+}
+
+// ── Plans, usage & limits ─────────────────────────────────────────────────────
+// Calendar-month bucket used to track monthly additions, e.g. "2026-05".
+function currentPeriod(): string {
+  return new Date().toISOString().slice(0, 7);
+}
+
+// Return the tenant's plan limits, creating a default (free) subscription row
+// the first time we see a tenant so every tenant always has a concrete plan.
+async function getPlan(tenantId: string): Promise<PlanLimits> {
+  const row = await get<{ plan: string }>(
+    "SELECT plan FROM subscriptions WHERE tenant_id = ?",
+    [tenantId],
+  );
+  if (!row) {
+    await run(
+      "INSERT OR IGNORE INTO subscriptions (tenant_id, plan, status) VALUES (?, ?, 'active')",
+      [tenantId, DEFAULT_PLAN],
+    );
+    return planFor(DEFAULT_PLAN);
+  }
+  return planFor(row.plan);
+}
+
+// User-added repos count against the cap; preloaded library repos do not.
+async function countUserRepos(tenantId: string): Promise<number> {
+  const row = await get<{ c: number }>(
+    "SELECT COUNT(*) AS c FROM repos WHERE tenant_id = ? AND source = 'user'",
+    [tenantId],
+  );
+  return row?.c ?? 0;
+}
+
+async function monthlyAdditions(tenantId: string): Promise<number> {
+  const row = await get<{ repos_added: number }>(
+    "SELECT repos_added FROM usage_tracking WHERE tenant_id = ? AND period = ?",
+    [tenantId, currentPeriod()],
+  );
+  return row?.repos_added ?? 0;
+}
+
+async function incrementMonthlyAdditions(tenantId: string): Promise<void> {
+  await run(
+    `INSERT INTO usage_tracking (tenant_id, period, repos_added)
+     VALUES (?, ?, 1)
+     ON CONFLICT(tenant_id, period) DO UPDATE SET repos_added = repos_added + 1`,
+    [tenantId, currentPeriod()],
+  );
+}
+
+// Decide whether a tenant may add one more user repo. Returns null when allowed,
+// otherwise an { status, error } pair the route can return directly.
+async function checkRepoQuota(
+  tenantId: string,
+): Promise<{ status: number; error: string } | null> {
+  const plan = await getPlan(tenantId);
+  const used = await countUserRepos(tenantId);
+  if (used >= plan.repoCap) {
+    return {
+      status: 403,
+      error: `Library is full — the ${plan.name} plan allows ${plan.repoCap} repos. Upgrade or remove a repo to add more.`,
+    };
+  }
+  const added = await monthlyAdditions(tenantId);
+  if (added >= plan.monthlyAdditions) {
+    return {
+      status: 403,
+      error: `Monthly add limit reached — the ${plan.name} plan allows ${plan.monthlyAdditions} new repos per month.`,
+    };
+  }
+  return null;
+}
+
+// Copy the preloaded App Killers library into a tenant's own library. Idempotent
+// — existing rows are left untouched, and copied repos keep source='library' so
+// they don't count against the tenant's cap. Returns the number newly inserted.
+async function copyLibraryToTenant(tenantId: string): Promise<number> {
+  if (tenantId === LIBRARY_TENANT) return 0;
+  const result = await run(
+    `INSERT INTO repos (
+       tenant_id, id, owner, name, url, status, score, language, license,
+       stars, forks, issues, last_push, description, readme, ai_analysis,
+       enterpriseTier, comparableApp, embedding, source, created_by
+     )
+     SELECT
+       ?, id, owner, name, url, status, score, language, license,
+       stars, forks, issues, last_push, description, readme, ai_analysis,
+       enterpriseTier, comparableApp, embedding, 'library', created_by
+     FROM repos
+     WHERE tenant_id = ?
+     ON CONFLICT(tenant_id, id) DO NOTHING`,
+    [tenantId, LIBRARY_TENANT],
+  );
+  return result.rowsAffected ?? 0;
+}
+
+// Apply a plan change to a tenant: persist the plan and, when the new plan
+// includes the preloaded library, copy it in. This is the seam a Stripe webhook
+// will call once billing lands; for now the dev plan-switch endpoint calls it.
+async function applyPlan(
+  tenantId: string,
+  plan: string,
+): Promise<{ plan: PlanLimits; copied: number }> {
+  await run(
+    `INSERT INTO subscriptions (tenant_id, plan, status, updated_at)
+     VALUES (?, ?, 'active', CURRENT_TIMESTAMP)
+     ON CONFLICT(tenant_id) DO UPDATE SET
+       plan = excluded.plan,
+       status = 'active',
+       updated_at = CURRENT_TIMESTAMP`,
+    [tenantId, plan],
+  );
+  const limits = planFor(plan);
+  let copied = 0;
+  if (limits.preloadedLibrary) copied = await copyLibraryToTenant(tenantId);
+  return { plan: limits, copied };
 }
 
 // ── Schema ───────────────────────────────────────────────────────────────────
@@ -344,6 +467,11 @@ Return ONLY valid JSON with this exact structure:
     if (!match) return res.status(400).json({ error: "Not a valid GitHub URL" });
     const [, owner, repoName] = match;
 
+    // Ingest only ever adds a new repo (duplicates 409 below), so enforce the
+    // plan quota up front — before spending GitHub / AI calls on it.
+    const quota = await checkRepoQuota(tenantId);
+    if (quota) return res.status(quota.status).json({ error: quota.error });
+
     try {
       let data: any;
       try {
@@ -409,6 +537,7 @@ Return ONLY valid JSON with this exact structure:
           updated_at=CURRENT_TIMESTAMP
       `, [tenantId, id, canonicalOwner, canonicalName, data.html_url, stars, forks, issues, language, license, lastPush, desc, readme, score, JSON.stringify(aiAnalysis), userId]);
       await run("INSERT INTO snapshots (tenant_id, repo_id, score, stars, issues) VALUES (?, ?, ?, ?, ?)", [tenantId, id, score, stars, issues]);
+      await incrementMonthlyAdditions(tenantId);
 
       console.log(`Ingested ${id} for ${tenantId} — score: ${score}, category: ${category}`);
       res.json({ success: true, id, score, category });
@@ -560,6 +689,14 @@ Return ONLY valid JSON with this exact structure:
     console.log(`Attempting to save repo: ${id} for ${tenantId}`);
 
     try {
+      // This route upserts, so only a brand-new repo consumes quota. Updates to
+      // an existing repo (re-analysis, refreshed stars) are always allowed.
+      const existing = await get("SELECT 1 FROM repos WHERE tenant_id = ? AND id = ?", [tenantId, id]);
+      if (!existing) {
+        const quota = await checkRepoQuota(tenantId);
+        if (quota) return res.status(quota.status).json({ error: quota.error });
+      }
+
       await run(`
         INSERT INTO repos (tenant_id, id, owner, name, url, stars, forks, issues, language, license, last_push, description, readme, score, ai_analysis, source, created_by)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?)
@@ -576,6 +713,7 @@ Return ONLY valid JSON with this exact structure:
 
       // Create snapshot
       await run("INSERT INTO snapshots (tenant_id, repo_id, score, stars, issues) VALUES (?, ?, ?, ?, ?)", [tenantId, id, score, stars, issues]);
+      if (!existing) await incrementMonthlyAdditions(tenantId);
 
       res.json({ success: true, id });
 
@@ -689,6 +827,16 @@ Return ONLY valid JSON with this exact structure:
   app.post("/api/keys", async (req, res) => {
     const { tenantId } = getTenant(req);
     const { name } = req.body ?? {};
+
+    const plan = await getPlan(tenantId);
+    const keyCount = (await get<{ c: number }>("SELECT COUNT(*) AS c FROM api_keys WHERE tenant_id = ?", [tenantId]))?.c ?? 0;
+    if (keyCount >= plan.apiKeys) {
+      const detail = plan.apiKeys === 0
+        ? `API keys aren't available on the ${plan.name} plan — upgrade to create one.`
+        : `Key limit reached — the ${plan.name} plan allows ${plan.apiKeys} API key${plan.apiKeys === 1 ? "" : "s"}.`;
+      return res.status(403).json({ error: detail });
+    }
+
     const raw = "rh_" + crypto.randomBytes(24).toString("hex");
     const prefix = raw.slice(0, 10);
     await run("INSERT INTO api_keys (tenant_id, name, key_prefix, key_hash) VALUES (?, ?, ?, ?)", [tenantId, name || "API key", prefix, sha256(raw)]);
@@ -700,6 +848,53 @@ Return ONLY valid JSON with this exact structure:
     const { tenantId } = getTenant(req);
     await run("DELETE FROM api_keys WHERE id = ? AND tenant_id = ?", [req.params.id, tenantId]);
     res.json({ success: true });
+  });
+
+  // ── Subscription & usage (plan limits, live consumption) ─────────────────────
+  // The frontend reads this to render the current plan, what's left, and to
+  // disable actions the plan doesn't allow.
+  app.get("/api/subscription", async (req, res) => {
+    const { tenantId } = getTenant(req);
+    const plan = await getPlan(tenantId);
+    const [repos, additions, keyCount] = await Promise.all([
+      countUserRepos(tenantId),
+      monthlyAdditions(tenantId),
+      get<{ c: number }>("SELECT COUNT(*) AS c FROM api_keys WHERE tenant_id = ?", [tenantId]).then(r => r?.c ?? 0),
+    ]);
+    res.json({
+      plan: plan.id,
+      planName: plan.name,
+      limits: {
+        repoCap: plan.repoCap,
+        monthlyAdditions: plan.monthlyAdditions,
+        apiKeys: plan.apiKeys,
+        preloadedLibrary: plan.preloadedLibrary,
+      },
+      usage: {
+        repos,
+        additionsThisMonth: additions,
+        apiKeys: keyCount,
+        period: currentPeriod(),
+      },
+    });
+  });
+
+  // Plan switching seam. Billing is deferred, so this lets us exercise the full
+  // upgrade path (limit changes + preloaded-library copy) without Stripe. When
+  // billing lands, the Stripe webhook calls applyPlan() with the same effect and
+  // this dev route can be removed.
+  app.post("/api/subscription/plan", async (req, res) => {
+    const { tenantId } = getTenant(req);
+    const { plan } = req.body ?? {};
+    if (!isPlanId(plan)) {
+      return res.status(400).json({ error: "Unknown plan. Expected: free, solo, or studio." });
+    }
+    const { plan: limits, copied } = await applyPlan(tenantId, plan);
+    if (copied > 0) {
+      await loadEmbeddingCache(); // surface freshly-copied library embeddings to search
+      console.log(`Plan → ${plan} for ${tenantId}; copied ${copied} library repos`);
+    }
+    res.json({ plan: limits.id, planName: limits.name, copiedFromLibrary: copied });
   });
 
   // External API for agents (e.g. Replit) — authenticated by API key, scoped to
