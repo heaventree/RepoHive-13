@@ -29,6 +29,18 @@ function getTenant(req: express.Request): { tenantId: string; userId: string } {
   return { tenantId: (orgId ?? userId) as string, userId: userId as string };
 }
 
+// Admins may curate the preloaded library. Identified by Clerk user id via the
+// ADMIN_USER_IDS env var (comma-separated). With auth disabled (dev) the single
+// dev tenant is treated as admin so the feature is exercisable locally.
+const ADMIN_USER_IDS = (process.env.ADMIN_USER_IDS || "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+
+function isAdmin(req: express.Request): boolean {
+  if (!AUTH_ENABLED) return true;
+  const { userId } = getAuth(req);
+  return !!userId && ADMIN_USER_IDS.includes(userId);
+}
+
 // Composite cache key — repo ids ("owner/name") are only unique within a tenant.
 const ck = (tenantId: string, id: string) => `${tenantId}::${id}`;
 
@@ -895,6 +907,89 @@ Return ONLY valid JSON with this exact structure:
       console.log(`Plan → ${plan} for ${tenantId}; copied ${copied} library repos`);
     }
     res.json({ plan: limits.id, planName: limits.name, copiedFromLibrary: copied });
+  });
+
+  // ── Admin: curate the preloaded library ─────────────────────────────────────
+  // An admin promotes repos from their own account into the __library__ tenant,
+  // which is the App Killers library Solo/Studio subscribers receive on upgrade.
+  function requireAdmin(req: express.Request, res: express.Response): boolean {
+    if (isAdmin(req)) return true;
+    res.status(403).json({ error: "Admin access required" });
+    return false;
+  }
+
+  // Lets the frontend show/hide the admin-only library category.
+  app.get("/api/admin/status", (req, res) => {
+    res.json({ admin: isAdmin(req) });
+  });
+
+  app.get("/api/admin/library", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const repos = await all(
+      `SELECT id, owner, name, url, score, language, stars, ai_analysis,
+              (embedding IS NOT NULL) AS embedded
+       FROM repos WHERE tenant_id = ? ORDER BY score DESC`,
+      [LIBRARY_TENANT],
+    );
+    res.json(repos);
+  });
+
+  // Promote a repo from the caller's own library into the preloaded library.
+  // Carries the embedding so vector search works immediately; enterpriseTier /
+  // comparableApp are derived from ai_analysis (the app's source of truth).
+  app.post("/api/admin/library/promote", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { tenantId } = getTenant(req);
+    const { repoId } = req.body ?? {};
+    if (!repoId) return res.status(400).json({ error: "repoId is required" });
+
+    const repo = await get<any>("SELECT * FROM repos WHERE tenant_id = ? AND id = ?", [tenantId, repoId]);
+    if (!repo) return res.status(404).json({ error: `Repo ${repoId} not found in your library` });
+
+    let tier = repo.enterpriseTier ? 1 : 0;
+    let comparable = repo.comparableApp ?? null;
+    try {
+      const a = JSON.parse(repo.ai_analysis ?? "");
+      if (a && typeof a.enterpriseTier !== "undefined") {
+        tier = a.enterpriseTier ? 1 : 0;
+        comparable = a.comparableApp ?? comparable;
+      }
+    } catch {}
+
+    await run(
+      `INSERT INTO repos (
+         tenant_id, id, owner, name, url, status, score, language, license,
+         stars, forks, issues, last_push, description, readme, ai_analysis,
+         enterpriseTier, comparableApp, embedding, source, created_by
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'library', ?)
+       ON CONFLICT(tenant_id, id) DO UPDATE SET
+         score=excluded.score, stars=excluded.stars, forks=excluded.forks,
+         issues=excluded.issues, last_push=excluded.last_push,
+         description=excluded.description, readme=excluded.readme,
+         ai_analysis=excluded.ai_analysis, enterpriseTier=excluded.enterpriseTier,
+         comparableApp=excluded.comparableApp, embedding=excluded.embedding,
+         updated_at=CURRENT_TIMESTAMP`,
+      [
+        LIBRARY_TENANT, repo.id, repo.owner, repo.name, repo.url, repo.status,
+        repo.score, repo.language, repo.license, repo.stars, repo.forks, repo.issues,
+        repo.last_push, repo.description, repo.readme, repo.ai_analysis, tier, comparable,
+        repo.embedding, repo.created_by,
+      ],
+    );
+    if (repo.embedding) {
+      try { embeddingCache.set(ck(LIBRARY_TENANT, repo.id), JSON.parse(repo.embedding)); } catch {}
+    }
+    console.log(`Library promote: ${repo.id} added to __library__ by admin`);
+    res.json({ success: true, id: repo.id });
+  });
+
+  // Remove a repo from the preloaded library (does not touch any subscriber's
+  // already-copied instance).
+  app.delete("/api/admin/library/:repoId(*)", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    await run("DELETE FROM repos WHERE tenant_id = ? AND id = ?", [LIBRARY_TENANT, req.params.repoId]);
+    embeddingCache.delete(ck(LIBRARY_TENANT, req.params.repoId));
+    res.json({ success: true });
   });
 
   // External API for agents (e.g. Replit) — authenticated by API key, scoped to
