@@ -9,7 +9,9 @@
     "start": "NODE_ENV=production tsx server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "seed": "tsx scripts/seed-library.ts",
+    "tenants": "tsx scripts/list-tenants.ts"
   },
   "dependencies": {
     "@clerk/express": "^2.1.4",
