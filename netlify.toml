@@ -1,0 +1,33 @@
+# Netlify build + routing for RepoHive.
+# - Vite builds the static frontend into dist/.
+# - The Express API runs as a single Netlify Function (netlify/functions/api.ts),
+#   wrapped with serverless-http.
+# - /api/* is rewritten to that function. Everything else falls back to
+#   index.html so client-side routes (React Router) work on direct hits.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  # Bundle the seed JSON and any other non-JS assets the function imports
+  # so they're present at runtime.
+  included_files = ["scripts/seed/**"]
+
+# Send every API call to the bundled Express function. Using the bare function
+# path (no :splat) makes Netlify preserve the original /api/... URL when the
+# function runs, so the existing Express route registrations match as-is.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+# SPA fallback — any unmatched path serves the built index.html so
+# React Router can take it from there.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
