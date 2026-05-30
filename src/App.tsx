@@ -9,12 +9,14 @@ import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
 import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
-import { UserButton } from '@clerk/react';
+import { UserButton, useUser } from '@clerk/react';
 import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
+  const { user } = useUser();
+  const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || '';
 
   const handleTabChange = (tab: string) => {
     setSelectedRepo(null);
@@ -164,9 +166,16 @@ export default function App() {
 
           <div className="w-px h-4 bg-white/8 mx-1" />
 
-          {/* Avatar / User button */}
+          {/* User identity */}
           {AUTH_ENABLED ? (
-            <UserButton afterSignOutUrl="/" />
+            <div className="flex items-center gap-2">
+              {displayName && (
+                <span className="text-xs font-mono text-slate-400 hidden sm:block max-w-[120px] truncate">
+                  {displayName}
+                </span>
+              )}
+              <UserButton afterSignOutUrl="/" />
+            </div>
           ) : (
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"

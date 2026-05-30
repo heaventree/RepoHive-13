@@ -10,14 +10,34 @@ const _CLERK_PK  = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_P
 const isValidClerkSK = (k: string) => /^sk_(test|live)_/.test(k);
 const isValidClerkPK = (k: string) => /^pk_(test|live)_/.test(k);
 const AUTH_ENABLED = isValidClerkSK(_CLERK_SK) && isValidClerkPK(_CLERK_PK);
+// REQUIRE_AUTH=true or running on Netlify means auth is mandatory.
+const IS_STRICT = process.env.REQUIRE_AUTH === "true" || Boolean(process.env.NETLIFY);
+
 if (!AUTH_ENABLED) {
   const skOk = isValidClerkSK(_CLERK_SK);
   const pkOk = isValidClerkPK(_CLERK_PK);
-  console.warn(`[auth] Running WITHOUT authentication (${skOk ? "SK ok" : "SK invalid"}, ${pkOk ? "PK ok" : "PK invalid"}). Set valid CLERK_SECRET_KEY + CLERK_PUBLISHABLE_KEY to enable.`);
+  if (IS_STRICT) {
+    console.error(`[auth] FATAL: Auth required by environment but keys are invalid. SK=${skOk ? "ok" : "invalid"}, PK=${pkOk ? "ok" : "invalid"}. Set CLERK_SECRET_KEY (sk_...) and CLERK_PUBLISHABLE_KEY (pk_...).`);
+  } else {
+    console.warn(`[auth] Running WITHOUT authentication in dev mode (${skOk ? "SK ok" : "SK invalid"}, ${pkOk ? "PK ok" : "PK invalid"}). Set valid CLERK keys to enable.`);
+  }
 }
 const DEV_TENANT = "dev-tenant";
-const DEV_USER = "dev-user";
+const DEV_USER   = "dev-user";
 const LIBRARY_TENANT = "__library__";
+
+// ── User lookup / auto-create ─────────────────────────────────────────────────
+async function lookupOrCreateUser(clerkUserId: string, email?: string): Promise<{ plan: string }> {
+  const existing = await get<{ plan: string }>(
+    "SELECT plan FROM users WHERE clerk_user_id = ?", [clerkUserId],
+  );
+  if (existing) return existing;
+  await run(
+    "INSERT OR IGNORE INTO users (clerk_user_id, email, plan) VALUES (?, ?, 'free')",
+    [clerkUserId, email ?? null],
+  );
+  return { plan: "free" };
+}
 
 function getTenant(req: express.Request): { tenantId: string; userId: string } {
   if (!AUTH_ENABLED) return { tenantId: DEV_TENANT, userId: DEV_USER };
@@ -139,6 +159,13 @@ async function applyPlan(tenantId: string, plan: string): Promise<{ plan: PlanLi
 // ── Schema ───────────────────────────────────────────────────────────────────
 async function initSchema() {
   await execScript(`
+    CREATE TABLE IF NOT EXISTS users (
+      clerk_user_id TEXT PRIMARY KEY,
+      email TEXT,
+      plan TEXT NOT NULL DEFAULT 'free',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS repos (
       tenant_id TEXT NOT NULL,
       id TEXT NOT NULL,
@@ -149,7 +176,9 @@ async function initSchema() {
       stars INTEGER DEFAULT 0, forks INTEGER DEFAULT 0, issues INTEGER DEFAULT 0,
       last_push TEXT, description TEXT, readme TEXT, ai_analysis TEXT,
       enterpriseTier INTEGER DEFAULT 0, comparableApp TEXT, embedding TEXT,
-      source TEXT DEFAULT 'user', created_by TEXT,
+      source TEXT DEFAULT 'user',
+      user_id TEXT,
+      created_by TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (tenant_id, id)
@@ -391,15 +420,26 @@ export function createApiApp(): express.Express {
     catch (err) { next(err); }
   });
 
+  // On Netlify (or when REQUIRE_AUTH=true), reject all API traffic if auth keys are invalid.
+  if (IS_STRICT && !AUTH_ENABLED) {
+    app.use("/api", (_req, res) => {
+      res.status(503).json({ error: "Service unavailable: authentication not configured. Contact the site operator." });
+    });
+  }
+
   if (AUTH_ENABLED) {
     app.use(clerkMiddleware({
       publishableKey: _CLERK_PK,
       secretKey: _CLERK_SK,
     }));
-    app.use("/api", (req, res, next) => {
+    // Enforce authentication on all /api/* except the public external API.
+    // Also auto-create the user record in `users` on first authenticated request.
+    app.use("/api", async (req, res, next) => {
       if (req.path.startsWith("/external/")) return next();
       const { userId } = getAuth(req);
       if (!userId) return res.status(401).json({ error: "Authentication required" });
+      // Auto-create user on first request (fire-and-forget; errors non-fatal)
+      lookupOrCreateUser(userId).catch(() => {});
       next();
     });
   }
@@ -407,8 +447,17 @@ export function createApiApp(): express.Express {
   // ── Repos ──────────────────────────────────────────────────────────────────
   app.get("/api/repos", async (req, res) => {
     const { tenantId } = getTenant(req);
-    const repos = await all("SELECT * FROM repos WHERE tenant_id = ? ORDER BY score DESC", [tenantId]);
-    console.log(`Fetching repos for ${tenantId}: found ${repos.length} records`);
+    // Return tenant's own repos PLUS the shared __library__ repos (read-only, marked source='library').
+    // Tenant repos override library rows when the same id appears in both.
+    const ownRows = await all<any>("SELECT *, 'own' AS _origin FROM repos WHERE tenant_id = ? ORDER BY score DESC", [tenantId]);
+    let libraryRows: any[] = [];
+    if (tenantId !== LIBRARY_TENANT) {
+      const ownIds = new Set(ownRows.map((r: any) => r.id));
+      const lib = await all<any>("SELECT *, 'library' AS _origin FROM repos WHERE tenant_id = ? ORDER BY score DESC", [LIBRARY_TENANT]);
+      libraryRows = lib.filter((r: any) => !ownIds.has(r.id)).map((r: any) => ({ ...r, source: 'library', tenant_id: tenantId }));
+    }
+    const repos = [...ownRows, ...libraryRows].sort((a: any, b: any) => (b.score ?? 0) - (a.score ?? 0));
+    console.log(`Fetching repos for ${tenantId}: ${ownRows.length} own + ${libraryRows.length} library`);
     res.json(repos);
   });
 
