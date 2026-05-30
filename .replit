@@ -40,3 +40,9 @@ externalPort = 80
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+TURSO_DATABASE_URL = "libsql://repohive-heaventree.aws-eu-west-1.turso.io"
+VITE_CLERK_PUBLISHABLE_KEY = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODAxMDM0NzQsImlkIjoiMDE5ZTVjMjAtMWUwMS03MmExLWEzMzAtNmIwMjRiZmU3OWVjIiwicmlkIjoiMzZjN2RhMTYtN2M0NS00Nzk5LWEwYTUtNjI0ZjllNjY1MWUxIn0.sMylzdCS4jLYYitCIPN__ADlGnWg8woJwJNSz4wqbO4rVLOT53vG0PtZphyjG5RmzLjvsykyCEH517yCdcfxCQ"

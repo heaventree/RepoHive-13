@@ -32,9 +32,9 @@ export function MarketingNav() {
             className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
             style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
           >
-            RS
+            RH
           </div>
-          <span className="font-bold text-sm tracking-tight text-white font-mono">RepoScout</span>
+          <span className="font-bold text-sm tracking-tight text-white font-mono">RepoHive</span>
         </Link>
 
         {/* Links */}

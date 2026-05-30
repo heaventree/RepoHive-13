@@ -9,6 +9,8 @@ import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
 import { Repo } from './types';
 import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { UserButton } from '@clerk/react';
+import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
@@ -79,15 +81,15 @@ export default function App() {
               className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
               style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
             >
-              RS
+              RH
             </div>
-            <span className="font-bold text-sm tracking-tight text-white">RepoScout</span>
+            <span className="font-bold text-sm tracking-tight text-white">RepoHive</span>
           </div>
           <span
             className="text-[10px] font-mono text-slate-600 px-1.5 py-0.5 rounded border"
             style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}
           >
-            v2.1.0
+            v3.0.0
           </span>
         </div>
 
@@ -162,13 +164,17 @@ export default function App() {
 
           <div className="w-px h-4 bg-white/8 mx-1" />
 
-          {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
-          >
-            AD
-          </div>
+          {/* Avatar / User button */}
+          {AUTH_ENABLED ? (
+            <UserButton afterSignOutUrl="/" />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
+            >
+              RH
+            </div>
+          )}
         </div>
       </header>
 
