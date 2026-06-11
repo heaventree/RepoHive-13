@@ -4,6 +4,10 @@ import { SignIn, SignUp } from '@clerk/react';
 import { LandingPage } from './pages/LandingPage';
 import { PricingPage } from './pages/PricingPage';
 import { SignInPage } from './pages/SignInPage';
+import TermsPage from './pages/legal/Terms';
+import PrivacyPage from './pages/legal/Privacy';
+import AcceptableUsePage from './pages/legal/AcceptableUse';
+import ImprintPage from './pages/legal/Imprint';
 import { AUTH_ENABLED, RequireAuth } from './auth';
 import App from './App';
 
@@ -33,6 +37,10 @@ export function Router() {
         />
         <Route path="/app" element={<RequireAuth><App /></RequireAuth>} />
         <Route path="/app/*" element={<RequireAuth><App /></RequireAuth>} />
+        <Route path="/legal/terms" element={<TermsPage />} />
+        <Route path="/legal/privacy" element={<PrivacyPage />} />
+        <Route path="/legal/acceptable-use" element={<AcceptableUsePage />} />
+        <Route path="/legal/imprint" element={<ImprintPage />} />
         {/* Legacy: anything else → landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
