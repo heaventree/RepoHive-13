@@ -13,9 +13,13 @@
 [build.environment]
   # VITE_-prefixed publishable keys are baked into the frontend bundle on
   # purpose — they are browser-safe by design (Clerk/Stripe publishable keys).
-  # Without this, Netlify's secrets scanning flags them in dist/ and fails the
-  # deploy.
+  # APP_URL is the public website address printed in our legal pages and
+  # advertised everywhere. Without these omissions Netlify's secrets scanner
+  # flags them in dist/ and fails the deploy.
   SECRETS_SCAN_OMIT_KEYS = "VITE_CLERK_PUBLISHABLE_KEY,VITE_STRIPE_PUBLISHABLE_KEY,APP_URL,TURSO_DATABASE_URL"
+  # Also skip files where the public site URL legitimately appears as visible
+  # body text (legal pages) or as a default placeholder (env example).
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,src/pages/legal/Imprint.tsx,src/pages/legal/Privacy.tsx,src/pages/legal/Terms.tsx,src/pages/legal/AcceptableUse.tsx"
 
 [functions]
   node_bundler = "esbuild"
