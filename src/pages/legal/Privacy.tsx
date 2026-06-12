@@ -1,5 +1,3 @@
-
-
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
@@ -11,18 +9,18 @@ export default function PrivacyPolicyPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
-        
+
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Privacy Policy</h1>
           <p className="text-gray-400 mb-2">RepoHive (operated by Heaventree Ltd.)</p>
-          <p className="text-gray-400 mb-8">Effective Date: 15 May 2025</p>
-          
+          <p className="text-gray-400 mb-8">Effective Date: 12 June 2026</p>
+
           <div className="prose prose-invert max-w-none space-y-8">
             <p className="text-gray-300 leading-relaxed">
               This Privacy Policy explains how Heaventree Ltd. (&quot;Heaventree&quot;, &quot;we&quot;, &quot;us&quot;) collects, uses, stores, and protects personal data when you access or use RepoHive, available at https://repohive.cloud (the &quot;Platform&quot;).
             </p>
             <p className="text-gray-300 leading-relaxed">
-              RepoHive is a creator-focused publishing and monetization platform. This policy applies to all visitors, registered users, creators, and subscribers.
+              RepoHive is a subscription software tool that helps developers and teams organise, analyse, and search collections of open-source GitHub repositories. This policy applies to all visitors, registered users, and subscribers.
             </p>
 
             <section>
@@ -40,219 +38,155 @@ export default function PrivacyPolicyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-white mb-4">2. Personal Data We Collect</h2>
-              
-              <h3 className="text-lg font-medium text-white mb-2">a) Information You Provide Directly</h3>
-              <p className="text-gray-300 leading-relaxed mb-2">We may collect:</p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Name</li>
-                <li>Email address</li>
-                <li>Account credentials</li>
-                <li>Billing and subscription details</li>
-                <li>Content you upload or publish</li>
-                <li>Communications with support</li>
+              <p className="text-gray-300 leading-relaxed mb-2"><strong className="text-white">Account data</strong> — collected when you register or sign in (via our authentication provider):</p>
+              <ul className="text-gray-300 space-y-1 list-disc pl-6 mb-4">
+                <li>Name and email address</li>
+                <li>Authentication identifiers and, where you choose social sign-in, your linked provider identity</li>
+                <li>Organisation/team membership for team accounts</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                This data is collected when you create an account, publish content, subscribe, contact us, or otherwise interact with RepoHive.
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-2">
-                <strong className="text-white">Legal basis:</strong> Contract, Legitimate Interests, or Consent (depending on context)
-              </p>
-
-              <h3 className="text-lg font-medium text-white mt-6 mb-2">b) Automatically Collected Information</h3>
-              <p className="text-gray-300 leading-relaxed mb-2">When you use RepoHive, we may automatically collect:</p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>IP address</li>
-                <li>Device and browser type</li>
-                <li>Access times and pages viewed</li>
-                <li>Usage and performance metrics</li>
+              <p className="text-gray-300 leading-relaxed mb-2"><strong className="text-white">Content you submit</strong> — the working data of your library:</p>
+              <ul className="text-gray-300 space-y-1 list-disc pl-6 mb-4">
+                <li>GitHub repository URLs you add to your library</li>
+                <li>Project names, descriptions, and notes you write</li>
+                <li>Configuration and preferences</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                This data is used for security, fraud prevention, analytics, and service improvement.
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-2">
-                <strong className="text-white">Legal basis:</strong> Legitimate Interests
-              </p>
-
-              <h3 className="text-lg font-medium text-white mt-6 mb-2">c) Cookies and Similar Technologies</h3>
-              <p className="text-gray-300 leading-relaxed mb-2">
-                RepoHive uses cookies and similar technologies to operate securely and improve functionality.
-              </p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Strictly necessary cookies are always active</li>
-                <li>Analytics or marketing cookies are used only where legally permitted and subject to your consent</li>
+              <p className="text-gray-300 leading-relaxed mb-2"><strong className="text-white">Billing data</strong> — processed by our payment provider (Stripe):</p>
+              <ul className="text-gray-300 space-y-1 list-disc pl-6 mb-4">
+                <li>Subscription plan, billing history, and payment status</li>
+                <li>We never receive or store your full card details</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                You can manage cookie preferences via our cookie banner or browser settings. Full details are provided in our Cookie Policy.
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-2">
-                <strong className="text-white">Legal basis:</strong> Consent (where required), Legitimate Interests (essential cookies)
-              </p>
+              <p className="text-gray-300 leading-relaxed mb-2"><strong className="text-white">Usage and technical data</strong> — collected automatically:</p>
+              <ul className="text-gray-300 space-y-1 list-disc pl-6">
+                <li>IP address, browser type, device information</li>
+                <li>Log data, error reports, and feature usage (e.g. repositories added per month, for plan-limit enforcement)</li>
+                <li>API key usage timestamps</li>
+              </ul>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-white mb-4">3. How We Use Personal Data</h2>
-              <p className="text-gray-300 leading-relaxed mb-2">We use personal data to:</p>
               <ul className="text-gray-300 space-y-1 list-disc pl-6">
                 <li>Provide and operate the RepoHive platform</li>
-                <li>Manage user accounts and subscriptions</li>
-                <li>Process payments and prevent fraud</li>
-                <li>Communicate with users and provide support</li>
-                <li>Improve platform functionality and performance</li>
-                <li>Comply with legal and regulatory obligations</li>
+                <li>Authenticate you and secure your account</li>
+                <li>Process subscriptions and payments</li>
+                <li>Generate AI analyses and search indexes from the repositories you add</li>
+                <li>Enforce plan limits and prevent abuse</li>
+                <li>Respond to support requests</li>
+                <li>Improve performance, reliability, and features</li>
+                <li>Comply with legal obligations</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4 font-medium">
-                We do not sell personal data.
-              </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">4. Payments</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">4. AI Processing</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Payments are processed by third-party payment providers (such as Stripe). Heaventree Ltd. does not store full payment card details.
+                When you add a repository, its publicly available metadata and README content are sent to third-party AI providers to generate analyses (categorisation, summaries, scoring) and search embeddings. This processing concerns public repository data, not your personal data; your notes and project descriptions may also be processed to provide semantic search over your own library.
               </p>
               <p className="text-gray-300 leading-relaxed">
-                Payment providers act as independent data controllers or processors under their own privacy policies.
+                We do not use your personal data to train AI models.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">5. User-Generated Content</h2>
-              <p className="text-gray-300 leading-relaxed mb-4">
-                Content you publish on RepoHive may contain personal data. You are responsible for ensuring you have the legal right to publish such content.
-              </p>
-              <p className="text-gray-300 leading-relaxed">
-                Heaventree Ltd. acts as a hosting provider, not a publisher, in relation to user-generated content.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-white mb-4">6. Legal Bases for Processing</h2>
-              <p className="text-gray-300 leading-relaxed mb-2">We process personal data based on:</p>
+              <h2 className="text-xl font-semibold text-white mb-4">5. Legal Bases for Processing</h2>
               <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li><strong className="text-white">Contract</strong> – to provide the services you request</li>
+                <li><strong className="text-white">Contract</strong> – to provide the Services you signed up for</li>
                 <li><strong className="text-white">Legitimate Interests</strong> – to operate, secure, and improve RepoHive</li>
-                <li><strong className="text-white">Consent</strong> – where required (e.g. marketing, non-essential cookies)</li>
-                <li><strong className="text-white">Legal Obligation</strong> – where required by law</li>
+                <li><strong className="text-white">Legal Obligation</strong> – tax, accounting, and compliance requirements</li>
+                <li><strong className="text-white">Consent</strong> – for optional communications, where required</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">7. Data Sharing</h2>
-              <p className="text-gray-300 leading-relaxed mb-2">We may share personal data with:</p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Hosting and infrastructure providers</li>
-                <li>Payment processors</li>
-                <li>Analytics and security providers</li>
-                <li>Legal or regulatory authorities where required</li>
-              </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                All service providers are contractually required to protect personal data and process it only on our instructions.
+              <h2 className="text-xl font-semibold text-white mb-4">6. Data Sharing</h2>
+              <p className="text-gray-300 leading-relaxed mb-2">
+                We do not sell personal data. We share data only with service providers necessary to operate the Platform, under appropriate data processing agreements:
               </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-white mb-4">8. International Data Transfers</h2>
-              <p className="text-gray-300 leading-relaxed mb-4">
-                RepoHive is operated globally. Personal data may be transferred outside the EEA.
-              </p>
-              <p className="text-gray-300 leading-relaxed mb-2">Where required, transfers are safeguarded using:</p>
               <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Standard Contractual Clauses (SCCs)</li>
-                <li>Adequacy decisions (where applicable)</li>
-                <li>Additional technical and organisational safeguards</li>
+                <li>Authentication provider (account sign-in and session management)</li>
+                <li>Payment processor (Stripe — subscriptions and billing)</li>
+                <li>Hosting, content delivery, and database infrastructure providers</li>
+                <li>AI model providers (repository analysis and search embeddings, as described in Section 4)</li>
+                <li>Authorities, where legally required</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">9. Data Retention</h2>
-              <p className="text-gray-300 leading-relaxed mb-4">
-                We retain personal data only as long as necessary for the purposes for which it was collected, including legal, accounting, and security requirements.
-              </p>
-              <p className="text-gray-300 leading-relaxed mb-2">Typical retention periods include:</p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Account data: for the duration of the account</li>
-                <li>Billing records: as required by applicable law</li>
-                <li>Support communications: limited retention for service quality and dispute resolution</li>
-              </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                Data is securely deleted or anonymised when no longer required.
+              <h2 className="text-xl font-semibold text-white mb-4">7. International Data Transfers</h2>
+              <p className="text-gray-300 leading-relaxed">
+                Our service providers may process data outside your country of residence, including outside the EU/EEA. Where this occurs, transfers are protected by appropriate safeguards such as the EU Standard Contractual Clauses or equivalent mechanisms.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">10. Data Security</h2>
-              <p className="text-gray-300 leading-relaxed mb-2">We implement appropriate technical and organisational measures, including:</p>
+              <h2 className="text-xl font-semibold text-white mb-4">8. Data Retention</h2>
               <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Encryption (SSL/TLS)</li>
-                <li>Access controls</li>
-                <li>Secure hosting environments</li>
-                <li>Regular security reviews</li>
+                <li>Account and library data: retained while your account is active</li>
+                <li>After account deletion: removed or anonymised within a reasonable period, except where retention is legally required</li>
+                <li>Billing records: retained as required by tax and accounting law</li>
+                <li>Server logs: retained for a limited period for security and diagnostics</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                No system is completely secure, but we take reasonable steps to protect personal data.
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-4">9. Data Security</h2>
+              <p className="text-gray-300 leading-relaxed">
+                We use industry-standard measures to protect data, including encryption in transit (TLS), hashed storage of API keys, tenant-level isolation of user data, and access controls. No system is completely secure; we encourage you to use a strong, unique password and to protect your API keys.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">11. Your Rights</h2>
-              <p className="text-gray-300 leading-relaxed mb-2">Where applicable under GDPR, you have the right to:</p>
-              <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Access your personal data</li>
-                <li>Correct inaccurate data</li>
-                <li>Request deletion</li>
+              <h2 className="text-xl font-semibold text-white mb-4">10. Your Rights</h2>
+              <p className="text-gray-300 leading-relaxed mb-2">Subject to applicable law (including the GDPR where it applies), you have the right to:</p>
+              <ul className="text-gray-300 space-y-1 list-disc pl-6 mb-4">
+                <li>Access the personal data we hold about you</li>
+                <li>Rectify inaccurate data</li>
+                <li>Erase your data (&quot;right to be forgotten&quot;)</li>
                 <li>Restrict or object to processing</li>
                 <li>Data portability</li>
-                <li>Withdraw consent at any time</li>
+                <li>Withdraw consent at any time, where processing is based on consent</li>
+                <li>Lodge a complaint with a supervisory authority</li>
               </ul>
-              <p className="text-gray-300 leading-relaxed mt-4">
+              <p className="text-gray-300 leading-relaxed">
                 Requests can be submitted to: <a href="mailto:info@repohive.cloud" className="text-primary hover:underline">info@repohive.cloud</a>
               </p>
-              <p className="text-gray-300 leading-relaxed mt-2">
-                You also have the right to lodge a complaint with your local data protection authority.
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-white mb-4">11. Cookies</h2>
+              <p className="text-gray-300 leading-relaxed">
+                RepoHive uses cookies and similar technologies that are strictly necessary to operate the Platform securely — primarily session and authentication cookies. We do not use third-party advertising or cross-site tracking cookies.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-white mb-4">12. Marketing Communications</h2>
               <p className="text-gray-300 leading-relaxed">
-                You will only receive marketing communications where legally permitted. You may unsubscribe at any time using the link provided or by contacting us.
+                We may send service-related emails (billing, security, important changes) as part of operating the Platform. Optional product updates are sent only with your consent, and every such email includes an unsubscribe link.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-white mb-4">13. Children&apos;s Privacy</h2>
               <p className="text-gray-300 leading-relaxed">
-                RepoHive is not intended for children under 16. We do not knowingly collect personal data from children. If such data is identified, it will be deleted promptly.
+                RepoHive is not directed at children and may not be used by anyone under 18 years of age (or the age of majority in their jurisdiction). We do not knowingly collect data from children; if you believe a child has provided us data, contact us and we will delete it.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-white mb-4">14. EU Digital Services Act (DSA)</h2>
-              <p className="text-gray-300 leading-relaxed mb-4">
-                For EU users, RepoHive operates as an intermediary hosting service under Regulation (EU) 2022/2065.
-              </p>
+              <h2 className="text-xl font-semibold text-white mb-4">14. Changes to This Policy</h2>
               <p className="text-gray-300 leading-relaxed">
-                Heaventree Ltd. does not engage in proactive monitoring of user content but will act upon valid notices of illegal content in accordance with applicable law.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-white mb-4">15. Changes to This Policy</h2>
-              <p className="text-gray-300 leading-relaxed">
-                We may update this Privacy Policy from time to time. The latest version will always be available on repohive.cloud.
+                We may update this Privacy Policy from time to time. Material changes will be announced via the Platform or by email before they take effect. The effective date above always reflects the current version.
               </p>
             </section>
 
             <section className="border-t border-white/10 pt-8 mt-8">
-              <h2 className="text-xl font-semibold text-white mb-4">16. Contact</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">15. Contact</h2>
               <p className="text-gray-300 leading-relaxed">
-                RepoHive (operated by Heaventree Ltd.)<br />
-                Suite 4.3.02, Block 4, Eurotowers,<br />
+                Heaventree Ltd.<br />
+                Suite 4.3.02, Block 4, Eurotowers<br />
                 Gibraltar, GX111AA<br />
                 <a href="mailto:info@repohive.cloud" className="text-primary hover:underline">info@repohive.cloud</a>
-              </p>
-              <p className="text-gray-400 text-sm mt-6">
-                © Heaventree Ltd. — 2025
               </p>
             </section>
           </div>

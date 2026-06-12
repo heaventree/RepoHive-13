@@ -67,22 +67,19 @@ export default function ImprintPage() {
             <section>
               <h2 className="text-xl font-semibold text-white mb-4">Platform Operator vs. Content Publisher Distinction</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                RepoHive is a neutral technical platform that enables users to create, publish, host, and monetize their own content.
+                RepoHive is a neutral technical tool that enables users to organise, annotate, and analyse references to publicly available open-source repositories within their own private workspaces.
               </p>
               <p className="text-gray-300 leading-relaxed mb-2">Heaventree Ltd.:</p>
               <ul className="text-gray-300 space-y-1 list-disc pl-6">
-                <li>Does not act as the publisher, editor, or author of user-generated content</li>
-                <li>Does not exercise editorial control over user content</li>
-                <li>Does not pre-screen or approve content prior to publication</li>
+                <li>Does not act as the publisher, editor, or author of user-submitted content (such as notes and project descriptions)</li>
+                <li>Does not author or control the third-party repositories referenced on the Platform, whose metadata is retrieved from the GitHub public API</li>
+                <li>Does not pre-screen user-submitted content prior to storage</li>
               </ul>
               <p className="text-gray-300 leading-relaxed mt-4">
-                All content made available by users on RepoHive is the sole responsibility of the respective user or content creator.
+                Content submitted by users remains the sole responsibility of the respective user. AI-generated analyses are produced automatically and are provided for informational purposes only.
               </p>
               <p className="text-gray-300 leading-relaxed mt-4">
                 Heaventree Ltd. shall not be regarded as the publisher or content provider within the meaning of applicable media, press, or publishing laws, unless expressly stated otherwise in writing.
-              </p>
-              <p className="text-gray-300 leading-relaxed mt-4">
-                This distinction applies irrespective of whether content is free, subscription-based, monetized, or distributed using RepoHive&apos;s technical features.
               </p>
             </section>
 
