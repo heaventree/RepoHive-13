@@ -1,14 +1,27 @@
-import { createClient, type Client, type InValue } from "@libsql/client";
+// libSQL client.
+//
+// Use the fetch-based `web` client unconditionally. The default `@libsql/client`
+// (Node) pulls in a native sqlite binding that doesn't survive Netlify's
+// esbuild bundle and crashes the function at runtime. The web client has zero
+// native deps, works fine for libsql:// and http(s):// URLs (i.e. Turso), and
+// runs identically in serverless and long-lived Node servers.
 
-// Use Turso/libSQL when configured, otherwise fall back to a local file so the
-// app runs offline (and in sandboxes without egress to turso.io). The same
-// async driver/code path is exercised either way.
-const url = process.env.TURSO_DATABASE_URL?.trim() || "file:repohive.db";
+import { createClient } from "@libsql/client/web";
+import type { Client, InValue } from "@libsql/client";
+
+const url = process.env.TURSO_DATABASE_URL?.trim();
 const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
+
+if (!url) {
+  throw new Error(
+    "TURSO_DATABASE_URL is not set. Set it to a libsql:// URL in .env (local) " +
+      "or in your hosting provider's environment variables (production).",
+  );
+}
 
 export const db: Client = createClient({ url, authToken });
 
-console.log(`Database client initialized: ${url.startsWith("file:") ? url : "Turso (remote)"}`);
+console.log(`Database client initialized: Turso (web/fetch) → ${new URL(url).host}`);
 
 // libSQL rejects `undefined` bound parameters — coerce to null.
 function normalize(args: any[]): InValue[] {

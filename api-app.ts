@@ -422,10 +422,20 @@ export function createApiApp(): express.Express {
     verify: (req, _res, buf) => { (req as any).rawBody = buf; },
   }));
 
-  // Run schema + cache init exactly once on the first request.
-  app.use(async (_req, _res, next) => {
-    try { await ensureInit(); next(); }
-    catch (err) { next(err); }
+  // Run schema + cache init exactly once on the first request. Surface init
+  // failures as a JSON 500 with the error message — without this the function
+  // would crash and Netlify would return an opaque 502.
+  app.use(async (_req, res, next) => {
+    try {
+      await ensureInit();
+      next();
+    } catch (err: any) {
+      console.error("[init] schema/cache initialization failed:", err);
+      res.status(500).json({
+        error: "Server initialization failed.",
+        detail: err?.message ?? String(err),
+      });
+    }
   });
 
   // Verify the Clerk session on every request (when configured). The Express
