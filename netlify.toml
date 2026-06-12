@@ -10,6 +10,13 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[build.environment]
+  # VITE_-prefixed publishable keys are baked into the frontend bundle on
+  # purpose — they are browser-safe by design (Clerk/Stripe publishable keys).
+  # Without this, Netlify's secrets scanning flags them in dist/ and fails the
+  # deploy.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_CLERK_PUBLISHABLE_KEY,VITE_STRIPE_PUBLISHABLE_KEY,APP_URL,TURSO_DATABASE_URL"
+
 [functions]
   node_bundler = "esbuild"
   # Bundle the seed JSON and any other non-JS assets the function imports
