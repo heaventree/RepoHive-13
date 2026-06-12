@@ -4,6 +4,10 @@ import { SignIn, SignUp } from '@clerk/react';
 import { LandingPage } from './pages/LandingPage';
 import { PricingPage } from './pages/PricingPage';
 import { SignInPage } from './pages/SignInPage';
+import { HowItWorksPage } from './pages/HowItWorksPage';
+import { AppKillersPage } from './pages/AppKillersPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
+import { ProjectsPage } from './pages/ProjectsPage';
 import TermsPage from './pages/legal/Terms';
 import PrivacyPage from './pages/legal/Privacy';
 import AcceptableUsePage from './pages/legal/AcceptableUse';
@@ -12,11 +16,12 @@ import { AUTH_ENABLED, RequireAuth } from './auth';
 import App from './App';
 
 function ClerkAuthScreen({ mode }: { mode: 'sign-in' | 'sign-up' }) {
+  // After auth, drop the user into the app — not the marketing home page.
   return (
     <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0b1326' }}>
       {mode === 'sign-in'
-        ? <SignIn routing="hash" signUpUrl="/sign-up" />
-        : <SignUp routing="hash" signInUrl="/sign-in" />}
+        ? <SignIn routing="hash" signUpUrl="/sign-up" fallbackRedirectUrl="/app" forceRedirectUrl="/app" />
+        : <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/app" forceRedirectUrl="/app" />}
     </div>
   );
 }
@@ -27,6 +32,10 @@ export function Router() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/app-killers" element={<AppKillersPage />} />
+        <Route path="/integrations" element={<IntegrationsPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
         <Route
           path="/sign-in"
           element={AUTH_ENABLED ? <ClerkAuthScreen mode="sign-in" /> : <SignInPage mode="signin" />}

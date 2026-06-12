@@ -158,8 +158,15 @@ async function main() {
     const i = args.indexOf(flag);
     return i >= 0 ? args[i + 1] : null;
   };
-  const from = arg("--from");
-  const copyTo = arg("--copy-to");
+  // Accept either the flag form (--from <path> --copy-to <id>) or bare
+  // positional args (anything that looks like a .db path / tenant id).
+  // Easy to get the npm-run quoting wrong on PowerShell, so be forgiving.
+  const positional = args.filter(a => !a.startsWith("--") && !["--from", "--copy-to"].includes(args[args.indexOf(a) - 1] ?? ""));
+  const looksLikeTenant = (s?: string | null) => !!s && /^(user|org)_/.test(s);
+  const looksLikeDbPath = (s?: string | null) => !!s && /\.(db|sqlite)$/i.test(s);
+
+  const from = arg("--from") || positional.find(looksLikeDbPath) || null;
+  let copyTo = arg("--copy-to") || positional.find(looksLikeTenant) || null;
   if (args.includes("--copy-to") && !copyTo) {
     console.error("--copy-to requires a tenant id, e.g. --copy-to user_2abc...");
     process.exit(1);

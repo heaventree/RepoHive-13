@@ -32,18 +32,28 @@ export function MarketingFooter() {
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Product</div>
-          {['Library', 'Projects', 'App Killers', 'Monitoring', 'API'].map(l => (
-            <div key={l}>
-              <Link to="/app" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</Link>
+          {[
+            { label: 'How it works', to: '/how-it-works' },
+            { label: 'Projects',     to: '/projects' },
+            { label: 'App Killers',  to: '/app-killers' },
+            { label: 'Integrations', to: '/integrations' },
+            { label: 'Open app',     to: '/app' },
+          ].map(l => (
+            <div key={l.label}>
+              <Link to={l.to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l.label}</Link>
             </div>
           ))}
         </div>
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Company</div>
-          {['Pricing', 'Changelog', 'Roadmap', 'Blog'].map(l => (
-            <div key={l}>
-              <Link to="/pricing" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</Link>
+          {[
+            { label: 'Pricing', to: '/pricing' },
+            { label: 'Sign in', to: '/sign-in' },
+            { label: 'Sign up', to: '/sign-up' },
+          ].map(l => (
+            <div key={l.label}>
+              <Link to={l.to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l.label}</Link>
             </div>
           ))}
         </div>

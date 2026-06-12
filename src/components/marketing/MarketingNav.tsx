@@ -42,8 +42,10 @@ export function MarketingNav() {
         {/* Links */}
         <div className="hidden md:flex items-center gap-1">
           {[
-            { to: '/', label: 'Home' },
-            { to: '/pricing', label: 'Pricing' },
+            { to: '/how-it-works', label: 'How it works' },
+            { to: '/projects',     label: 'Projects' },
+            { to: '/integrations', label: 'Integrations' },
+            { to: '/pricing',      label: 'Pricing' },
           ].map(({ to, label }) => (
             <Link
               key={to}
@@ -59,8 +61,12 @@ export function MarketingNav() {
           ))}
           <div className="w-px h-4 bg-white/10 mx-1" />
           <Link
-            to="/app"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono text-amber-500/70 border border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40 transition-all duration-150"
+            to="/app-killers"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all duration-150 border ${
+              location.pathname === '/app-killers'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                : 'text-amber-500/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40'
+            }`}
           >
             <Flame className="w-3.5 h-3.5" /> App Killers
           </Link>
