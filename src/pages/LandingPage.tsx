@@ -262,7 +262,7 @@ const PAIN_POINTS = [
 const FEATURES = [
   { icon: <Layers className="w-5 h-5" />, title: 'Bulk import',        desc: 'Paste any GitHub URL — single repo, org, or a list of 1,000. Everything ingested in minutes.',                                       color: PRIMARY },
   { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Updated weekly.',                             color: PRIMARY_CTR },
-  { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '370+ pre-loaded OSS alternatives to expensive SaaS tools. Available on Solo and Studio as a curated starting point.',                color: AMBER },
+  { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '500+ pre-loaded OSS alternatives to expensive SaaS tools. Available on Solo and Studio as a curated starting point.',                color: AMBER },
   { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos, license changes, dropped stars, and security flags. Know before your team does.',                   color: TERTIARY },
   { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoHive to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
   { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Add a project and get AI-curated recommendations.',                        color: '#60a5fa' },
@@ -271,7 +271,7 @@ const FEATURES = [
 const IDE_INTEGRATIONS = ['Replit', 'Bolt', 'Lovable', 'Base44', 'Claude Code', 'Cursor'];
 
 const STATS = [
-  { value: '374+',    label: 'Repos analysed' },
+  { value: '500+',    label: 'Repos analysed' },
   { value: '3,072',   label: 'Vector dimensions' },
   { value: '<40ms',   label: 'Search latency' },
   { value: '6 tools', label: 'IDE integrations' },
@@ -340,16 +340,16 @@ export function LandingPage() {
                   Add your repos free <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  to="/app"
+                  to="/how-it-works"
                   className="flex items-center gap-2 px-6 py-3 rounded-full font-mono font-bold text-sm transition-all hover:bg-white/5"
                   style={{ border: '1px solid rgba(66,71,84,0.30)', color: PRIMARY }}
                 >
-                  See the demo <ChevronRight className="w-4 h-4" />
+                  How it works <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 
               <p className="mt-5 text-[11px] font-mono" style={{ color: '#424754' }}>
-                Free forever · No credit card · 374 repos already analysed
+                Free forever · No credit card · 500+ repos already analysed
               </p>
             </div>
 
@@ -430,6 +430,15 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          <div className="mt-12">
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:text-white"
+              style={{ color: TERTIARY }}
+            >
+              The full walkthrough <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -490,6 +499,13 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
+              <Link
+                to="/integrations"
+                className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:text-white pt-2"
+                style={{ color: '#c084fc' }}
+              >
+                Integration guide <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
             <div className="rounded-xl p-6" style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
               <div className="text-[10px] font-mono uppercase tracking-widest mb-5" style={{ color: '#8c909f' }}>Connect to any platform</div>
@@ -528,17 +544,22 @@ export function LandingPage() {
               </div>
               <h3 className="font-mono font-black text-white leading-tight tracking-tight"
                 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)' }}>
-                370+ curated repos, pre-loaded.
+                500+ curated repos, pre-loaded.
               </h3>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                Solo and Studio plans unlock our hand-curated App Killers library — 370+ open source alternatives to the most expensive SaaS tools. Already analysed, scored, and ready to search.
+                Solo and Studio plans unlock our hand-curated App Killers library — 500+ open source alternatives to the most expensive SaaS tools. Already analysed, scored, and ready to search.
               </p>
             </div>
-            <div className="flex-none">
-              <Link to="/pricing"
-                className="flex items-center gap-2 px-8 py-4 rounded-full font-mono font-bold text-sm transition-all hover:scale-105"
+            <div className="flex-none flex flex-col gap-3">
+              <Link to="/app-killers"
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-full font-mono font-bold text-sm transition-all hover:scale-105"
                 style={{ background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 20px rgba(77,142,255,0.30)' }}>
-                See plans <ArrowRight className="w-4 h-4" />
+                Explore App Killers <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/pricing"
+                className="flex items-center justify-center gap-2 px-8 py-3 rounded-full font-mono font-bold text-xs transition-all hover:bg-white/5"
+                style={{ border: '1px solid rgba(66,71,84,0.30)', color: PRIMARY }}>
+                See plans
               </Link>
             </div>
           </div>

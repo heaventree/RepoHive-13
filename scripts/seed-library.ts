@@ -130,6 +130,21 @@ async function seedLibrary(repos: SeedRepo[]): Promise<{ inserted: number; withE
     inserted += n;
     if (n && embedding) withEmbedding++;
   }
+
+  // Backfill embeddings for rows that already exist without one (e.g. from an
+  // earlier run of the committed, embedding-less seed). Updates every tenant's
+  // copy of the repo, so user libraries copied from the bare set get fixed too.
+  let backfilled = 0;
+  for (const r of repos) {
+    if (!r.embedding) continue;
+    const res = await run(
+      "UPDATE repos SET embedding = ? WHERE id = ? AND embedding IS NULL",
+      [r.embedding, r.id],
+    );
+    backfilled += res.rowsAffected ?? 0;
+  }
+  if (backfilled > 0) console.log(`Backfilled embeddings on ${backfilled} existing rows (across all tenants).`);
+
   return { inserted, withEmbedding };
 }
 

@@ -39,7 +39,7 @@ const PLANS = [
       { label: 'AI analysis on all your repos',                included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public repos only',                            included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: false },
+      { label: 'Pre-loaded App Killers library (500+ repos)',  included: false },
       { label: 'Staleness monitoring & alerts',                included: false },
       { label: 'API key for IDE integration',                  included: false },
       { label: 'Project workspaces',                           included: false },
@@ -60,7 +60,7 @@ const PLANS = [
       { label: 'AI analysis + weekly re-analysis',             included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Pre-loaded App Killers library (500+ repos)',  included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '1 API key for IDE integration',                included: true },
       { label: 'Project workspaces',                           included: true },
@@ -80,7 +80,7 @@ const PLANS = [
       { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Pre-loaded App Killers library (500+ repos)',  included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '25 API keys (one per seat)',                   included: true },
       { label: 'Project workspaces + team collaboration',      included: true },
@@ -362,7 +362,7 @@ export function PricingPage() {
               </div>
               <div>
                 <div className="text-sm font-mono font-bold text-white">Infrastructure Operational</div>
-                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
+                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 583 repos indexed. API latency avg 40ms.</div>
               </div>
             </div>
             <div
