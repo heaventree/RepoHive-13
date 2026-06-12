@@ -1,13 +1,18 @@
 // libSQL client.
 //
-// Use the fetch-based `web` client unconditionally. The default `@libsql/client`
+// Use the fetch-based `web` client for remote URLs. The default `@libsql/client`
 // (Node) pulls in a native sqlite binding that doesn't survive Netlify's
 // esbuild bundle and crashes the function at runtime. The web client has zero
 // native deps, works fine for libsql:// and http(s):// URLs (i.e. Turso), and
 // runs identically in serverless and long-lived Node servers.
+//
+// file: URLs (local dev, tests, sandboxes) still need the native client. It is
+// loaded through a non-literal require so esbuild cannot follow it — the
+// Netlify bundle stays native-free, and the branch simply never executes there.
 
 import { createClient } from "@libsql/client/web";
 import type { Client, InValue } from "@libsql/client";
+import { createRequire } from "node:module";
 
 const url = process.env.TURSO_DATABASE_URL?.trim();
 const authToken = process.env.TURSO_AUTH_TOKEN?.trim() || undefined;
@@ -19,9 +24,23 @@ if (!url) {
   );
 }
 
-export const db: Client = createClient({ url, authToken });
+function createFileClient(fileUrl: string): Client {
+  const req = createRequire(
+    typeof __filename !== "undefined" ? __filename : import.meta.url,
+  );
+  const modName = ["@libsql", "client"].join("/"); // opaque to esbuild
+  return req(modName).createClient({ url: fileUrl });
+}
 
-console.log(`Database client initialized: Turso (web/fetch) → ${new URL(url).host}`);
+export const db: Client = url.startsWith("file:")
+  ? createFileClient(url)
+  : createClient({ url, authToken });
+
+console.log(
+  url.startsWith("file:")
+    ? `Database client initialized: local file → ${url}`
+    : `Database client initialized: Turso (web/fetch) → ${new URL(url).host}`,
+);
 
 // libSQL rejects `undefined` bound parameters — coerce to null.
 function normalize(args: any[]): InValue[] {

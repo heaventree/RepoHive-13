@@ -6,7 +6,7 @@ import "dotenv/config";
 import express from "express";
 import crypto from "crypto";
 import Stripe from "stripe";
-import { clerkMiddleware, getAuth } from "@clerk/express";
+import { clerkMiddleware, getAuth, clerkClient } from "@clerk/express";
 import { all, get, run, execScript } from "./db";
 import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
 
@@ -1252,6 +1252,101 @@ Return ONLY valid JSON with this exact structure:
     await run("DELETE FROM repos WHERE tenant_id = ? AND id = ?", [LIBRARY_TENANT, req.params.repoId]);
     embeddingCache.delete(ck(LIBRARY_TENANT, req.params.repoId));
     res.json({ success: true });
+  });
+
+  // Platform-wide stats for the admin overview: tenant counts, plan
+  // distribution, repo totals, and this month's activity.
+  app.get("/api/admin/stats", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const period = currentPeriod();
+    const [tenants, plans, repos, additions, keys, projects] = await Promise.all([
+      get<{ c: number }>(
+        "SELECT COUNT(DISTINCT tenant_id) AS c FROM subscriptions WHERE tenant_id != ?", [LIBRARY_TENANT]),
+      all<{ plan: string; c: number }>(
+        "SELECT plan, COUNT(*) AS c FROM subscriptions WHERE tenant_id != ? GROUP BY plan", [LIBRARY_TENANT]),
+      get<{ user_repos: number; library_copies: number }>(
+        `SELECT
+           SUM(CASE WHEN source = 'user' THEN 1 ELSE 0 END) AS user_repos,
+           SUM(CASE WHEN source = 'library' THEN 1 ELSE 0 END) AS library_copies
+         FROM repos WHERE tenant_id != ?`, [LIBRARY_TENANT]),
+      get<{ c: number }>(
+        "SELECT COALESCE(SUM(repos_added), 0) AS c FROM usage_tracking WHERE period = ?", [period]),
+      get<{ c: number }>("SELECT COUNT(*) AS c FROM api_keys"),
+      get<{ c: number }>("SELECT COUNT(*) AS c FROM projects"),
+    ]);
+    const librarySize = (await get<{ c: number }>(
+      "SELECT COUNT(*) AS c FROM repos WHERE tenant_id = ?", [LIBRARY_TENANT]))?.c ?? 0;
+    res.json({
+      tenants: tenants?.c ?? 0,
+      planDistribution: Object.fromEntries(plans.map(p => [p.plan, p.c])),
+      userRepos: repos?.user_repos ?? 0,
+      libraryCopies: repos?.library_copies ?? 0,
+      librarySize,
+      reposAddedThisMonth: additions?.c ?? 0,
+      apiKeys: keys?.c ?? 0,
+      projects: projects?.c ?? 0,
+      period,
+    });
+  });
+
+  // Per-tenant management view: plan, status, usage, key count. Enriched with
+  // the Clerk user's email/name where resolvable (personal accounts only —
+  // org_ tenants resolve to the org, which we just label).
+  app.get("/api/admin/tenants", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const period = currentPeriod();
+    const rows = await all<any>(
+      `SELECT s.tenant_id, s.plan, s.status, s.updated_at,
+              COALESCE(r.user_repos, 0)    AS user_repos,
+              COALESCE(r.library_copies, 0) AS library_copies,
+              COALESCE(u.repos_added, 0)   AS added_this_month,
+              COALESCE(k.key_count, 0)     AS api_keys
+       FROM subscriptions s
+       LEFT JOIN (
+         SELECT tenant_id,
+                SUM(CASE WHEN source = 'user' THEN 1 ELSE 0 END) AS user_repos,
+                SUM(CASE WHEN source = 'library' THEN 1 ELSE 0 END) AS library_copies
+         FROM repos GROUP BY tenant_id
+       ) r ON r.tenant_id = s.tenant_id
+       LEFT JOIN usage_tracking u ON u.tenant_id = s.tenant_id AND u.period = ?
+       LEFT JOIN (
+         SELECT tenant_id, COUNT(*) AS key_count FROM api_keys GROUP BY tenant_id
+       ) k ON k.tenant_id = s.tenant_id
+       WHERE s.tenant_id != ?
+       ORDER BY s.updated_at DESC`,
+      [period, LIBRARY_TENANT],
+    );
+
+    // Best-effort identity enrichment from Clerk; tolerate failures (network,
+    // deleted users) so the table still renders.
+    const enriched = await Promise.all(rows.map(async (row) => {
+      let email: string | null = null;
+      let name: string | null = null;
+      if (AUTH_ENABLED && row.tenant_id.startsWith("user_")) {
+        try {
+          const user = await clerkClient.users.getUser(row.tenant_id);
+          email = user.primaryEmailAddress?.emailAddress
+            ?? user.emailAddresses[0]?.emailAddress ?? null;
+          name = [user.firstName, user.lastName].filter(Boolean).join(" ") || null;
+        } catch {}
+      }
+      return { ...row, email, name, isOrg: row.tenant_id.startsWith("org_") };
+    }));
+    res.json(enriched);
+  });
+
+  // Change a tenant's plan from the admin panel (e.g. comp a subscription or
+  // fix a billing mishap). Uses the same applyPlan seam Stripe drives.
+  app.post("/api/admin/tenants/:tenantId/plan", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { plan } = req.body ?? {};
+    if (!isPlanId(plan)) {
+      return res.status(400).json({ error: "Unknown plan. Expected: free, solo, or studio." });
+    }
+    const { plan: limits, copied } = await applyPlan(req.params.tenantId, plan);
+    if (copied > 0) await loadEmbeddingCache();
+    console.log(`Admin: plan → ${plan} for ${req.params.tenantId} (+${copied} library repos)`);
+    res.json({ plan: limits.id, copiedFromLibrary: copied });
   });
 
   // External API for agents (e.g. Replit) — authenticated by API key, scoped to

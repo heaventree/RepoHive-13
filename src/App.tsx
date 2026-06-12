@@ -7,7 +7,7 @@ import { ConfigPortal } from './components/ConfigPortal';
 import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
-import { AdminLibrary } from './components/AdminLibrary';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
 import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame, Crown } from 'lucide-react';
 import { UserButton } from '@clerk/react';
@@ -64,7 +64,7 @@ export default function App() {
           appKillersMode
         />;
       case 'admin':
-        return isAdmin ? <AdminLibrary /> : null;
+        return isAdmin ? <AdminDashboard /> : null;
       default:
         return <Library 
           onViewRepo={setSelectedRepo} 
