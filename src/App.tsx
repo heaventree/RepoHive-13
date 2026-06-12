@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Library } from './components/Library';
 import { Ingest } from './components/Ingest';
 import { RepoDetail } from './components/RepoDetail';
@@ -7,14 +7,25 @@ import { ConfigPortal } from './components/ConfigPortal';
 import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
+import { AdminLibrary } from './components/AdminLibrary';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame, Crown } from 'lucide-react';
 import { UserButton } from '@clerk/react';
 import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
+  // Admin tab is shown only when the backend confirms this user is in
+  // ADMIN_USER_IDS (the API enforces it regardless — this is just visibility).
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/status')
+      .then(r => r.json())
+      .then(d => setIsAdmin(Boolean(d?.admin)))
+      .catch(() => {});
+  }, []);
 
   const handleTabChange = (tab: string) => {
     setSelectedRepo(null);
@@ -52,6 +63,8 @@ export default function App() {
           onGoToWorkspace={() => setActiveTab('projects')}
           appKillersMode
         />;
+      case 'admin':
+        return isAdmin ? <AdminLibrary /> : null;
       default:
         return <Library 
           onViewRepo={setSelectedRepo} 
@@ -132,6 +145,21 @@ export default function App() {
             <Flame className="w-3.5 h-3.5" />
             App Killers
           </button>
+
+          {/* Admin — only rendered when the backend confirms admin access */}
+          {isAdmin && (
+            <button
+              onClick={() => handleTabChange('admin')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 border ${
+                activeTab === 'admin'
+                  ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_16px_rgba(168,85,247,0.2)]'
+                  : 'text-purple-500/60 border-purple-500/20 hover:bg-purple-500/10 hover:text-purple-300 hover:border-purple-500/40'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              Admin
+            </button>
+          )}
         </nav>
 
         {/* Right actions */}
