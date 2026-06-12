@@ -5,6 +5,7 @@
 import "dotenv/config";
 import express from "express";
 import crypto from "crypto";
+import Stripe from "stripe";
 import { clerkMiddleware, getAuth } from "@clerk/express";
 import { all, get, run, execScript } from "./db";
 import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
@@ -162,6 +163,66 @@ async function applyPlan(
   let copied = 0;
   if (limits.preloadedLibrary) copied = await copyLibraryToTenant(tenantId);
   return { plan: limits, copied };
+}
+
+// ── Stripe billing ───────────────────────────────────────────────────────────
+// All Stripe wiring is optional: when STRIPE_SECRET_KEY is unset the billing
+// routes respond 503 and the rest of the app is unaffected.
+let stripeClient: Stripe | null = null;
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) return null;
+  if (!stripeClient) stripeClient = new Stripe(key);
+  return stripeClient;
+}
+
+// Stripe Price IDs for each paid plan/interval, configured in the Stripe
+// dashboard and supplied via env. priceToPlan() inverts the mapping so webhook
+// events can resolve which plan a subscription corresponds to.
+function priceIdFor(plan: string, interval: string): string | undefined {
+  const table: Record<string, string | undefined> = {
+    "solo:monthly":   process.env.STRIPE_PRICE_SOLO_MONTHLY,
+    "solo:annual":    process.env.STRIPE_PRICE_SOLO_ANNUAL,
+    "studio:monthly": process.env.STRIPE_PRICE_STUDIO_MONTHLY,
+    "studio:annual":  process.env.STRIPE_PRICE_STUDIO_ANNUAL,
+  };
+  return table[`${plan}:${interval}`]?.trim() || undefined;
+}
+
+function priceToPlan(priceId: string): string | null {
+  for (const plan of ["solo", "studio"]) {
+    for (const interval of ["monthly", "annual"]) {
+      if (priceIdFor(plan, interval) === priceId) return plan;
+    }
+  }
+  return null;
+}
+
+async function recordStripeIds(tenantId: string, customerId?: string | null, subscriptionId?: string | null) {
+  await run(
+    `INSERT INTO subscriptions (tenant_id, plan, status, stripe_customer_id, stripe_subscription_id)
+     VALUES (?, ?, 'active', ?, ?)
+     ON CONFLICT(tenant_id) DO UPDATE SET
+       stripe_customer_id = COALESCE(excluded.stripe_customer_id, stripe_customer_id),
+       stripe_subscription_id = COALESCE(excluded.stripe_subscription_id, stripe_subscription_id),
+       updated_at = CURRENT_TIMESTAMP`,
+    [tenantId, DEFAULT_PLAN, customerId ?? null, subscriptionId ?? null],
+  );
+}
+
+async function tenantForStripeEvent(opts: { metadataTenant?: string | null; customerId?: string | null; subscriptionId?: string | null }): Promise<string | null> {
+  if (opts.metadataTenant) return opts.metadataTenant;
+  if (opts.subscriptionId) {
+    const row = await get<{ tenant_id: string }>(
+      "SELECT tenant_id FROM subscriptions WHERE stripe_subscription_id = ?", [opts.subscriptionId]);
+    if (row) return row.tenant_id;
+  }
+  if (opts.customerId) {
+    const row = await get<{ tenant_id: string }>(
+      "SELECT tenant_id FROM subscriptions WHERE stripe_customer_id = ?", [opts.customerId]);
+    if (row) return row.tenant_id;
+  }
+  return null;
 }
 
 // ── Schema ───────────────────────────────────────────────────────────────────
@@ -355,7 +416,11 @@ function ensureInit(): Promise<void> {
 
 export function createApiApp(): express.Express {
   const app = express();
-  app.use(express.json());
+  // Keep the raw request bytes alongside the parsed JSON — Stripe webhook
+  // signatures are computed over the exact raw body.
+  app.use(express.json({
+    verify: (req, _res, buf) => { (req as any).rawBody = buf; },
+  }));
 
   // Run schema + cache init exactly once on the first request.
   app.use(async (_req, _res, next) => {
@@ -363,13 +428,20 @@ export function createApiApp(): express.Express {
     catch (err) { next(err); }
   });
 
-  // Verify the Clerk session on every request (when configured).
+  // Verify the Clerk session on every request (when configured). The Express
+  // middleware needs the publishable key as well as the secret; environments
+  // often only define the VITE_-prefixed variant (for the frontend build), so
+  // fall back to it rather than crashing every request with a 500.
   if (AUTH_ENABLED) {
-    app.use(clerkMiddleware());
-    // Gate the internal API. /api/external/* authenticates with an API key
-    // instead of a Clerk session, so it is allowed through here.
+    app.use(clerkMiddleware({
+      publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+    }));
+    // Gate the internal API. /api/external/* authenticates with an API key and
+    // /api/stripe/webhook authenticates with a Stripe signature, so they are
+    // allowed through here.
     app.use("/api", (req, res, next) => {
       if (req.path.startsWith("/external")) return next();
+      if (req.path === "/stripe/webhook") return next();
       const { userId } = getAuth(req);
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
       next();
@@ -922,6 +994,171 @@ Return ONLY valid JSON with this exact structure:
       console.log(`Plan → ${plan} for ${tenantId}; copied ${copied} library repos`);
     }
     res.json({ plan: limits.id, planName: limits.name, copiedFromLibrary: copied });
+  });
+
+  // ── Stripe billing routes ────────────────────────────────────────────────────
+  // Start a Stripe Checkout session for a paid plan. The tenant id travels in
+  // the session metadata so the webhook can activate the right account.
+  app.post("/api/stripe/checkout", async (req, res) => {
+    const stripe = getStripe();
+    if (!stripe) return res.status(503).json({ error: "Billing is not configured yet." });
+
+    const { tenantId, userId } = getTenant(req);
+    const { plan, interval = "monthly" } = req.body ?? {};
+    if (plan !== "solo" && plan !== "studio") {
+      return res.status(400).json({ error: "plan must be 'solo' or 'studio'" });
+    }
+    if (interval !== "monthly" && interval !== "annual") {
+      return res.status(400).json({ error: "interval must be 'monthly' or 'annual'" });
+    }
+    const price = priceIdFor(plan, interval);
+    if (!price) {
+      return res.status(503).json({ error: `Price for ${plan}/${interval} is not configured (STRIPE_PRICE_* env).` });
+    }
+
+    const appUrl = (process.env.APP_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    try {
+      const existing = await get<{ stripe_customer_id: string | null }>(
+        "SELECT stripe_customer_id FROM subscriptions WHERE tenant_id = ?", [tenantId]);
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [{ price, quantity: 1 }],
+        ...(existing?.stripe_customer_id ? { customer: existing.stripe_customer_id } : {}),
+        client_reference_id: tenantId,
+        metadata: { tenantId, plan, userId },
+        subscription_data: { metadata: { tenantId, plan } },
+        success_url: `${appUrl}/app?billing=success`,
+        cancel_url: `${appUrl}/pricing?billing=cancelled`,
+        allow_promotion_codes: true,
+      });
+      res.json({ url: session.url });
+    } catch (err: any) {
+      console.error("Stripe checkout failed:", err.message);
+      res.status(500).json({ error: "Could not start checkout. Please try again." });
+    }
+  });
+
+  // Open the Stripe customer portal (manage payment method, cancel, invoices).
+  app.post("/api/stripe/portal", async (req, res) => {
+    const stripe = getStripe();
+    if (!stripe) return res.status(503).json({ error: "Billing is not configured yet." });
+
+    const { tenantId } = getTenant(req);
+    const row = await get<{ stripe_customer_id: string | null }>(
+      "SELECT stripe_customer_id FROM subscriptions WHERE tenant_id = ?", [tenantId]);
+    if (!row?.stripe_customer_id) {
+      return res.status(404).json({ error: "No billing account yet — subscribe to a paid plan first." });
+    }
+    const appUrl = (process.env.APP_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    try {
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: row.stripe_customer_id,
+        return_url: `${appUrl}/app`,
+      });
+      res.json({ url: portal.url });
+    } catch (err: any) {
+      console.error("Stripe portal failed:", err.message);
+      res.status(500).json({ error: "Could not open the billing portal." });
+    }
+  });
+
+  // Stripe webhook — authenticated by signature over the raw body, not by a
+  // Clerk session (exempted from the auth gate above).
+  app.post("/api/stripe/webhook", async (req, res) => {
+    const stripe = getStripe();
+    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+    if (!stripe || !secret) return res.status(503).json({ error: "Billing is not configured yet." });
+
+    let event: Stripe.Event;
+    try {
+      const sig = req.headers["stripe-signature"] as string;
+      event = stripe.webhooks.constructEvent((req as any).rawBody, sig, secret);
+    } catch (err: any) {
+      console.warn("Stripe webhook signature verification failed:", err.message);
+      return res.status(400).json({ error: "Invalid signature" });
+    }
+
+    try {
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          const tenantId = session.metadata?.tenantId || session.client_reference_id;
+          const plan = session.metadata?.plan;
+          if (tenantId && isPlanId(plan ?? "")) {
+            await recordStripeIds(tenantId,
+              typeof session.customer === "string" ? session.customer : session.customer?.id,
+              typeof session.subscription === "string" ? session.subscription : session.subscription?.id);
+            const { copied } = await applyPlan(tenantId, plan!);
+            if (copied > 0) await loadEmbeddingCache();
+            console.log(`Stripe: checkout complete → ${plan} for ${tenantId} (+${copied} library repos)`);
+          } else {
+            console.warn("Stripe: checkout.session.completed without usable tenant/plan metadata");
+          }
+          break;
+        }
+
+        case "customer.subscription.updated": {
+          const sub = event.data.object as Stripe.Subscription;
+          const tenantId = await tenantForStripeEvent({
+            metadataTenant: sub.metadata?.tenantId,
+            subscriptionId: sub.id,
+            customerId: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
+          });
+          if (!tenantId) { console.warn(`Stripe: no tenant for subscription ${sub.id}`); break; }
+
+          const priceId = sub.items.data[0]?.price?.id;
+          const plan = priceId ? priceToPlan(priceId) : null;
+          if (sub.status === "active" || sub.status === "trialing") {
+            if (plan) {
+              const { copied } = await applyPlan(tenantId, plan);
+              if (copied > 0) await loadEmbeddingCache();
+            }
+            await run("UPDATE subscriptions SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?", [tenantId]);
+          } else if (sub.status === "past_due" || sub.status === "unpaid") {
+            await run("UPDATE subscriptions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?", [sub.status, tenantId]);
+          } else if (sub.status === "canceled") {
+            await applyPlan(tenantId, "free");
+          }
+          console.log(`Stripe: subscription ${sub.id} → ${sub.status} (tenant ${tenantId}, plan ${plan ?? "unchanged"})`);
+          break;
+        }
+
+        case "customer.subscription.deleted": {
+          const sub = event.data.object as Stripe.Subscription;
+          const tenantId = await tenantForStripeEvent({
+            metadataTenant: sub.metadata?.tenantId,
+            subscriptionId: sub.id,
+            customerId: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
+          });
+          if (tenantId) {
+            await applyPlan(tenantId, "free");
+            console.log(`Stripe: subscription deleted → free for ${tenantId}`);
+          }
+          break;
+        }
+
+        case "invoice.payment_failed": {
+          const invoice = event.data.object as Stripe.Invoice;
+          const tenantId = await tenantForStripeEvent({
+            customerId: typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id,
+          });
+          if (tenantId) {
+            await run("UPDATE subscriptions SET status = 'past_due', updated_at = CURRENT_TIMESTAMP WHERE tenant_id = ?", [tenantId]);
+            console.log(`Stripe: payment failed → past_due for ${tenantId}`);
+          }
+          break;
+        }
+
+        default:
+          // Unhandled event types are acknowledged so Stripe doesn't retry them.
+          break;
+      }
+      res.json({ received: true });
+    } catch (err: any) {
+      console.error(`Stripe webhook handler failed (${event.type}):`, err.message);
+      res.status(500).json({ error: "Webhook handling failed" });
+    }
   });
 
   // ── Admin: curate the preloaded library ─────────────────────────────────────

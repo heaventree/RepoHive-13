@@ -59,18 +59,41 @@
     }
   },
 
-  "deferred_phase_2_billing": {
-    "_note": "These are placeholders for the Stripe wiring that comes in Phase 2 billing. Leave unset until that ships — the app does not read them yet.",
+  "stripe_billing": {
+    "_note": "Billing routes respond 503 until these are set, so they can be added in any order. Webhook endpoint URL: https://repohive.cloud/api/stripe/webhook — subscribe it to checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed.",
     "STRIPE_SECRET_KEY": {
       "scope": "server",
+      "description": "Stripe dashboard → Developers → API keys.",
       "example": "sk_test_... or sk_live_..."
     },
     "STRIPE_WEBHOOK_SECRET": {
       "scope": "server",
+      "description": "Signing secret shown when creating the webhook endpoint.",
       "example": "whsec_..."
+    },
+    "STRIPE_PRICE_SOLO_MONTHLY": {
+      "scope": "server",
+      "description": "Recurring Price ID for Solo monthly ($19/mo). Stripe dashboard → Products.",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_SOLO_ANNUAL": {
+      "scope": "server",
+      "description": "Recurring Price ID for Solo annual ($180/yr).",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_STUDIO_MONTHLY": {
+      "scope": "server",
+      "description": "Recurring Price ID for Studio monthly ($49/mo).",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_STUDIO_ANNUAL": {
+      "scope": "server",
+      "description": "Recurring Price ID for Studio annual ($468/yr).",
+      "example": "price_..."
     },
     "VITE_STRIPE_PUBLISHABLE_KEY": {
       "scope": "frontend (build-time)",
+      "description": "Not currently read by the frontend (Checkout is hosted by Stripe) — safe to set for future use.",
       "example": "pk_test_..."
     }
   },

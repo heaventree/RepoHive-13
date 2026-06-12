@@ -115,6 +115,29 @@ const FAQS = [
 export function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
+
+  // Paid plans go through Stripe Checkout. 401 means not signed in yet —
+  // send them to sign-up first; they can subscribe from inside the app.
+  const startCheckout = async (tier: string) => {
+    const plan = tier.toLowerCase();
+    setCheckoutBusy(tier);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, interval: billing }),
+      });
+      if (res.status === 401) { window.location.href = '/sign-up'; return; }
+      const data = await res.json();
+      if (res.ok && data.url) { window.location.href = data.url; return; }
+      alert(data.error || 'Unable to start checkout — please try again.');
+    } catch {
+      alert('Unable to start checkout — please try again.');
+    } finally {
+      setCheckoutBusy(null);
+    }
+  };
 
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
@@ -247,17 +270,28 @@ export function PricingPage() {
                     ))}
                   </ul>
 
-                  {/* CTA */}
-                  <Link
-                    to="/sign-up"
-                    className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={plan.ctaStyle === 'primary'
-                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
-                      : { background: SURFACE_HIGH, color: PRIMARY }
-                    }
-                  >
-                    {plan.cta}
-                  </Link>
+                  {/* CTA — free goes to sign-up, paid plans go to Stripe Checkout */}
+                  {plan.tier === 'FREE' ? (
+                    <Link
+                      to="/sign-up"
+                      className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
+                      style={{ background: SURFACE_HIGH, color: PRIMARY }}
+                    >
+                      {plan.cta}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => startCheckout(plan.tier)}
+                      disabled={checkoutBusy !== null}
+                      className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                      style={plan.ctaStyle === 'primary'
+                        ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
+                        : { background: SURFACE_HIGH, color: PRIMARY }
+                      }
+                    >
+                      {checkoutBusy === plan.tier ? 'Redirecting…' : plan.cta}
+                    </button>
+                  )}
                 </div>
               );
             })}
