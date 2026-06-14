@@ -327,7 +327,58 @@ async function initSchema() {
       current_period_end DATETIME,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS ai_usage_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider TEXT NOT NULL,
+      model TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      tenant_id TEXT,
+      input_units INTEGER DEFAULT 0,
+      output_units INTEGER DEFAULT 0,
+      cost_usd REAL DEFAULT 0,
+      ok INTEGER DEFAULT 1,
+      recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS cost_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
+}
+
+// ── AI cost tracking ─────────────────────────────────────────────────────────
+// Approximate prices (USD) as of mid-2025 — update via COST_CONFIG overrides.
+const PRICE_TABLE: Record<string, { input: number; output: number; unit: string }> = {
+  // DeepSeek Chat: $0.14/M input, $0.28/M output tokens
+  'deepseek:deepseek-chat':      { input: 0.14 / 1_000_000, output: 0.28 / 1_000_000, unit: 'tokens' },
+  // Gemini Embedding 001: $0.00025/1K tokens (in = out same price)
+  'gemini:gemini-embedding-001': { input: 0.00025 / 1_000,  output: 0,                unit: 'tokens' },
+  // GitHub API: free — tracked for rate-limit visibility only
+  'github:rest':                 { input: 0, output: 0, unit: 'requests' },
+};
+
+function calcCost(providerModel: string, inputUnits: number, outputUnits: number): number {
+  const p = PRICE_TABLE[providerModel];
+  if (!p) return 0;
+  return p.input * inputUnits + p.output * outputUnits;
+}
+
+// Fire-and-forget: never let tracking errors bubble up to callers.
+async function trackUsage(opts: {
+  provider: string; model: string; operation: string; tenantId?: string;
+  inputUnits: number; outputUnits?: number; ok?: boolean;
+}): Promise<void> {
+  try {
+    const { provider, model, operation, tenantId, inputUnits, outputUnits = 0, ok = true } = opts;
+    const cost = calcCost(`${provider}:${model}`, inputUnits, outputUnits);
+    await run(
+      `INSERT INTO ai_usage_events (provider, model, operation, tenant_id, input_units, output_units, cost_usd, ok)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [provider, model, operation, tenantId ?? null, inputUnits, outputUnits, cost, ok ? 1 : 0],
+    );
+  } catch { /* tracking must never break the caller */ }
 }
 
 // ── Vector helpers ──────────────────────────────────────────────────────────
@@ -340,48 +391,59 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return denom === 0 ? 0 : dot / denom;
 }
 
-async function generateEmbedding(text: string): Promise<number[] | null> {
+async function generateEmbedding(text: string, tenantId?: string): Promise<number[] | null> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return null;
+  const truncated = text.slice(0, 4000);
+  const inputTokens = Math.ceil(truncated.length / 4);
   try {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${key}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'models/gemini-embedding-001', content: { parts: [{ text: text.slice(0, 4000) }] } })
+        body: JSON.stringify({ model: 'models/gemini-embedding-001', content: { parts: [{ text: truncated }] } })
       }
     );
     const data = await res.json();
-    return data.embedding?.values ?? null;
-  } catch { return null; }
+    const values = data.embedding?.values ?? null;
+    trackUsage({ provider: 'gemini', model: 'gemini-embedding-001', operation: 'embed', tenantId, inputUnits: inputTokens, ok: values !== null });
+    return values;
+  } catch {
+    trackUsage({ provider: 'gemini', model: 'gemini-embedding-001', operation: 'embed', tenantId, inputUnits: inputTokens, ok: false });
+    return null;
+  }
 }
 
 // Expand a short brief into a richer description so the embedding
 // captures synonyms and related concepts (e.g. "CRM" → full feature list).
-async function expandBrief(brief: string): Promise<string> {
+async function expandBrief(brief: string, tenantId?: string): Promise<string> {
   const words = brief.trim().split(/\s+/).length;
   if (words > 20) return brief; // already detailed enough
   const key = process.env.DEEPSEEK_API_KEY;
   if (!key) return brief;
+  const prompt = `Expand this software project description into 3-4 sentences covering what it does, its key features, typical use cases, and related technical concepts. Be specific and use relevant technical terminology. Project: "${brief}"`;
   try {
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: [{
-          role: 'user',
-          content: `Expand this software project description into 3-4 sentences covering what it does, its key features, typical use cases, and related technical concepts. Be specific and use relevant technical terminology. Project: "${brief}"`
-        }],
+        messages: [{ role: 'user', content: prompt }],
         max_tokens: 200,
         temperature: 0.2
       })
     });
     const data = await res.json();
+    const inputTokens  = data.usage?.prompt_tokens     ?? Math.ceil(prompt.length / 4);
+    const outputTokens = data.usage?.completion_tokens ?? 0;
     const expanded = data.choices?.[0]?.message?.content?.trim();
+    trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'expand-brief', tenantId, inputUnits: inputTokens, outputUnits: outputTokens, ok: !!expanded });
     return expanded ? `${brief}\n\n${expanded}` : brief;
-  } catch { return brief; }
+  } catch {
+    trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'expand-brief', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
+    return brief;
+  }
 }
 
 function buildEmbedText(repo: any, ai: any = {}): string {
@@ -490,10 +552,11 @@ export function createApiApp(): express.Express {
     return 'General';
   }
 
-  async function fetchGitHub(path: string) {
+  async function fetchGitHub(path: string, tenantId?: string) {
     const headers: Record<string, string> = { 'User-Agent': 'RepoHive/2' };
     if (process.env.GITHUB_TOKEN) headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`;
     const res = await fetch(`https://api.github.com${path}`, { headers });
+    trackUsage({ provider: 'github', model: 'rest', operation: path.split('?')[0].replace(/\/[^/]+$/g, '/:id'), tenantId, inputUnits: 1, ok: res.ok });
     if (!res.ok) throw new Error(`GitHub ${res.status}: ${res.statusText}`);
     return res.json() as Promise<any>;
   }
@@ -519,7 +582,7 @@ export function createApiApp(): express.Express {
     }
   }
 
-  async function deepseekAnalyze(id: string, description: string, language: string | null, topics: string[], readme: string | null, fallbackCategory: string): Promise<any> {
+  async function deepseekAnalyze(id: string, description: string, language: string | null, topics: string[], readme: string | null, fallbackCategory: string, tenantId?: string): Promise<any> {
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) return null;
 
@@ -557,17 +620,22 @@ Return ONLY valid JSON with this exact structure:
       });
       if (!res.ok) {
         console.warn(`DeepSeek API error ${res.status}: ${res.statusText}`);
+        trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
         return null;
       }
       const data: any = await res.json();
+      const inputTokens  = data.usage?.prompt_tokens     ?? Math.ceil(prompt.length / 4);
+      const outputTokens = data.usage?.completion_tokens ?? 0;
       const text = data.choices?.[0]?.message?.content || '';
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return null;
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: inputTokens, outputUnits: outputTokens, ok: !!parsed });
+      if (!parsed) return null;
       console.log(`DeepSeek analyzed ${id} → ${parsed.category}`);
       return parsed;
     } catch (err: any) {
       console.warn(`DeepSeek analysis failed for ${id}: ${err.message}`);
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
       return null;
     }
   }
@@ -590,7 +658,7 @@ Return ONLY valid JSON with this exact structure:
     try {
       let data: any;
       try {
-        data = await fetchGitHub(`/repos/${owner}/${repoName}`);
+        data = await fetchGitHub(`/repos/${owner}/${repoName}`, tenantId);
       } catch (err: any) {
         if (err.message?.includes('404')) {
           // Repo name may be truncated — try GitHub search to resolve it
@@ -625,7 +693,7 @@ Return ONLY valid JSON with this exact structure:
 
       let readme = null;
       try {
-        const rm = await fetchGitHub(`/repos/${canonicalOwner}/${canonicalName}/readme`);
+        const rm = await fetchGitHub(`/repos/${canonicalOwner}/${canonicalName}/readme`, tenantId);
         readme = Buffer.from(rm.content, 'base64').toString('utf8').slice(0, 5000);
       } catch (_) {}
 
@@ -639,7 +707,7 @@ Return ONLY valid JSON with this exact structure:
         integrationNotes: []
       };
 
-      const aiResult = await deepseekAnalyze(id, desc, language, topics, readme, category);
+      const aiResult = await deepseekAnalyze(id, desc, language, topics, readme, category, tenantId);
       const aiAnalysis = aiResult ?? fallbackAnalysis;
 
       await run(`
@@ -659,7 +727,7 @@ Return ONLY valid JSON with this exact structure:
 
       // Auto-embed after ingest — don't block the response
       const embedText = buildEmbedText({ name: canonicalName, description: desc }, aiAnalysis);
-      generateEmbedding(embedText).then(async emb => {
+      generateEmbedding(embedText, tenantId).then(async emb => {
         if (emb) {
           await run("UPDATE repos SET embedding = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(emb), tenantId, id]);
           embeddingCache.set(ck(tenantId, id), emb);
@@ -687,8 +755,8 @@ Return ONLY valid JSON with this exact structure:
     // ── Vector path ──────────────────────────────────────────────────────────
     if (embeddingCache.size > 0) {
       // Expand short briefs so "CRM" becomes a full feature description
-      const queryText = await expandBrief(brief);
-      const briefEmb = await generateEmbedding(queryText);
+      const queryText = await expandBrief(brief, tenantId);
+      const briefEmb = await generateEmbedding(queryText, tenantId);
       if (briefEmb) {
         // Compute raw cosine similarities for all repos with embeddings
         const rawScored = repos
@@ -1361,6 +1429,92 @@ Return ONLY valid JSON with this exact structure:
     if (copied > 0) await loadEmbeddingCache();
     console.log(`Admin: plan → ${plan} for ${req.params.tenantId} (+${copied} library repos)`);
     res.json({ plan: limits.id, copiedFromLibrary: copied });
+  });
+
+  // ── Admin cost monitoring ──────────────────────────────────────────────────
+  // Aggregated AI + GitHub usage for the cost dashboard. Returns:
+  //  - totals for all time and the current calendar month
+  //  - per-provider/model breakdown
+  //  - daily totals for the last 30 days (chart data)
+  //  - the 50 most recent raw events
+  app.get("/api/admin/costs", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const period = currentPeriod(); // "YYYY-MM"
+
+    const [totals, byModel, daily, recent, monthTotals, budgetRow] = await Promise.all([
+      // All-time totals
+      get<{ total_cost: number; total_calls: number; failed_calls: number }>(
+        `SELECT ROUND(SUM(cost_usd), 6) AS total_cost, COUNT(*) AS total_calls,
+                SUM(CASE WHEN ok=0 THEN 1 ELSE 0 END) AS failed_calls
+         FROM ai_usage_events`),
+      // Per-provider+model breakdown (all time)
+      all<{ provider: string; model: string; operation: string; calls: number; input_units: number; output_units: number; cost_usd: number; failed: number }>(
+        `SELECT provider, model, operation,
+                COUNT(*) AS calls,
+                SUM(input_units) AS input_units,
+                SUM(output_units) AS output_units,
+                ROUND(SUM(cost_usd), 6) AS cost_usd,
+                SUM(CASE WHEN ok=0 THEN 1 ELSE 0 END) AS failed
+         FROM ai_usage_events
+         GROUP BY provider, model, operation
+         ORDER BY cost_usd DESC`),
+      // Daily totals for the last 30 days
+      all<{ day: string; cost_usd: number; calls: number }>(
+        `SELECT DATE(recorded_at) AS day,
+                ROUND(SUM(cost_usd), 6) AS cost_usd,
+                COUNT(*) AS calls
+         FROM ai_usage_events
+         WHERE recorded_at >= DATE('now', '-30 days')
+         GROUP BY DATE(recorded_at)
+         ORDER BY day ASC`),
+      // 50 most-recent raw events for the activity log
+      all<any>(
+        `SELECT id, provider, model, operation, tenant_id, input_units, output_units,
+                ROUND(cost_usd, 6) AS cost_usd, ok, recorded_at
+         FROM ai_usage_events ORDER BY id DESC LIMIT 50`),
+      // This-month totals
+      get<{ cost_usd: number; calls: number }>(
+        `SELECT ROUND(SUM(cost_usd), 6) AS cost_usd, COUNT(*) AS calls
+         FROM ai_usage_events
+         WHERE strftime('%Y-%m', recorded_at) = ?`, [period]),
+      // Monthly budget threshold
+      get<{ value: string }>("SELECT value FROM cost_config WHERE key = 'monthly_budget_usd'"),
+    ]);
+
+    res.json({
+      allTime: {
+        costUsd: totals?.total_cost ?? 0,
+        calls: totals?.total_calls ?? 0,
+        failedCalls: totals?.failed_calls ?? 0,
+      },
+      thisMonth: {
+        period,
+        costUsd: monthTotals?.cost_usd ?? 0,
+        calls: monthTotals?.calls ?? 0,
+      },
+      byModel,
+      daily,
+      recent,
+      budgetUsd: budgetRow ? parseFloat(budgetRow.value) : null,
+    });
+  });
+
+  // Set or update the monthly budget warning threshold.
+  app.post("/api/admin/costs/budget", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { budgetUsd } = req.body ?? {};
+    if (budgetUsd === null || budgetUsd === undefined) {
+      await run("DELETE FROM cost_config WHERE key = 'monthly_budget_usd'");
+      return res.json({ budgetUsd: null });
+    }
+    const v = parseFloat(budgetUsd);
+    if (isNaN(v) || v < 0) return res.status(400).json({ error: "budgetUsd must be a non-negative number" });
+    await run(
+      `INSERT INTO cost_config (key, value) VALUES ('monthly_budget_usd', ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      [String(v)],
+    );
+    res.json({ budgetUsd: v });
   });
 
   // External API for agents (e.g. Replit) — authenticated by API key, scoped to
