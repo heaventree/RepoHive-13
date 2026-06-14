@@ -389,7 +389,13 @@ function buildEmbedText(repo: any, ai: any = {}): string {
 }
 
 async function loadEmbeddingCache() {
-  const rows = await all<any>("SELECT tenant_id, id, embedding FROM repos WHERE embedding IS NOT NULL");
+  // Exclude the master library tenant — its embeddings are duplicated into each
+  // subscriber's tenant on upgrade, so loading them here would double the memory
+  // for no benefit (searches run against the per-tenant copy, not __library__).
+  const rows = await all<any>(
+    "SELECT tenant_id, id, embedding FROM repos WHERE embedding IS NOT NULL AND tenant_id != ?",
+    [LIBRARY_TENANT],
+  );
   embeddingCache.clear();
   for (const row of rows) {
     try { embeddingCache.set(ck(row.tenant_id, row.id), JSON.parse(row.embedding)); } catch {}
@@ -786,7 +792,15 @@ Return ONLY valid JSON with this exact structure:
   // API Routes
   app.get("/api/repos", async (req, res) => {
     const { tenantId } = getTenant(req);
-    const repos = await all("SELECT * FROM repos WHERE tenant_id = ? ORDER BY score DESC", [tenantId]);
+    // Exclude heavy columns (readme, embedding) from list — they are only needed
+    // on the detail view and can easily push 500+ repos past Netlify's 6 MB limit.
+    const repos = await all(
+      `SELECT tenant_id, id, owner, name, url, status, score, language, license,
+              stars, forks, issues, last_push, description, ai_analysis,
+              enterpriseTier, comparableApp, source, created_by, created_at, updated_at
+       FROM repos WHERE tenant_id = ? ORDER BY score DESC`,
+      [tenantId],
+    );
     console.log(`Fetching repos for ${tenantId}: found ${repos.length} records`);
     res.json(repos);
   });

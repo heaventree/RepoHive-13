@@ -72,9 +72,10 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
     fetch('/api/repos')
       .then(res => res.json())
       .then(data => {
-        setRepos(data);
+        setRepos(Array.isArray(data) ? data : []);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   };
 
   useEffect(() => {
