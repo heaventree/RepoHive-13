@@ -9,6 +9,11 @@ export function HowItWorksPage() {
       kicker="How it works"
       title={<>From a folder of GitHub URLs to <span style={{ color: '#adc6ff' }}>a queryable repo brain.</span></>}
       subtitle="RepoHive turns the open-source repos you care about into an AI-indexed, searchable library so you can find the right one in seconds — not the wrong one after an afternoon of tabs."
+      seo={{
+        title: 'How It Works',
+        description: 'RepoHive ingests GitHub repos, scores them with AI, builds vector embeddings, and lets you search in plain English. Here\'s exactly how.',
+        openGraph: { type: 'website', url: 'https://repohive.app/how-it-works', siteName: 'RepoHive' },
+      }}
     >
       {/* The four stages */}
       <div className="grid md:grid-cols-2 gap-6 mb-20">

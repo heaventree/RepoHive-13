@@ -18,6 +18,11 @@ export function IntegrationsPage() {
       kicker="Integrations"
       title={<>Plug RepoHive into <span style={{ color: '#adc6ff' }}>any AI coding tool.</span></>}
       subtitle="RepoHive ships a simple authenticated HTTP API. Generate a key, paste it into the agent of your choice, and your hand-picked open-source library becomes the source of truth the AI builds with."
+      seo={{
+        title: 'Integrations — Connect RepoHive to Cursor, Claude, Copilot & More',
+        description: 'Use RepoHive\'s REST API to wire your curated repo library into Cursor, Claude Code, Replit, Bolt, Lovable, and any other AI coding tool.',
+        openGraph: { type: 'website', url: 'https://repohive.app/integrations', siteName: 'RepoHive' },
+      }}
     >
       {/* The mental model */}
       <div

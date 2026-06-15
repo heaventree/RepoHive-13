@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Rocket, ExternalLink, Star, Calendar, Loader, AlertCircle, ArrowRight } from 'lucide-react';
+import { SEO } from '../lib/seo';
 
 interface PublicRec {
   repo_id: string;
@@ -66,6 +67,17 @@ export const PublicProjectPage: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at top, #1e1b4b 0%, #0b1326 60%)' }}>
+      <SEO
+        title={data.project.name}
+        description={data.project.description || `A curated list of ${data.recommendations.length} open-source repos for ${data.project.name}.`}
+        openGraph={{
+          type: 'website',
+          title: `${data.project.name} — RepoHive Project`,
+          description: data.project.description || `${data.recommendations.length} curated open-source repos`,
+          url: `https://repohive.app/p/${slug}`,
+          siteName: 'RepoHive',
+        }}
+      />
       {/* Header */}
       <header className="border-b border-white/5 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">

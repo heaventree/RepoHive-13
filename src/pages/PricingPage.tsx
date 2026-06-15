@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, X, Zap } from 'lucide-react';
+import { SEO } from '../lib/seo';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 
@@ -141,6 +142,11 @@ export function PricingPage() {
 
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+      <SEO
+        title="Pricing"
+        description="Start free with 50 repos, or upgrade to Solo (500 repos) and Studio (unlimited) for full AI-powered open-source discovery."
+        openGraph={{ type: 'website', url: 'https://repohive.app/pricing', siteName: 'RepoHive' }}
+      />
       <Orbs />
       <MarketingNav />
 

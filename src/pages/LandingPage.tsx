@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../lib/seo';
+import { buildWebSiteSchema } from '../lib/seo';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 import {
@@ -277,9 +279,26 @@ const STATS = [
   { value: '6 tools', label: 'IDE integrations' },
 ];
 
+const WEB_SCHEMA = buildWebSiteSchema('RepoHive', 'https://repohive.app', {
+  description: 'Discover the best open-source repos for any project. AI-powered scoring, comparison, and curation.',
+});
+
 export function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+      <SEO
+        title="Find the Best Open-Source Repos for Any Project"
+        description="RepoHive uses AI to score, compare, and curate open-source repositories. Discover App Killers, import GitHub stars, and build shareable project lists."
+        openGraph={{
+          type: 'website',
+          title: 'RepoHive — AI-Powered Open-Source Discovery',
+          description: 'Score, compare, and curate the best open-source repos for any project.',
+          url: 'https://repohive.app/',
+          siteName: 'RepoHive',
+        }}
+        twitter={{ card: 'summary_large_image' }}
+        jsonLd={WEB_SCHEMA}
+      />
       <Orbs />
       <MarketingNav />
 

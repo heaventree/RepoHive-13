@@ -1,6 +1,8 @@
 import React, { ReactNode } from 'react';
 import { MarketingNav } from './MarketingNav';
 import { MarketingFooter } from './MarketingFooter';
+import { SEO } from '../../lib/seo';
+import type { SEOProps } from '../../lib/seo';
 
 const PRIMARY = '#adc6ff';
 
@@ -20,13 +22,15 @@ interface MarketingPageProps {
   title: ReactNode;
   subtitle: string;
   children: ReactNode;
+  seo?: SEOProps;
 }
 
 // Shared shell for all marketing/feature pages: dark background, orbs,
 // MarketingNav at top, MarketingFooter at bottom, hero block, then content.
-export function MarketingPage({ kicker, title, subtitle, children }: MarketingPageProps) {
+export function MarketingPage({ kicker, title, subtitle, children, seo }: MarketingPageProps) {
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+      {seo && <SEO {...seo} />}
       <Orbs />
       <MarketingNav />
 

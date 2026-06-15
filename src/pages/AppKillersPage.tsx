@@ -20,6 +20,11 @@ export function AppKillersPage() {
       kicker="App Killers library"
       title={<>Open source <span style={{ color: '#fbbf24' }}>that replaces your SaaS bill.</span></>}
       subtitle="A hand-curated set of production-grade open-source projects that are credible self-hosted replacements for the paid software your stack runs on. Already analysed, scored, embedded — search them in your library on day one."
+      seo={{
+        title: 'App Killers — Open Source Replacements for Paid SaaS',
+        description: 'Browse RepoHive\'s curated App Killers: self-hosted, production-ready open-source alternatives to Slack, Firebase, Heroku, Calendly, and 100+ more.',
+        openGraph: { type: 'website', url: 'https://repohive.app/app-killers', siteName: 'RepoHive' },
+      }}
     >
       {/* The promise */}
       <div className="grid md:grid-cols-3 gap-6 mb-16">

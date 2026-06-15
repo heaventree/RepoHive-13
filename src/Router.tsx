@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SEOProvider } from './lib/seo';
 import { SignIn, SignUp } from '@clerk/react';
 import { LandingPage } from './pages/LandingPage';
 import { PricingPage } from './pages/PricingPage';
@@ -27,8 +28,18 @@ function ClerkAuthScreen({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   );
 }
 
+const SEO_CONFIG = {
+  hostname: 'https://repohive.app',
+  appName: 'RepoHive',
+  lang: 'en',
+  defaultDescription: 'Discover the best open-source tools for any project. AI-powered repo discovery, scoring, and comparison.',
+  defaultOGImage: 'https://repohive.app/og-image.png',
+  environment: (import.meta.env.DEV ? 'development' : 'production') as 'development' | 'production',
+};
+
 export function Router() {
   return (
+    <SEOProvider config={SEO_CONFIG}>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -56,5 +67,6 @@ export function Router() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </SEOProvider>
   );
 }
