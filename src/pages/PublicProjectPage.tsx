@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Rocket, ExternalLink, Star, Calendar, Loader, AlertCircle, ArrowRight } from 'lucide-react';
 import { SEO } from '../lib/seo';
+import logoIcon from '../logos/repohive-ICON-white-yellow.png';
 
 interface PublicRec {
   repo_id: string;
@@ -82,7 +83,7 @@ export const PublicProjectPage: React.FC = () => {
       <header className="border-b border-white/5 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-white font-bold font-mono">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center font-black text-xs" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}>RH</div>
+            <img src={logoIcon} alt="" className="w-7 h-7" />
             RepoHive
           </Link>
           <Link to="/sign-up" className="text-xs font-mono text-slate-400 hover:text-white flex items-center gap-1">

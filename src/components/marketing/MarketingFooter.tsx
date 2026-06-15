@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logoIcon from '../../logos/repohive-ICON-white-yellow.png';
 
 export function MarketingFooter() {
   return (
@@ -10,12 +11,7 @@ export function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1 space-y-4">
           <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
-            >
-              RH
-            </div>
+            <img src={logoIcon} alt="" className="w-7 h-7" />
             <span className="font-bold text-sm text-white font-mono">RepoHive</span>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">

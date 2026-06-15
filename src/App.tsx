@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import logoIcon from './logos/repohive-ICON-white-yellow.png';
 import { Library } from './components/Library';
 import { Ingest } from './components/Ingest';
 import { RepoDetail } from './components/RepoDetail';
@@ -90,12 +91,7 @@ export default function App() {
         {/* Logo */}
         <div className="flex items-center gap-3 flex-none">
           <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
-            >
-              RH
-            </div>
+            <img src={logoIcon} alt="" className="w-7 h-7" />
             <span className="font-bold text-sm tracking-tight text-white">RepoHive</span>
           </div>
           <span

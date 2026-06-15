@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Flame } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { AUTH_ENABLED } from '../../auth';
+import logoWordmark from '../../logos/repohive-logo-white-yellow.png';
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -29,14 +30,8 @@ export function MarketingNav() {
         }}
       >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
-          >
-            RH
-          </div>
-          <span className="font-bold text-sm tracking-tight text-white font-mono">RepoHive</span>
+        <Link to="/" className="flex items-center">
+          <img src={logoWordmark} alt="RepoHive" className="h-7 w-auto" />
         </Link>
 
         {/* Links */}
