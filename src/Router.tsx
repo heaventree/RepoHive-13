@@ -10,6 +10,8 @@ import { AppKillersPage } from './pages/AppKillersPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { PublicProjectPage } from './pages/PublicProjectPage';
+import { BlogIndexPage } from './pages/BlogIndexPage';
+import { BlogPostPage } from './pages/BlogPostPage';
 import TermsPage from './pages/legal/Terms';
 import PrivacyPage from './pages/legal/Privacy';
 import AcceptableUsePage from './pages/legal/AcceptableUse';
@@ -63,6 +65,8 @@ export function Router() {
         <Route path="/legal/acceptable-use" element={<AcceptableUsePage />} />
         <Route path="/legal/imprint" element={<ImprintPage />} />
         <Route path="/p/:slug" element={<PublicProjectPage />} />
+        <Route path="/blog" element={<BlogIndexPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
         {/* Legacy: anything else → landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

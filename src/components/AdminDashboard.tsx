@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Crown, Users, LayoutDashboard, Flame, RefreshCw, Boxes, KeyRound, Rocket, TrendingUp, DollarSign, Zap } from 'lucide-react';
+import { Crown, Users, LayoutDashboard, Flame, RefreshCw, Boxes, KeyRound, Rocket, TrendingUp, DollarSign, Zap, Search } from 'lucide-react';
 import { AdminLibrary } from './AdminLibrary';
 import { AdminCosts } from './AdminCosts';
+import { AdminSEO } from './AdminSEO';
 
 interface AdminStats {
   tenants: number;
@@ -252,11 +253,12 @@ function TenantsTable() {
 // curation screen, in one tabbed view. Every API it calls is admin-gated
 // server-side; this component only renders when /api/admin/status says so.
 export const AdminDashboard: React.FC = () => {
-  const [section, setSection] = useState<'overview' | 'users' | 'library' | 'costs'>('overview');
+  const [section, setSection] = useState<'overview' | 'users' | 'library' | 'costs' | 'seo'>('overview');
 
   const sections = [
     { id: 'overview' as const, icon: LayoutDashboard, label: 'Overview' },
     { id: 'users' as const,    icon: Users,           label: 'Accounts' },
+    { id: 'seo' as const,      icon: Search,          label: 'SEO & Blog' },
     { id: 'costs' as const,    icon: DollarSign,      label: 'AI Costs' },
     { id: 'library' as const,  icon: Flame,           label: 'Preloaded Library' },
   ];
@@ -287,6 +289,24 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
+  if (section === 'seo') {
+    return (
+      <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+        <SectionTabs sections={sections} active={section} onChange={setSection} />
+        <div className="glass-header p-6">
+          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1 font-mono uppercase tracking-widest">
+            <Crown className="w-4 h-4 text-purple-400" /> Admin
+          </div>
+          <h2 className="text-3xl font-bold text-white font-mono tracking-tight">SEO &amp; Blog</h2>
+          <p className="text-xs text-slate-500 font-mono mt-1">Manage page metadata, run AI audits, configure analytics, and publish blog posts.</p>
+        </div>
+        <div className="p-6 max-w-6xl mx-auto w-full">
+          <AdminSEO />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
       <SectionTabs sections={sections} active={section} onChange={setSection} />
@@ -306,9 +326,9 @@ export const AdminDashboard: React.FC = () => {
 };
 
 function SectionTabs({ sections, active, onChange }: {
-  sections: { id: 'overview' | 'users' | 'costs' | 'library'; icon: React.ComponentType<{ className?: string }>; label: string }[];
+  sections: { id: 'overview' | 'users' | 'costs' | 'library' | 'seo'; icon: React.ComponentType<{ className?: string }>; label: string }[];
   active: string;
-  onChange: (s: 'overview' | 'users' | 'costs' | 'library') => void;
+  onChange: (s: 'overview' | 'users' | 'costs' | 'library' | 'seo') => void;
 }) {
   return (
     <div className="flex-none flex items-center gap-1 px-6 pt-4">

@@ -348,6 +348,42 @@ async function initSchema() {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS seo_pages (
+      path TEXT PRIMARY KEY,
+      label TEXT,
+      title TEXT,
+      description TEXT,
+      og_image TEXT,
+      keywords TEXT,
+      noindex INTEGER DEFAULT 0,
+      ai_score INTEGER,
+      ai_suggestions TEXT,
+      last_audited_at DATETIME,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS seo_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS blog_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      excerpt TEXT,
+      body_md TEXT,
+      og_image TEXT,
+      seo_title TEXT,
+      seo_description TEXT,
+      tags TEXT,
+      author TEXT,
+      status TEXT DEFAULT 'draft',
+      published_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 
@@ -539,6 +575,8 @@ export function createApiApp(): express.Express {
       if (req.path.startsWith("/external")) return next();
       if (req.path === "/stripe/webhook") return next();
       if (req.path.startsWith("/p/")) return next(); // public shareable projects
+      if (req.path === "/seo/settings") return next(); // public — SPA SEO metadata
+      if (req.path === "/blog" || req.path.startsWith("/blog/")) return next(); // public blog
       const { userId } = getAuth(req);
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
       next();
@@ -1780,6 +1818,344 @@ Return ONLY valid JSON with this exact structure:
       console.log(`Embedding sweep complete — ${embeddingCache.size} total in cache`);
     })();
   });
+  // ─── SEO admin (Reacteo-style) ───────────────────────────────────────────────
+  // Seed default routes that the admin can immediately edit. Idempotent.
+  const DEFAULT_SEO_PAGES = [
+    { path: '/',              label: 'Landing' },
+    { path: '/pricing',       label: 'Pricing' },
+    { path: '/how-it-works',  label: 'How It Works' },
+    { path: '/app-killers',   label: 'App Killers' },
+    { path: '/integrations',  label: 'Integrations' },
+    { path: '/blog',          label: 'Blog index' },
+    { path: '/legal/privacy', label: 'Privacy' },
+    { path: '/legal/terms',   label: 'Terms' },
+  ];
+
+  async function seedSeoPages() {
+    for (const p of DEFAULT_SEO_PAGES) {
+      await run(
+        "INSERT OR IGNORE INTO seo_pages (path, label) VALUES (?, ?)",
+        [p.path, p.label],
+      );
+    }
+  }
+  // Fire-and-forget; runs once per cold start.
+  ensureInit().then(() => seedSeoPages()).catch(() => {});
+
+  // Public — used by the SPA on every page to fetch overrides + GA/GTM ids.
+  app.get("/api/seo/settings", async (_req, res) => {
+    const rows = await all<{ key: string; value: string }>("SELECT key, value FROM seo_settings");
+    const settings: Record<string, string> = {};
+    for (const r of rows) settings[r.key] = r.value;
+    const overrides = await all<any>(
+      "SELECT path, title, description, og_image AS ogImage, keywords, noindex FROM seo_pages",
+    );
+    res.json({ settings, overrides });
+  });
+
+  app.get("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const rows = await all(
+      "SELECT * FROM seo_pages ORDER BY path",
+    );
+    res.json(rows);
+  });
+
+  app.post("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { path, label, title, description, og_image, keywords, noindex } = req.body ?? {};
+    if (!path) return res.status(400).json({ error: "path is required" });
+    await run(
+      `INSERT INTO seo_pages (path, label, title, description, og_image, keywords, noindex, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(path) DO UPDATE SET
+         label=excluded.label, title=excluded.title, description=excluded.description,
+         og_image=excluded.og_image, keywords=excluded.keywords, noindex=excluded.noindex,
+         updated_at=CURRENT_TIMESTAMP`,
+      [path, label ?? null, title ?? null, description ?? null, og_image ?? null, keywords ?? null, noindex ? 1 : 0],
+    );
+    res.json({ success: true });
+  });
+
+  app.delete("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const path = req.query.path as string;
+    if (!path) return res.status(400).json({ error: "path is required" });
+    await run("DELETE FROM seo_pages WHERE path = ?", [path]);
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/seo/settings", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const rows = await all<{ key: string; value: string }>("SELECT key, value FROM seo_settings");
+    const out: Record<string, string> = {};
+    for (const r of rows) out[r.key] = r.value;
+    res.json(out);
+  });
+
+  app.post("/api/admin/seo/settings", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const body = req.body ?? {};
+    for (const [k, v] of Object.entries(body)) {
+      if (typeof v === 'string') {
+        await run(
+          "INSERT INTO seo_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+          [k, v],
+        );
+      }
+    }
+    res.json({ success: true });
+  });
+
+  // DeepSeek-powered SEO audit: scores a page's metadata 0-100 and returns
+  // ranked suggestions for title, description, keywords, structure.
+  async function deepseekSeoAudit(page: { path: string; title?: string; description?: string; keywords?: string }, tenantId?: string) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) return null;
+    const prompt = `You are an SEO expert reviewing a web page's metadata.
+
+URL path: ${page.path}
+Current title: ${page.title || '(empty)'}
+Current description: ${page.description || '(empty)'}
+Current keywords: ${page.keywords || '(empty)'}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "score": 0-100 integer rating overall SEO quality,
+  "issues": ["array of specific problems with current metadata"],
+  "suggestions": {
+    "title": "improved title under 60 chars, compelling, with primary keyword early",
+    "description": "improved meta description 140-160 chars, action-oriented, with CTA",
+    "keywords": "comma-separated list of 5-8 high-intent keywords"
+  },
+  "rationale": "1-2 sentence explanation of the changes"
+}`;
+    try {
+      const r = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 600,
+          temperature: 0.4,
+        }),
+      });
+      if (!r.ok) {
+        trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'seo-audit', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
+        return null;
+      }
+      const data: any = await r.json();
+      const inTok = data.usage?.prompt_tokens ?? Math.ceil(prompt.length / 4);
+      const outTok = data.usage?.completion_tokens ?? 0;
+      const text = data.choices?.[0]?.message?.content || '';
+      const match = text.match(/\{[\s\S]*\}/);
+      const parsed = match ? JSON.parse(match[0]) : null;
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'seo-audit', tenantId, inputUnits: inTok, outputUnits: outTok, ok: !!parsed });
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  app.post("/api/admin/seo/audit", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { path } = req.body ?? {};
+    if (!path) return res.status(400).json({ error: "path is required" });
+    const page = await get<any>("SELECT * FROM seo_pages WHERE path = ?", [path]);
+    if (!page) return res.status(404).json({ error: "Page not found" });
+    const { userId } = getTenant(req);
+    const result = await deepseekSeoAudit(page, userId);
+    if (!result) return res.status(502).json({ error: "AI audit failed (check DEEPSEEK_API_KEY)" });
+    await run(
+      `UPDATE seo_pages SET ai_score = ?, ai_suggestions = ?, last_audited_at = CURRENT_TIMESTAMP WHERE path = ?`,
+      [result.score ?? null, JSON.stringify(result), path],
+    );
+    res.json(result);
+  });
+
+  app.post("/api/admin/seo/apply", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { path } = req.body ?? {};
+    const page = await get<any>("SELECT * FROM seo_pages WHERE path = ?", [path]);
+    if (!page?.ai_suggestions) return res.status(400).json({ error: "No suggestions to apply" });
+    const s = JSON.parse(page.ai_suggestions).suggestions || {};
+    await run(
+      `UPDATE seo_pages SET title = ?, description = ?, keywords = ?, updated_at = CURRENT_TIMESTAMP WHERE path = ?`,
+      [s.title ?? page.title, s.description ?? page.description, s.keywords ?? page.keywords, path],
+    );
+    res.json({ success: true });
+  });
+
+  // ─── Blog (SEO content) ──────────────────────────────────────────────────────
+  function slugify(text: string): string {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  }
+
+  // Public — list of published posts.
+  app.get("/api/blog", async (_req, res) => {
+    const posts = await all(
+      `SELECT slug, title, excerpt, og_image AS ogImage, tags, author, published_at AS publishedAt
+       FROM blog_posts WHERE status = 'published'
+       ORDER BY published_at DESC LIMIT 100`,
+    );
+    res.json(posts);
+  });
+
+  // Public — single post by slug.
+  app.get("/api/blog/:slug", async (req, res) => {
+    const post = await get(
+      `SELECT slug, title, excerpt, body_md AS bodyMd, og_image AS ogImage,
+              seo_title AS seoTitle, seo_description AS seoDescription,
+              tags, author, published_at AS publishedAt
+       FROM blog_posts WHERE slug = ? AND status = 'published'`,
+      [req.params.slug],
+    );
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    res.json(post);
+  });
+
+  // Admin — full list (incl. drafts).
+  app.get("/api/admin/blog", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const posts = await all(
+      `SELECT id, slug, title, excerpt, status, published_at AS publishedAt, updated_at AS updatedAt
+       FROM blog_posts ORDER BY updated_at DESC`,
+    );
+    res.json(posts);
+  });
+
+  app.get("/api/admin/blog/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const post = await get("SELECT * FROM blog_posts WHERE id = ?", [req.params.id]);
+    if (!post) return res.status(404).json({ error: "Not found" });
+    res.json(post);
+  });
+
+  app.post("/api/admin/blog", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { id, slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status } = req.body ?? {};
+    if (!title) return res.status(400).json({ error: "title is required" });
+    const finalSlug = slug || slugify(title);
+    const publishedAt = status === 'published' ? new Date().toISOString() : null;
+    if (id) {
+      await run(
+        `UPDATE blog_posts SET slug=?, title=?, excerpt=?, body_md=?, og_image=?, seo_title=?, seo_description=?,
+           tags=?, author=?, status=?,
+           published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN CURRENT_TIMESTAMP ELSE published_at END,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE id=?`,
+        [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
+         tags ?? null, author ?? null, status ?? 'draft', status ?? 'draft', id],
+      );
+      res.json({ success: true, id });
+    } else {
+      const result = await run(
+        `INSERT INTO blog_posts (slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
+         tags ?? null, author ?? null, status ?? 'draft', publishedAt],
+      );
+      res.json({ success: true, id: Number(result.lastInsertRowid) });
+    }
+  });
+
+  app.delete("/api/admin/blog/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    await run("DELETE FROM blog_posts WHERE id = ?", [req.params.id]);
+    res.json({ success: true });
+  });
+
+  // DeepSeek blog draft generator.
+  app.post("/api/admin/blog/draft", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { topic, keywords, tone } = req.body ?? {};
+    if (!topic) return res.status(400).json({ error: "topic is required" });
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "DEEPSEEK_API_KEY not set" });
+    const prompt = `Write an SEO-optimised blog post for RepoHive (a SaaS that helps developers discover and curate open-source GitHub repositories with AI).
+
+Topic: ${topic}
+Target keywords: ${keywords || '(infer from topic)'}
+Tone: ${tone || 'developer-friendly, practical, no fluff'}
+
+Return ONLY valid JSON:
+{
+  "title": "SEO title under 60 chars",
+  "slug": "url-slug",
+  "excerpt": "1-sentence summary under 160 chars",
+  "seo_title": "alternate title for <title> tag",
+  "seo_description": "meta description 140-160 chars",
+  "tags": "comma,separated,tags",
+  "body_md": "Full blog post in markdown with H2/H3 headings, 600-1000 words. Use code blocks if relevant. End with a CTA linking back to RepoHive."
+}`;
+    try {
+      const r = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 2500,
+          temperature: 0.6,
+        }),
+      });
+      if (!r.ok) return res.status(502).json({ error: `DeepSeek ${r.status}` });
+      const data: any = await r.json();
+      const inTok = data.usage?.prompt_tokens ?? Math.ceil(prompt.length / 4);
+      const outTok = data.usage?.completion_tokens ?? 0;
+      const { userId } = getTenant(req);
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'blog-draft', tenantId: userId, inputUnits: inTok, outputUnits: outTok, ok: true });
+      const text = data.choices?.[0]?.message?.content || '';
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) return res.status(502).json({ error: "AI returned no JSON" });
+      res.json(JSON.parse(match[0]));
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ─── Sitemap & robots ────────────────────────────────────────────────────────
+  const SITE_URL = process.env.APP_URL || 'https://repohive.app';
+
+  app.get("/sitemap.xml", async (_req, res) => {
+    const seoRows = await all<{ path: string }>("SELECT path FROM seo_pages WHERE noindex = 0");
+    const blogRows = await all<{ slug: string; published_at: string }>(
+      "SELECT slug, published_at FROM blog_posts WHERE status = 'published'",
+    );
+    const publicProjects = await all<{ public_slug: string }>(
+      "SELECT public_slug FROM projects WHERE is_public = 1 AND public_slug IS NOT NULL",
+    );
+
+    const urls: string[] = [];
+    const seen = new Set<string>();
+    const add = (loc: string, lastmod?: string, changefreq?: string, priority?: string) => {
+      if (seen.has(loc)) return;
+      seen.add(loc);
+      urls.push(`<url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}${changefreq ? `<changefreq>${changefreq}</changefreq>` : ''}${priority ? `<priority>${priority}</priority>` : ''}</url>`);
+    };
+
+    add(`${SITE_URL}/`, undefined, 'weekly', '1.0');
+    for (const p of seoRows) add(`${SITE_URL}${p.path}`, undefined, 'weekly', '0.8');
+    for (const b of blogRows) add(`${SITE_URL}/blog/${b.slug}`, b.published_at?.slice(0, 10), 'monthly', '0.7');
+    for (const pr of publicProjects) add(`${SITE_URL}/p/${pr.public_slug}`, undefined, 'monthly', '0.5');
+
+    res.set('Content-Type', 'application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>`);
+  });
+
+  app.get("/robots.txt", (_req, res) => {
+    res.type('text/plain').send(`User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /api/
+Sitemap: ${SITE_URL}/sitemap.xml
+`);
+  });
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return app;

@@ -4,19 +4,25 @@ import type { SEOProps, OpenGraphImage } from '../types';
 import { useSEOContext } from '../context/SEOProvider';
 import { renderTemplate, renderSeoTemplates } from '../utils/template-engine';
 
-export const SEO: React.FC<SEOProps> = ({
-  title,
-  description,
-  canonical,
-  lang,
-  openGraph,
-  twitter,
-  jsonLd,
-  noindex = false,
-  nofollow = false,
-  templateContext,
-}) => {
-  const { config, isDevelopment } = useSEOContext();
+export const SEO: React.FC<SEOProps> = (props) => {
+  const { config, isDevelopment, overrides } = useSEOContext();
+
+  // Merge admin DB overrides (keyed by path) over per-page defaults.
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const ovr = overrides[currentPath];
+  const title = ovr?.title || props.title;
+  const description = ovr?.description || props.description;
+  const canonical = props.canonical;
+  const lang = props.lang;
+  const openGraph = ovr?.ogImage
+    ? { ...(props.openGraph || {}), image: ovr.ogImage }
+    : props.openGraph;
+  const twitter = props.twitter;
+  const jsonLd = props.jsonLd;
+  const noindex = ovr?.noindex ? true : (props.noindex ?? false);
+  const nofollow = props.nofollow ?? false;
+  const templateContext = props.templateContext;
+  const keywords = ovr?.keywords;
 
   const baseContext = useMemo(() => ({
     sitetitle: config.appName,
@@ -83,6 +89,7 @@ export const SEO: React.FC<SEOProps> = ({
       <html lang={lang || config.lang || 'en'} />
       <title>{formattedTitle}</title>
       <meta name="description" content={finalDescription} />
+      {keywords && <meta name="keywords" content={keywords} />}
       {robotsMeta && <meta name="robots" content={robotsMeta} />}
       <link rel="canonical" href={finalCanonical} />
 
