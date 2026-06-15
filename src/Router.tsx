@@ -8,6 +8,7 @@ import { HowItWorksPage } from './pages/HowItWorksPage';
 import { AppKillersPage } from './pages/AppKillersPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
+import { PublicProjectPage } from './pages/PublicProjectPage';
 import TermsPage from './pages/legal/Terms';
 import PrivacyPage from './pages/legal/Privacy';
 import AcceptableUsePage from './pages/legal/AcceptableUse';
@@ -50,6 +51,7 @@ export function Router() {
         <Route path="/legal/privacy" element={<PrivacyPage />} />
         <Route path="/legal/acceptable-use" element={<AcceptableUsePage />} />
         <Route path="/legal/imprint" element={<ImprintPage />} />
+        <Route path="/p/:slug" element={<PublicProjectPage />} />
         {/* Legacy: anything else → landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

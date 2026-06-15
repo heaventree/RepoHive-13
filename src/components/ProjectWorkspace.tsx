@@ -20,7 +20,9 @@ import {
   GitFork,
   Zap,
   Database,
-  Cpu
+  Cpu,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { Repo, Project } from '../types';
 
@@ -44,6 +46,31 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const [error, setError] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [embedStatus, setEmbedStatus] = useState<{ embedded: number; total: number; running: boolean } | null>(null);
+  // Shareable project link state
+  const [shareInfo, setShareInfo] = useState<{ isPublic: boolean; slug: string | null } | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  // Sync share state whenever the active project changes.
+  useEffect(() => {
+    if (!activeProject) { setShareInfo(null); return; }
+    const ap = activeProject as any;
+    setShareInfo({ isPublic: !!ap.is_public, slug: ap.public_slug ?? null });
+  }, [activeProject]);
+
+  const toggleShare = async () => {
+    if (!activeProject) return;
+    try {
+      const res = await fetch(`/api/projects/${activeProject.id}/share`, { method: 'POST' });
+      const d = await res.json();
+      if (res.ok) {
+        setShareInfo({ isPublic: d.isPublic, slug: d.slug });
+        if (d.isPublic && d.slug) {
+          const url = `${window.location.origin}/p/${d.slug}`;
+          try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
+        }
+      }
+    } catch {}
+  };
 
   const fetchProjects = () => {
     fetch('/api/projects').then(res => res.json()).then(data => {
@@ -394,6 +421,34 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {activeProject && (
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={toggleShare}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                    shareInfo?.isPublic
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-bg-panel border-border-main text-slate-300 hover:text-white hover:border-accent-blue'
+                  }`}
+                  title={shareInfo?.isPublic ? 'Click to unshare' : 'Make this project public'}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  {shareInfo?.isPublic ? 'Public' : 'Share'}
+                </button>
+                {shareInfo?.isPublic && shareInfo.slug && (
+                  <button
+                    onClick={async () => {
+                      const url = `${window.location.origin}/p/${shareInfo.slug}`;
+                      try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
+                    }}
+                    className="text-[10px] font-mono text-slate-500 hover:text-accent-blue flex items-center gap-1"
+                  >
+                    <Copy className="w-2.5 h-2.5" />
+                    {shareCopied ? 'Copied!' : `/p/${shareInfo.slug}`}
+                  </button>
+                )}
+              </div>
+            )}
             <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
               <button
                 onClick={() => setRecViewMode('grid')}

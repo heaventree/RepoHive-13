@@ -9,6 +9,7 @@ import Stripe from "stripe";
 import { clerkMiddleware, getAuth, clerkClient } from "@clerk/express";
 import { all, get, run, execScript } from "./db";
 import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
+import { rescanOldestRepos } from "./lib/rescan";
 
 // When CLERK_SECRET_KEY is absent we run with auth disabled and scope all data
 // to a single dev tenant — keeps the app runnable offline / in CI / sandboxes.
@@ -271,6 +272,8 @@ async function initSchema() {
       name TEXT,
       description TEXT,
       constraints TEXT,
+      is_public INTEGER DEFAULT 0,
+      public_slug TEXT UNIQUE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -346,6 +349,20 @@ async function initSchema() {
       value TEXT NOT NULL
     );
   `);
+}
+
+// ── Schema migrations ────────────────────────────────────────────────────────
+// Columns added after initial deploy. Safe to run on every boot — libSQL
+// returns an error for duplicate columns which we intentionally ignore.
+async function runMigrations() {
+  const migrations = [
+    // Phase 2: shareable projects
+    "ALTER TABLE projects ADD COLUMN is_public INTEGER DEFAULT 0",
+    "ALTER TABLE projects ADD COLUMN public_slug TEXT",
+  ];
+  for (const sql of migrations) {
+    try { await run(sql); } catch { /* column already exists — ok */ }
+  }
 }
 
 // ── AI cost tracking ─────────────────────────────────────────────────────────
@@ -473,6 +490,7 @@ function ensureInit(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
       await initSchema();
+      await runMigrations();
       await loadEmbeddingCache();
     })().catch((err) => {
       initPromise = null; // let the next request retry
@@ -520,6 +538,7 @@ export function createApiApp(): express.Express {
     app.use("/api", (req, res, next) => {
       if (req.path.startsWith("/external")) return next();
       if (req.path === "/stripe/webhook") return next();
+      if (req.path.startsWith("/p/")) return next(); // public shareable projects
       const { userId } = getAuth(req);
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
       next();
@@ -991,6 +1010,99 @@ Return ONLY valid JSON with this exact structure:
     res.json({ success: true });
   });
 
+  // Share a project: toggle public, generate a stable slug, return the URL.
+  app.post("/api/projects/:id/share", async (req, res) => {
+    const { tenantId } = getTenant(req);
+    const project = await get<any>(
+      "SELECT id, is_public, public_slug FROM projects WHERE id = ? AND tenant_id = ?",
+      [req.params.id, tenantId],
+    );
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    if (project.is_public) {
+      // Already public — toggle off
+      await run("UPDATE projects SET is_public=0 WHERE id=? AND tenant_id=?", [req.params.id, tenantId]);
+      return res.json({ isPublic: false, slug: project.public_slug });
+    }
+
+    // Make public: generate a slug if none exists yet
+    const slug = project.public_slug ?? sha256(`${tenantId}:${req.params.id}:${Date.now()}`).slice(0, 12);
+    await run(
+      "UPDATE projects SET is_public=1, public_slug=? WHERE id=? AND tenant_id=?",
+      [slug, req.params.id, tenantId],
+    );
+    res.json({ isPublic: true, slug });
+  });
+
+  // Public project view — no auth, slug-based. Returns project + top recommendations
+  // + lightweight repo metadata (no readme/embedding). Used by the public share page.
+  app.get("/api/p/:slug", async (req, res) => {
+    const project = await get<any>(
+      "SELECT * FROM projects WHERE public_slug = ? AND is_public = 1",
+      [req.params.slug],
+    );
+    if (!project) return res.status(404).json({ error: "Project not found or not public" });
+
+    const recs = await all<any>(
+      `SELECT pr.repo_id, pr.fit_score, pr.rationale,
+              r.name, r.owner, r.url, r.stars, r.language, r.license,
+              r.description, r.ai_analysis, r.score
+       FROM project_recommendations pr
+       JOIN repos r ON r.tenant_id = pr.tenant_id AND r.id = pr.repo_id
+       WHERE pr.project_id = ? AND pr.tenant_id = ?
+       ORDER BY pr.fit_score DESC
+       LIMIT 10`,
+      [project.id, project.tenant_id],
+    );
+
+    res.json({
+      project: {
+        name: project.name,
+        description: project.description,
+        constraints: project.constraints ? JSON.parse(project.constraints) : {},
+        createdAt: project.created_at,
+      },
+      recommendations: recs,
+    });
+  });
+
+  // Fetch a GitHub user's public starred repos (public API, no user auth needed).
+  // Proxied through the server so we can attach our GITHUB_TOKEN and avoid the
+  // anonymous 60 req/hr rate limit.
+  app.get("/api/github/stars", async (req, res) => {
+    const { username, page = "1" } = req.query as Record<string, string>;
+    if (!username?.trim()) return res.status(400).json({ error: "username is required" });
+    const headers: Record<string, string> = { "User-Agent": "RepoHive/2" };
+    if (process.env.GITHUB_TOKEN) headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
+    try {
+      const ghRes = await fetch(
+        `https://api.github.com/users/${encodeURIComponent(username)}/starred?per_page=100&page=${page}`,
+        { headers },
+      );
+      if (!ghRes.ok) {
+        const msg = ghRes.status === 404 ? "GitHub user not found" : `GitHub API error ${ghRes.status}`;
+        return res.status(ghRes.status).json({ error: msg });
+      }
+      const data: any[] = await ghRes.json();
+      // Return only the fields we need — keeps payload small
+      res.json(data.map(r => ({
+        id:          r.full_name,
+        owner:       r.owner?.login,
+        name:        r.name,
+        url:         r.html_url,
+        stars:       r.stargazers_count,
+        forks:       r.forks_count,
+        issues:      r.open_issues_count,
+        language:    r.language,
+        license:     r.license?.spdx_id ?? r.license?.name ?? null,
+        last_push:   r.pushed_at,
+        description: r.description,
+      })));
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get("/api/config", async (req, res) => {
     const { tenantId } = getTenant(req);
     const config = await all<any>("SELECT key, value FROM config WHERE tenant_id = ?", [tenantId]);
@@ -1429,6 +1541,20 @@ Return ONLY valid JSON with this exact structure:
     if (copied > 0) await loadEmbeddingCache();
     console.log(`Admin: plan → ${plan} for ${req.params.tenantId} (+${copied} library repos)`);
     res.json({ plan: limits.id, copiedFromLibrary: copied });
+  });
+
+  // Manual rescan trigger — admin only. Also used by the weekly scheduled
+  // Netlify function which calls rescanOldestRepos() directly.
+  app.post("/api/admin/rescan", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const limit = Math.min(parseInt((req.query.limit as string) || "150"), 500);
+    try {
+      const result = await rescanOldestRepos(limit);
+      console.log(`[rescan] Admin triggered: ${JSON.stringify(result)}`);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // ── Admin cost monitoring ──────────────────────────────────────────────────

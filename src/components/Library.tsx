@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Filter, 
-  SortDesc, 
-  PlusCircle, 
-  Verified, 
+import {
+  Filter,
+  SortDesc,
+  PlusCircle,
+  Verified,
   ExternalLink,
   Search,
   RefreshCw,
@@ -21,9 +21,13 @@ import {
   HelpCircle,
   ChevronRight,
   Building2,
-  Flame
+  Flame,
+  GitCompare,
+  Download
 } from 'lucide-react';
 import { Repo } from '../types';
+import { CompareModal } from './CompareModal';
+import { GitHubImportModal } from './GitHubImportModal';
 
 interface LibraryProps {
   onViewRepo: (repo: Repo) => void;
@@ -62,6 +66,19 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [quickAddStatus, setQuickAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
   const [enterpriseOnly, setEnterpriseOnly] = useState(appKillersMode);
+  // Compare mode: select 2–4 repos and view them side-by-side.
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
+  const [showGithubImport, setShowGithubImport] = useState(false);
+
+  const toggleCompare = (id: string) => {
+    setCompareIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < 4) next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     setEnterpriseOnly(appKillersMode);
@@ -276,7 +293,15 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             <RefreshCw className={`w-4 h-4 ${isRescanning ? 'animate-spin' : ''}`} />
             <span>{isRescanning ? 'Refreshing...' : 'Refresh'}</span>
           </button>
-          <button 
+          <button
+            onClick={() => setShowGithubImport(true)}
+            className="bg-bg-panel hover:bg-slate-800 text-slate-200 text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-border-main"
+            title="Import a GitHub user's starred repos"
+          >
+            <Github className="w-4 h-4" />
+            <span>Import stars</span>
+          </button>
+          <button
             onClick={onBulkIngest}
             className="bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-blue-500"
           >
@@ -285,6 +310,27 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </button>
         </div>
       </div>
+
+      {/* Compare action bar — appears when 2+ repos are ticked */}
+      {compareIds.size > 0 && (
+        <div className="flex-none px-6 py-2 flex items-center justify-between border-b border-border-main/30" style={{ background: 'rgba(77,142,255,0.08)' }}>
+          <div className="flex items-center gap-2 text-xs font-mono text-accent-blue">
+            <GitCompare className="w-3.5 h-3.5" />
+            <span className="font-bold">{compareIds.size}</span> selected for compare
+            <span className="text-slate-500 ml-1">(max 4)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCompareIds(new Set())} className="text-[11px] text-slate-500 hover:text-slate-300 font-mono">Clear</button>
+            <button
+              onClick={() => setShowCompare(true)}
+              disabled={compareIds.size < 2}
+              className="px-3 py-1.5 rounded bg-accent-blue/20 border border-accent-blue/40 text-accent-blue text-xs font-mono font-bold hover:bg-accent-blue/30 transition-all disabled:opacity-40"
+            >
+              Compare {compareIds.size} repos →
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-none px-6 py-3 mb-6 flex flex-col gap-3 border-b border-white/5">
         <div className="flex items-center justify-between">
@@ -607,15 +653,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 const stale = isStale(repo.last_push);
 
                 return (
-                  <div 
+                  <div
                     key={repo.id}
                     onClick={() => onViewRepo(repo)}
-                    className="group hover:bg-white/5 cursor-pointer transition-colors border-l-2 border-l-transparent hover:border-l-accent-blue"
+                    className={`group hover:bg-white/5 cursor-pointer transition-colors border-l-2 ${compareIds.has(repo.id) ? 'border-l-accent-blue bg-accent-blue/[0.04]' : 'border-l-transparent hover:border-l-accent-blue'}`}
                   >
                     <div className="grid grid-cols-12 gap-4 items-center px-4 py-6">
                       <div className="col-span-4 flex flex-col gap-1 pl-2">
                         <div className="min-w-0">
                           <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
+                              title="Add to compare"
+                              className={`w-4 h-4 flex-none rounded border ${compareIds.has(repo.id) ? 'bg-accent-blue border-accent-blue' : 'border-slate-600 hover:border-accent-blue'}`}
+                            >
+                              {compareIds.has(repo.id) && <span className="block text-white text-[10px] leading-3">✓</span>}
+                            </button>
                             {formatRepoName(repo.id)}
                             {aiData?.enterpriseTier && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
@@ -717,11 +770,19 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               } catch (e) {}
 
               return (
-                <div 
+                <div
                   key={repo.id}
                   onClick={() => onViewRepo(repo)}
-                  className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all cursor-pointer flex flex-col"
+                  className={`glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all cursor-pointer flex flex-col relative ${compareIds.has(repo.id) ? 'ring-2 ring-accent-blue' : ''}`}
                 >
+                  {/* Compare-select checkbox */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
+                    title="Add to compare"
+                    className={`absolute top-3 right-3 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${compareIds.has(repo.id) ? 'bg-accent-blue border-accent-blue' : 'border-slate-600 bg-bg-dark/60 hover:border-accent-blue'}`}
+                  >
+                    {compareIds.has(repo.id) && <span className="text-white text-xs leading-3">✓</span>}
+                  </button>
                   <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
                     {aiData?.enterpriseTier && (
                       <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border-b border-amber-500/25">
@@ -822,6 +883,21 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </div>
         )}
       </div>
+
+      {showCompare && compareIds.size >= 2 && (
+        <CompareModal
+          repos={repos.filter(r => compareIds.has(r.id))}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
+
+      {showGithubImport && (
+        <GitHubImportModal
+          existingRepoIds={new Set(repos.map(r => r.id))}
+          onClose={() => setShowGithubImport(false)}
+          onImported={() => fetchRepos()}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Crown, Users, LayoutDashboard, Flame, RefreshCw, Boxes, KeyRound, Rocket, TrendingUp, DollarSign } from 'lucide-react';
+import { Crown, Users, LayoutDashboard, Flame, RefreshCw, Boxes, KeyRound, Rocket, TrendingUp, DollarSign, Zap } from 'lucide-react';
 import { AdminLibrary } from './AdminLibrary';
 import { AdminCosts } from './AdminCosts';
 
@@ -52,10 +52,28 @@ function StatCard({ icon: Icon, label, value, sub }: {
 
 function Overview() {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [rescanRunning, setRescanRunning] = useState(false);
+  const [rescanResult, setRescanResult] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/stats').then(r => r.json()).then(d => { if (d && !d.error) setStats(d); }).catch(() => {});
   }, []);
+
+  const runRescan = async () => {
+    if (!window.confirm('Run rescan now? This refreshes GitHub stats for up to 150 oldest user repos. Uses GitHub API quota.')) return;
+    setRescanRunning(true);
+    setRescanResult(null);
+    try {
+      const res = await fetch('/api/admin/rescan?limit=150', { method: 'POST' });
+      const d = await res.json();
+      if (res.ok) setRescanResult(`Done — ${d.updated} updated, ${d.archived} archived, ${d.errors} errors out of ${d.processed} processed.`);
+      else setRescanResult(`Failed: ${d.error}`);
+    } catch (e: any) {
+      setRescanResult(`Failed: ${e.message}`);
+    } finally {
+      setRescanRunning(false);
+    }
+  };
 
   if (!stats) return <p className="text-xs text-slate-600 italic font-mono p-6">Loading stats…</p>;
 
@@ -93,6 +111,31 @@ function Overview() {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Maintenance actions */}
+      <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
+              <Zap className="w-3.5 h-3.5 text-accent-blue" /> Maintenance
+            </div>
+            <h3 className="text-sm font-bold text-white font-mono mb-1">Rescan oldest repos now</h3>
+            <p className="text-[11px] text-slate-500 font-mono max-w-md leading-relaxed">
+              Refreshes GitHub stats (stars, forks, issues, last push) for the 150 user repos with the oldest <code>updated_at</code>.
+              Runs automatically every Sunday at 00:00 UTC.
+            </p>
+            {rescanResult && <p className="text-[11px] font-mono mt-2 text-emerald-400">{rescanResult}</p>}
+          </div>
+          <button
+            onClick={runRescan}
+            disabled={rescanRunning}
+            className="px-4 py-2 rounded-lg bg-accent-blue/20 border border-accent-blue/40 text-accent-blue text-xs font-mono font-bold hover:bg-accent-blue/30 transition-all disabled:opacity-50 flex items-center gap-1.5 flex-none"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${rescanRunning ? 'animate-spin' : ''}`} />
+            {rescanRunning ? 'Running…' : 'Run now'}
+          </button>
         </div>
       </div>
     </div>
