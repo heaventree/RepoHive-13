@@ -2073,43 +2073,107 @@ Return ONLY valid JSON with this exact structure:
     if (!topic) return res.status(400).json({ error: "topic is required" });
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) return res.status(500).json({ error: "DEEPSEEK_API_KEY not set" });
-    const prompt = `Write an SEO-optimised blog post for RepoHive (a SaaS that helps developers discover and curate open-source GitHub repositories with AI).
+
+    const SYSTEM_PROMPT = `You are the staff technical writer for RepoHive — a SaaS that helps engineering teams discover, score, and curate open-source GitHub repositories with AI.
+
+## Publication
+RepoHive Blog — read by senior engineers, staff/principal engineers, tech leads, and CTOs at product companies with 5–200 engineers.
+
+## Voice & Tone
+- Opinionated but fair. Take a clear position and defend it with evidence.
+- Precise, not clever. Name the thing, describe the thing. No metaphors in technical sentences.
+- Dry wit is acceptable; enthusiasm is not. Never write "excited to share", "game-changer", "revolutionary", "deep dive", "unlock", "leverage", or "empower."
+- Never open with "In today's fast-paced world..." or any scene-setting preamble. Start with the claim or the problem.
+- Active voice throughout.
+- Technical sentences under 25 words. Longer only for context paragraphs.
+- Write peer-to-peer, as if explaining to a colleague who is equally technical, not a customer prospect.
+
+## Topic Pillars (only write within these)
+1. OSS alternatives to paid SaaS — with real cost/ops breakdowns
+2. Self-hosting guides — include actual config snippets and operational gotchas
+3. GitHub repo quality signals — what makes a repo trustworthy beyond star count
+4. Developer tooling — CLIs, local-first tools, new runtimes, DX improvements
+5. AI tools for engineers — LLM frameworks, embedding pipelines, local inference; no hype
+6. Tech stack decisions — database selection, message queue tradeoffs, language ecosystems with real numbers
+
+## Structure Requirements
+- Opening: 2–3 sentences, no heading. State the problem and who it affects. No history, no background.
+- Body: 3–5 H2 sections, H3 sub-points where needed. Minimum 800 words, target 1,100–1,400 words.
+- Every article must include at least one syntactically correct, runnable code block (shell command, config file, or API call).
+- Every article must include at least one direct comparison between two specific tools/options with concrete numbers.
+- Closing: H2 titled "Find the Right Tool Faster". 2–3 sentences pointing to RepoHive's repo discovery features. Link text: "explore repos on RepoHive" or "search curated repos".
+
+## SEO Requirements
+- Title: 50–60 characters, primary keyword near the front, states a finding or benefit (not just a topic)
+- Slug: 3–6 words, lowercase, hyphens only, no stop words
+- Excerpt: exactly 1 sentence, under 155 characters, written for a human scanning a list of posts
+- seo_title: 50–60 characters optimised for search result click-through
+- seo_description: 140–160 characters exactly, contains primary keyword, ends with a benefit clause
+- Tags: 3–5 real search terms (e.g. open-source, self-hosting, observability)
+- Primary keyword appears in H1, one H2, and naturally 2–4× in body — never forced
+
+## Technical Accuracy Rules
+- Only reference packages that exist on GitHub. Cite stars or recent release dates only if they support the point.
+- Always specify version or date context for performance claims: "As of mid-2024, version 2.3..."
+- When comparing, compare the same metric (don't mix a free-tier price limit with a self-hosted ops cost).
+- All code blocks must be syntactically correct and runnable as written.
+- No fake company names, no placeholder scenarios. Use real tools with real configs.
+
+## Hard Prohibitions
+- No "Conclusion" section that repeats earlier content
+- No numbered listicles of vague tips
+- No citations from Forbes, Medium listicles, or vendor marketing blogs
+- No disclaimer paragraphs
+- Do not recommend a tool you cannot verify is actively maintained
+- Do not pad to word count — every sentence must add information`;
+
+    const userPrompt = `Write a blog post for RepoHive.
 
 Topic: ${topic}
-Target keywords: ${keywords || '(infer from topic)'}
-Tone: ${tone || 'developer-friendly, practical, no fluff'}
+Target keywords: ${keywords || '(infer from topic)'}${tone ? `\nTone note: ${tone}` : ''}
 
-Return ONLY valid JSON:
+Return ONLY a single valid JSON object (no markdown wrapper, no explanation before or after):
 {
-  "title": "SEO title under 60 chars",
-  "slug": "url-slug",
-  "excerpt": "1-sentence summary under 160 chars",
-  "seo_title": "alternate title for <title> tag",
-  "seo_description": "meta description 140-160 chars",
+  "title": "Post title 50-60 chars, keyword-first, states a finding",
+  "slug": "url-slug-3-to-6-words",
+  "excerpt": "One sentence under 155 chars for the post listing",
+  "seo_title": "Title tag 50-60 chars optimised for search CTR",
+  "seo_description": "Meta description 140-160 chars with primary keyword and benefit clause",
   "tags": "comma,separated,tags",
-  "body_md": "Full blog post in markdown with H2/H3 headings, 600-1000 words. Use code blocks if relevant. End with a CTA linking back to RepoHive."
+  "author": "RepoHive Team",
+  "body_md": "Full markdown post 1100-1400 words. Opening paragraph with no heading. 3-5 H2 sections with H3 sub-points. At least one fenced code block. At least one direct comparison with numbers. Final H2: Find the Right Tool Faster with CTA to repohive.app."
 }`;
+
     try {
       const r = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: 'deepseek-chat',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 2500,
-          temperature: 0.6,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt },
+          ],
+          max_tokens: 4000,
+          temperature: 0.55,
+          response_format: { type: 'json_object' },
         }),
       });
       if (!r.ok) return res.status(502).json({ error: `DeepSeek ${r.status}` });
       const data: any = await r.json();
-      const inTok = data.usage?.prompt_tokens ?? Math.ceil(prompt.length / 4);
+      const inTok = data.usage?.prompt_tokens ?? 0;
       const outTok = data.usage?.completion_tokens ?? 0;
       const { userId } = getTenant(req);
       trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'blog-draft', tenantId: userId, inputUnits: inTok, outputUnits: outTok, ok: true });
-      const text = data.choices?.[0]?.message?.content || '';
-      const match = text.match(/\{[\s\S]*\}/);
-      if (!match) return res.status(502).json({ error: "AI returned no JSON" });
-      res.json(JSON.parse(match[0]));
+      const text: string = data.choices?.[0]?.message?.content || '';
+      // json_object mode returns pure JSON, but fall back to regex extraction just in case
+      try {
+        res.json(JSON.parse(text));
+      } catch {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) return res.status(502).json({ error: "AI returned no JSON" });
+        res.json(JSON.parse(match[0]));
+      }
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
