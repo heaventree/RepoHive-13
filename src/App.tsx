@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import logoIcon from './logos/repohive-ICON-white-yellow.png';
+import { Link } from 'react-router-dom';
 import { Library } from './components/Library';
 import { Ingest } from './components/Ingest';
 import { RepoDetail } from './components/RepoDetail';
@@ -90,10 +90,9 @@ export default function App() {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 flex-none">
-          <div className="flex items-center gap-2">
-            <img src={logoIcon} alt="" className="w-7 h-7" />
-            <span className="font-bold text-sm tracking-tight text-white">RepoHive</span>
-          </div>
+          <Link to="/" className="flex items-center">
+            <img src="/repohive-logo-white-yellow.png" alt="RepoHive" className="h-7 w-auto" />
+          </Link>
           <span
             className="text-[10px] font-mono text-slate-600 px-1.5 py-0.5 rounded border"
             style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}

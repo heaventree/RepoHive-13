@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Flame } from 'lucide-react';
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { AUTH_ENABLED } from '../../auth';
-import logoWordmark from '../../logos/repohive-logo-white-yellow.png';
+const logoWordmark = '/repohive-logo-white-yellow.png';
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -72,12 +72,12 @@ export function MarketingNav() {
           {AUTH_ENABLED ? (
             <>
               <Show when="signed-out">
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/app">
                   <button className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
                     Sign In
                   </button>
                 </SignInButton>
-                <SignUpButton mode="modal">
+                <SignUpButton mode="modal" forceRedirectUrl="/app">
                   <button
                     className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
                     style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
