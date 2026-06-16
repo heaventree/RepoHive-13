@@ -1,11 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RefreshCw, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
+interface Distribution {
+  appKiller: number;
+  saasReady: number;
+  none: number;
+  unclassified: number;
+}
+
 interface Stats {
   total: number;
   pending: number;
   classified: number;
   classifierVersion: number;
+  distribution?: Distribution;
 }
 
 interface BatchResult {
@@ -136,6 +144,15 @@ export const AdminReclassify: React.FC = () => {
           <Stat label="Classified" value={String(stats?.classified ?? '—')} />
           <Stat label="Engine" value={`v${stats?.classifierVersion ?? '—'}`} />
         </div>
+
+        {stats?.distribution && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono mb-4">
+            <Stat label="App Killer" value={String(stats.distribution.appKiller)} accent="text-amber-300" />
+            <Stat label="SaaS Ready" value={String(stats.distribution.saasReady)} accent="text-cyan-300" />
+            <Stat label="None" value={String(stats.distribution.none)} accent="text-slate-400" />
+            <Stat label="Unclassified" value={String(stats.distribution.unclassified)} accent="text-slate-500" />
+          </div>
+        )}
 
         {(running || progress.processed > 0) && (
           <div className="space-y-2">

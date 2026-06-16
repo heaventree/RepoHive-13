@@ -6,6 +6,11 @@
 // and in-memory progress doesn't survive between invocations. So instead each
 // call processes a small, awaited batch and persists results to the DB; callers
 // repeat until nothing remains. Progress is always derived from the DB.
+//
+// Work is de-duplicated by repo id: the same repo can exist as several rows
+// (the owner's copy, the preloaded __library__ copy, other tenants' copies).
+// We analyse each unique id once and write the result to every copy, so the
+// counts reflect real repos and every surface that reads a copy stays in sync.
 
 import "dotenv/config";
 import { all, run } from "../db";
@@ -24,20 +29,28 @@ function parse(json: string | null): any {
   try { return json ? JSON.parse(json) : {}; } catch { return {}; }
 }
 
-// A repo needs a (normal) reclassify when its analysis predates the current
-// classifier — i.e. it has no productClass, or an older classifierVersion.
+// Convergence is version-based: a repo is "done" once stamped at the current
+// classifier version, regardless of the outcome. This guarantees the sweep
+// always drains (a repo that errors is still stamped, so it won't spin), and a
+// prompt change (CLASSIFIER_VERSION bump) re-queues everything exactly once.
 function needsReclassify(ai: any): boolean {
-  if (!ai || typeof ai !== 'object') return true;
-  if (typeof ai.productClass !== 'string') return true;
-  const v = typeof ai.classifierVersion === 'number' ? ai.classifierVersion : 0;
+  const v = typeof ai?.classifierVersion === 'number' ? ai.classifierVersion : 0;
   return v < CLASSIFIER_VERSION;
 }
 
-// In force mode we want to re-analyse everything, so the marker is "was this
-// repo processed during the current drive?" — tracked via reclassifiedAt.
 function processedSince(ai: any, since: string): boolean {
   const at = typeof ai?.reclassifiedAt === 'string' ? ai.reclassifiedAt : null;
   return !!at && at >= since;
+}
+
+// Group every row by repo id; keep the richest analysis as the representative.
+function groupById(rows: RepoRow[]): Map<string, RepoRow[]> {
+  const map = new Map<string, RepoRow[]>();
+  for (const r of rows) {
+    const list = map.get(r.id);
+    if (list) list.push(r); else map.set(r.id, [r]);
+  }
+  return map;
 }
 
 export interface ReclassifyStats {
@@ -47,19 +60,49 @@ export interface ReclassifyStats {
   classifierVersion: number;
 }
 
-// DB-derived progress for the admin status panel.
+// DB-derived progress for the admin status panel — de-duplicated by repo id.
 export async function reclassifyStats(): Promise<ReclassifyStats> {
-  const rows = await all<{ ai_analysis: string | null }>("SELECT ai_analysis FROM repos");
+  const rows = await all<{ id: string; ai_analysis: string | null }>("SELECT id, ai_analysis FROM repos");
+  const byId = new Map<string, string | null>();
+  for (const r of rows) if (!byId.has(r.id)) byId.set(r.id, r.ai_analysis);
+
   let pending = 0;
-  for (const r of rows) {
-    if (needsReclassify(parse(r.ai_analysis))) pending++;
+  for (const ai of byId.values()) {
+    if (needsReclassify(parse(ai))) pending++;
   }
   return {
-    total: rows.length,
+    total: byId.size,
     pending,
-    classified: rows.length - pending,
+    classified: byId.size - pending,
     classifierVersion: CLASSIFIER_VERSION,
   };
+}
+
+// Effective productClass distribution (de-duplicated by id), mirroring how the
+// UI buckets repos: an "app-killer" with no named product counts as saas-ready.
+export interface ReclassifyDistribution {
+  appKiller: number;
+  saasReady: number;
+  none: number;
+  unclassified: number;
+}
+
+export async function reclassifyDistribution(): Promise<ReclassifyDistribution> {
+  const rows = await all<{ id: string; ai_analysis: string | null }>("SELECT id, ai_analysis FROM repos");
+  const byId = new Map<string, any>();
+  for (const r of rows) if (!byId.has(r.id)) byId.set(r.id, parse(r.ai_analysis));
+
+  const dist: ReclassifyDistribution = { appKiller: 0, saasReady: 0, none: 0, unclassified: 0 };
+  for (const ai of byId.values()) {
+    const raw = typeof ai?.productClass === 'string' ? ai.productClass : null;
+    const pc = raw ? raw.toLowerCase().trim().replace(/[\s_]+/g, '-') : null;
+    const hasComparable = typeof ai?.comparableApp === 'string' && ai.comparableApp.trim().length > 0;
+    if (pc === 'app-killer') (hasComparable ? dist.appKiller++ : dist.saasReady++);
+    else if (pc === 'saas-ready') dist.saasReady++;
+    else if (pc === 'none') dist.none++;
+    else dist.unclassified++;
+  }
+  return dist;
 }
 
 export interface ReclassifyBatchResult {
@@ -78,10 +121,10 @@ export interface ReclassifyBatchOpts {
   forceSince?: string | null;
 }
 
-// Process repos that still need work — up to `limit`, and only while under the
-// time budget — awaiting each so the result is persisted before we return.
-// Returns how many remain so the caller can loop. The time budget is what keeps
-// a single request under the Netlify function timeout (DeepSeek calls are slow).
+// Process unique repos that still need work — up to `limit`, and only while
+// under the time budget — awaiting each so the result is persisted before we
+// return. Every processed repo is stamped (success or failure) so the sweep
+// always converges. Returns how many remain so the caller can loop.
 export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<ReclassifyBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
   const maxMs = Math.min(Math.max(opts.maxMs ?? 7000, 1000), 20000);
@@ -89,37 +132,49 @@ export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<R
   const start = Date.now();
 
   const rows = await all<RepoRow>("SELECT tenant_id, id, description, language, readme, ai_analysis FROM repos");
+  const byId = groupById(rows);
 
-  const candidates = rows.filter(r => {
-    const ai = parse(r.ai_analysis);
+  const candidates = [...byId.values()].filter(group => {
+    const ai = parse(group[0].ai_analysis);
     return force ? !processedSince(ai, opts.forceSince!) : needsReclassify(ai);
   });
 
   let processed = 0, updated = 0, failed = 0;
 
-  for (const repo of candidates) {
+  for (const group of candidates) {
     if (processed >= limit || Date.now() - start >= maxMs) break;
     processed++;
+
+    const rep = group.find(r => r.description || r.readme) || group[0];
+    const now = new Date().toISOString();
+    let classFields: any = { classifierVersion: CLASSIFIER_VERSION, reclassifiedAt: now };
+
     try {
-      const existing = parse(repo.ai_analysis);
+      const existing = parse(rep.ai_analysis);
       const topics = Array.isArray(existing.tags) ? existing.tags : [];
-      const { parsed } = await analyzeRepo(repo.id, repo.description || '', repo.language, topics, repo.readme);
-      const now = new Date().toISOString();
+      const { parsed } = await analyzeRepo(rep.id, rep.description || '', rep.language, topics, rep.readme);
       if (parsed) {
-        const merged = { ...existing, ...parsed, classifierVersion: CLASSIFIER_VERSION, reclassifiedAt: now };
-        await run("UPDATE repos SET ai_analysis = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(merged), repo.tenant_id, repo.id]);
+        classFields = { ...parsed, ...classFields };
         updated++;
       } else {
-        // No usable result (e.g. missing API key). Still stamp the attempt so the
-        // sweep converges instead of spinning on the same un-analysable repo.
-        const merged = { ...existing, classifierVersion: CLASSIFIER_VERSION, reclassifiedAt: now };
-        await run("UPDATE repos SET ai_analysis = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(merged), repo.tenant_id, repo.id]);
+        // No usable result (e.g. missing API key). Still stamped, so it converges.
         failed++;
       }
     } catch (err: any) {
-      console.warn(`[reclassify] ${repo.id} failed: ${err.message}`);
+      console.warn(`[reclassify] ${rep.id} failed: ${err.message}`);
+      classFields = { ...classFields, classifyError: String(err.message).slice(0, 200) };
       failed++;
     }
+
+    // Write the new classification onto every copy of this repo, preserving
+    // each row's own pre-existing analysis fields.
+    for (const row of group) {
+      const merged = { ...parse(row.ai_analysis), ...classFields };
+      await run("UPDATE repos SET ai_analysis = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(merged), row.tenant_id, row.id]);
+    }
+
+    // Gentle pacing to stay under DeepSeek rate limits.
+    await new Promise(r => setTimeout(r, 120));
   }
 
   return {
