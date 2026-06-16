@@ -1796,6 +1796,93 @@ talks to or augments another service (a bridge, add-on, or adapter) is "none".`;
     })();
   });
 
+  // ── Admin: global reclassification sweep ────────────────────────────────────
+  // Re-runs the AI analysis across ALL tenants for repos whose stored analysis
+  // predates the current classification schema (missing `productClass`). Lets
+  // admins refresh the library after we tighten or change the prompt.
+  //
+  // A timer (RECLASSIFY_INTERVAL_HOURS, default 24h, set 0 to disable) auto-runs
+  // the same sweep so the library stays current without manual prodding.
+  let reclassifyStatus: {
+    running: boolean;
+    total: number;
+    done: number;
+    failed: number;
+    startedAt: string | null;
+    finishedAt: string | null;
+    trigger: 'manual' | 'auto' | null;
+  } = { running: false, total: 0, done: 0, failed: 0, startedAt: null, finishedAt: null, trigger: null };
+
+  async function runReclassifySweep(trigger: 'manual' | 'auto', force: boolean) {
+    if (reclassifyStatus.running) return;
+
+    const allRepos = await all<any>("SELECT tenant_id, id, description, language, readme, ai_analysis FROM repos");
+    const needsUpdate = allRepos.filter(r => {
+      if (force) return true;
+      try {
+        const a = r.ai_analysis ? JSON.parse(r.ai_analysis) : {};
+        return typeof a.productClass !== 'string';
+      } catch { return true; }
+    });
+
+    reclassifyStatus = {
+      running: true,
+      total: needsUpdate.length,
+      done: 0,
+      failed: 0,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      trigger,
+    };
+    console.log(`Reclassify sweep (${trigger}) starting — ${needsUpdate.length} repos`);
+
+    for (const repo of needsUpdate) {
+      try {
+        let existing: any = {};
+        try { existing = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {}; } catch {}
+        const topics = existing.tags || [];
+        const category = existing.category || 'General';
+
+        const fresh = await deepseekAnalyze(repo.id, repo.description || '', repo.language, topics, repo.readme, category, repo.tenant_id);
+        if (fresh) {
+          const merged = { ...existing, ...fresh };
+          await run("UPDATE repos SET ai_analysis = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(merged), repo.tenant_id, repo.id]);
+        }
+        reclassifyStatus.done++;
+      } catch (err: any) {
+        console.warn(`Reclassify failed for ${repo.id}: ${err.message}`);
+        reclassifyStatus.failed++;
+        reclassifyStatus.done++;
+      }
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    reclassifyStatus.running = false;
+    reclassifyStatus.finishedAt = new Date().toISOString();
+    console.log(`Reclassify sweep complete — ${reclassifyStatus.total} processed, ${reclassifyStatus.failed} failed`);
+  }
+
+  app.get("/api/admin/reclassify/status", (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json(reclassifyStatus);
+  });
+
+  app.post("/api/admin/reclassify", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    if (reclassifyStatus.running) return res.json({ message: 'Sweep already running', ...reclassifyStatus });
+    const force = req.query.force === 'true' || req.body?.force === true;
+    res.json({ message: 'Sweep started', force });
+    runReclassifySweep('manual', force).catch(err => console.warn('Reclassify sweep error:', err.message));
+  });
+
+  // Periodic auto-rescan. Default 24h; set RECLASSIFY_INTERVAL_HOURS=0 to disable.
+  const reclassifyIntervalHours = Number(process.env.RECLASSIFY_INTERVAL_HOURS ?? '24');
+  if (reclassifyIntervalHours > 0) {
+    setInterval(() => {
+      runReclassifySweep('auto', false).catch(err => console.warn('Auto reclassify error:', err.message));
+    }, reclassifyIntervalHours * 60 * 60 * 1000);
+  }
+
   // ── Embedding sweep endpoints ────────────────────────────────────────────────
   let embedSweepStatus = { running: false, total: 0, done: 0, failed: 0 };
 
