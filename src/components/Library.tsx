@@ -259,14 +259,14 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-xs font-bold py-1.5 pl-2 pr-1 text-slate-200 focus:outline-none cursor-pointer uppercase font-mono"
+              className="bg-transparent text-xs font-bold py-1.5 pl-2 pr-1 text-slate-200 focus:outline-none cursor-pointer uppercase font-mono [&>option]:bg-bg-dark [&>option]:text-slate-200 [&>option]:normal-case"
             >
-              <option value="latest">Updated</option>
-              <option value="score">Score</option>
-              <option value="stars">Stars</option>
-              <option value="name">Name</option>
-              <option value="language">Language</option>
-              <option value="license">License</option>
+              <option value="latest" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Updated</option>
+              <option value="score" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Score</option>
+              <option value="stars" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Stars</option>
+              <option value="name" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Name</option>
+              <option value="language" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Language</option>
+              <option value="license" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>License</option>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
