@@ -14,9 +14,12 @@ import {
   Database, 
   Github,
   ChevronDown,
-  Flame
+  Flame,
+  Server,
+  Play
 } from 'lucide-react';
 import { Repo, Snapshot } from '../types';
+import { classifyRepo } from '../lib/classification';
 
 interface RepoDetailProps {
   repo: Repo;
@@ -34,6 +37,8 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
       return null;
     }
   }, [repo.ai_analysis]);
+
+  const cls = useMemo(() => classifyRepo(aiData), [aiData]);
 
   const formatRepoName = (id: string) => {
     const parts = id.split('/');
@@ -250,16 +255,40 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
               </h3>
             </div>
             <div className="p-5 space-y-8">
-              {aiData?.enterpriseTier && aiData?.comparableApp && (
+              {cls.kind === 'app-killer' && (
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-amber-500/25"
                   style={{ background: 'rgba(245,158,11,0.06)' }}>
                   <Flame className="w-8 h-8 text-amber-400 flex-shrink-0" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">App Killer</p>
                     <p className="text-xs text-slate-300 truncate">
-                      Replaces <span className="text-amber-300 font-semibold">{aiData.comparableApp}</span>
+                      Replaces <span className="text-amber-300 font-semibold">{cls.comparableApp}</span>
                     </p>
                   </div>
+                  {cls.demoUrl && (
+                    <a href={cls.demoUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all text-[11px] font-bold font-mono uppercase">
+                      <Play className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                  )}
+                </div>
+              )}
+              {cls.kind === 'saas-ready' && (
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-cyan-500/30"
+                  style={{ background: 'rgba(6,182,212,0.06)' }}>
+                  <Server className="w-8 h-8 text-cyan-300 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest mb-0.5">SaaS Ready</p>
+                    <p className="text-xs text-slate-300 truncate">
+                      Self-hostable, production-ready application you can run as a service.
+                    </p>
+                  </div>
+                  {cls.demoUrl && (
+                    <a href={cls.demoUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition-all text-[11px] font-bold font-mono uppercase">
+                      <Play className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                  )}
                 </div>
               )}
 

@@ -4,13 +4,10 @@ import { Library } from './components/Library';
 import { Ingest } from './components/Ingest';
 import { RepoDetail } from './components/RepoDetail';
 import { ProjectWorkspace } from './components/ProjectWorkspace';
-import { ConfigPortal } from './components/ConfigPortal';
-import { ApiConfig } from './components/ApiConfig';
-import { Monitoring } from './components/Monitoring';
-import { Policies } from './components/Policies';
+import { SettingsHub } from './components/SettingsHub';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame, Crown } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Settings, Flame, Crown } from 'lucide-react';
 import { UserButton } from '@clerk/react';
 import { AUTH_ENABLED } from './auth';
 
@@ -49,14 +46,17 @@ export default function App() {
         return <Ingest onComplete={() => setActiveTab('library')} />;
       case 'projects':
         return <ProjectWorkspace setActiveTab={setActiveTab} setSelectedRepo={setSelectedRepo} />;
+      case 'settings':
+        return <SettingsHub onExit={() => setActiveTab('library')} />;
+      // Legacy direct routes — now nested under Settings.
       case 'monitoring':
-        return <Monitoring />;
+        return <SettingsHub initialSection="monitoring" onExit={() => setActiveTab('library')} />;
       case 'policies':
-        return <Policies />;
-      case 'config':
-        return <ConfigPortal onBack={() => setActiveTab('library')} />;
+        return <SettingsHub initialSection="policies" onExit={() => setActiveTab('library')} />;
       case 'api':
-        return <ApiConfig />;
+        return <SettingsHub initialSection="api" onExit={() => setActiveTab('library')} />;
+      case 'config':
+        return <SettingsHub initialSection="config" onExit={() => setActiveTab('library')} />;
       case 'appkillers':
         return <Library
           onViewRepo={setSelectedRepo}
@@ -104,12 +104,9 @@ export default function App() {
         {/* Nav */}
         <nav className="flex items-center gap-0.5 flex-1 justify-center mx-4">
           {[
-            { id: 'library',    icon: LayoutGrid,  label: 'Library' },
-            { id: 'projects',   icon: Rocket,       label: 'Projects' },
-            { id: 'monitoring', icon: Activity,     label: 'Monitoring' },
-            { id: 'policies',   icon: ShieldCheck,  label: 'Policies' },
-            { id: 'api',        icon: Globe,        label: 'API' },
-            { id: 'config',     icon: Settings,     label: 'System Config' },
+            { id: 'library',  icon: LayoutGrid, label: 'Library' },
+            { id: 'projects', icon: Rocket,     label: 'Projects' },
+            { id: 'settings', icon: Settings,   label: 'Settings' },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}

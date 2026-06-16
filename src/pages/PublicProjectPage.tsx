@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Rocket, ExternalLink, Star, Calendar, Loader, AlertCircle, ArrowRight } from 'lucide-react';
+import { Rocket, ExternalLink, Star, Calendar, Loader, AlertCircle, ArrowRight, Flame, Server } from 'lucide-react';
+import { classifyRepo } from '../lib/classification';
 import { SEO } from '../lib/seo';
 import logoIcon from '../logos/repohive-ICON-white-yellow.png';
 
@@ -118,6 +119,7 @@ export const PublicProjectPage: React.FC = () => {
           <div className="space-y-3">
             {data.recommendations.map(rec => {
               const ai = aiOf(rec.ai_analysis);
+              const cls = classifyRepo(ai);
               return (
                 <a
                   key={rec.repo_id}
@@ -149,7 +151,8 @@ export const PublicProjectPage: React.FC = () => {
                     {rec.language && <span>{rec.language}</span>}
                     {rec.license && <span className="px-1.5 py-0.5 rounded border border-emerald-500/30 text-emerald-400 bg-emerald-500/10">{rec.license}</span>}
                     <span className="flex items-center gap-0.5 text-amber-500"><Star className="w-3 h-3" />{rec.stars?.toLocaleString()}</span>
-                    {ai.comparableApp && <span className="text-purple-300">Replaces {ai.comparableApp}</span>}
+                    {cls.kind === 'app-killer' && <span className="flex items-center gap-1 text-amber-400"><Flame className="w-3 h-3" />Replaces {cls.comparableApp}</span>}
+                    {cls.kind === 'saas-ready' && <span className="flex items-center gap-1 text-cyan-300"><Server className="w-3 h-3" />SaaS Ready</span>}
                   </div>
                 </a>
               );

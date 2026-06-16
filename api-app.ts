@@ -660,9 +660,29 @@ Return ONLY valid JSON with this exact structure:
   "integrationNotes": [
     { "platform": "e.g. Next.js", "match": "Perfect Match or Good Fit", "description": "one sentence" }
   ],
-  "enterpriseTier": true or false — true if this repo is production-ready, self-hostable, and a credible open-source replacement for a known paid SaaS product (e.g. Coolify replaces Heroku/Vercel, Supabase replaces Firebase, Plausible replaces Google Analytics),
-  "comparableApp": "Name of the well-known paid product this replaces, or null if none"
-}`;
+  "productClass": "one of: app-killer, saas-ready, none",
+  "comparableApp": "Name of the well-known paid product this replaces, or null",
+  "demoUrl": "URL of a live demo or hosted homepage if one is mentioned in the README/description, else null",
+  "enterpriseTier": true or false
+}
+
+Classification rules — be strict. "productClass" describes ONLY standalone,
+production-ready, self-hostable end-user applications (something a non-developer
+could deploy and use as a running service with a UI). Decide as follows:
+- "app-killer": it is a credible drop-in replacement for a SPECIFIC, well-known
+  paid SaaS product. Set "comparableApp" to that product's name and set
+  "enterpriseTier" to true. Examples: Coolify replaces Heroku/Vercel, Supabase
+  replaces Firebase, Plausible replaces Google Analytics.
+- "saas-ready": it is a standalone self-hostable SaaS-style application, but it
+  does NOT cleanly replace one single named product (it may overlap several, or
+  be a novel category). Set "comparableApp" to null and "enterpriseTier" to false.
+- "none": EVERYTHING ELSE. This includes libraries, SDKs, frameworks, CLI tools,
+  developer utilities, plugins/extensions/themes, bridges or connectors, API
+  wrappers, model weights, inference-engine adapters/add-ons, datasets, demos,
+  templates, and anything that is a building block rather than a runnable app.
+  Set "comparableApp" to null and "enterpriseTier" to false.
+When unsure between "saas-ready" and "none", choose "none". A repo that merely
+talks to or augments another service (a bridge, add-on, or adapter) is "none".`;
 
     try {
       const res = await fetch('https://api.deepseek.com/chat/completions', {

@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Star, GitFork, AlertCircle, ExternalLink, Clock, Shield, Zap, Tag } from 'lucide-react';
+import { X, Star, GitFork, AlertCircle, ExternalLink, Clock, Zap, Tag, Flame, Server } from 'lucide-react';
 import { Repo } from '../types';
+import { classifyRepo } from '../lib/classification';
 
 interface CompareModalProps {
   repos: Repo[];
@@ -105,21 +106,25 @@ export const CompareModal: React.FC<CompareModalProps> = ({ repos, onClose }) =>
       },
     },
     {
-      label: 'Replaces',
+      label: 'Classification',
       render: r => {
-        const ai = aiOf(r);
-        return ai.comparableApp
-          ? <span className="flex items-center gap-1 text-[11px] font-mono text-purple-300"><Zap className="w-3 h-3" />{ai.comparableApp}</span>
-          : <span className="text-slate-600 text-xs">—</span>;
+        const cls = classifyRepo(aiOf(r));
+        if (cls.kind === 'app-killer') {
+          return <span className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-300"><Flame className="w-3 h-3" />App Killer</span>;
+        }
+        if (cls.kind === 'saas-ready') {
+          return <span className="inline-flex items-center gap-1 text-[11px] font-mono text-cyan-300"><Server className="w-3 h-3" />SaaS Ready</span>;
+        }
+        return <span className="text-slate-600 text-xs">—</span>;
       },
     },
     {
-      label: 'Enterprise ready',
+      label: 'Replaces',
       render: r => {
-        const ai = aiOf(r);
-        return ai.enterpriseTier
-          ? <span className="flex items-center gap-1 text-emerald-400 text-xs font-mono"><Shield className="w-3.5 h-3.5" />Yes</span>
-          : <span className="text-slate-600 text-xs">No</span>;
+        const cls = classifyRepo(aiOf(r));
+        return cls.comparableApp
+          ? <span className="flex items-center gap-1 text-[11px] font-mono text-purple-300"><Zap className="w-3 h-3" />{cls.comparableApp}</span>
+          : <span className="text-slate-600 text-xs">—</span>;
       },
     },
   ];

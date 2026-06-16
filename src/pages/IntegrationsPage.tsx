@@ -100,8 +100,10 @@ export function IntegrationsPage() {
         "category": "Security",
         "tags": ["auth", "jwt", "oauth"],
         "summary": "Drop-in self-hostable auth server …",
-        "enterpriseTier": true,
-        "comparableApp": "Auth0"
+        "productClass": "app-killer",
+        "comparableApp": "Auth0",
+        "demoUrl": null,
+        "enterpriseTier": true
       }
     },
     …

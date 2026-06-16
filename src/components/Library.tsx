@@ -22,9 +22,12 @@ import {
   GitCompare,
   ArrowDown,
   ArrowUp,
-  Check
+  Check,
+  Play,
+  Server
 } from 'lucide-react';
 import { Repo } from '../types';
+import { classifyRepo } from '../lib/classification';
 import { CompareModal } from './CompareModal';
 
 interface LibraryProps {
@@ -143,7 +146,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         if (enterpriseOnly) {
           try {
             const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
-            matchesEnterprise = data.enterpriseTier === true && typeof data.comparableApp === 'string' && data.comparableApp.trim().length > 0;
+            matchesEnterprise = classifyRepo(data).kind === 'app-killer';
           } catch { matchesEnterprise = false; }
           if (matchesEnterprise && appKillersMode) {
             const lic = (repo.license || '').toUpperCase();
@@ -517,6 +520,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               {filteredRepos.map(repo => {
                 let aiData = null;
                 try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
+                const cls = classifyRepo(aiData);
                 const stale = isStale(repo.last_push);
 
                 return (
@@ -537,10 +541,16 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                               {compareIds.has(repo.id) && <Check className="w-3 h-3 text-white" />}
                             </button>
                             {formatRepoName(repo.id)}
-                            {aiData?.enterpriseTier && aiData?.comparableApp && (
+                            {cls.kind === 'app-killer' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
                                 <Flame className="w-2.5 h-2.5" />
-                                vs {aiData.comparableApp}
+                                vs {cls.comparableApp}
+                              </span>
+                            )}
+                            {cls.kind === 'saas-ready' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[9px] font-bold text-cyan-300 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+                                <Server className="w-2.5 h-2.5" />
+                                SaaS Ready
                               </span>
                             )}
                           </div>
@@ -616,6 +626,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             {filteredRepos.map(repo => {
               let aiData = null;
               try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
+              const cls = classifyRepo(aiData);
               const selected = compareIds.has(repo.id);
 
               return (
@@ -625,13 +636,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   className={`glass-card rounded-2xl overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
                 >
                   <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
-                    {/* Enterprise badge — only when we know what it replaces; always reserves height so card doesn't jump */}
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${aiData?.enterpriseTier && aiData?.comparableApp ? 'bg-black/40 visible' : 'invisible'}`}>
-                      <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
-                        Replaces {aiData?.comparableApp}
-                      </span>
-                    </div>
+                    {/* Classification badge — always reserves height so cards don't jump. */}
+                    {cls.kind === 'saas-ready' ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-cyan-500/30 bg-black/40">
+                        <Server className="w-3 h-3 text-cyan-300 flex-shrink-0" />
+                        <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider truncate">
+                          SaaS Ready
+                        </span>
+                      </div>
+                    ) : (
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${cls.kind === 'app-killer' ? 'bg-black/40 visible' : 'invisible'}`}>
+                        <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
+                          Replaces {cls.comparableApp}
+                        </span>
+                      </div>
+                    )}
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex flex-col min-w-0">
@@ -675,6 +695,18 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                           <span>Details</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
+                        {cls.demoUrl && (
+                          <a
+                            href={cls.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Open live demo"
+                            className="flex-none w-10 inline-flex items-center justify-center rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all"
+                          >
+                            <Play className="w-4 h-4" />
+                          </a>
+                        )}
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
                           title={selected ? 'Remove from compare' : 'Add to compare'}

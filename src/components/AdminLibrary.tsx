@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Crown, Flame, Plus, Trash2, RefreshCw, Search, CheckCircle2 } from 'lucide-react';
+import { classifyRepo } from '../lib/classification';
 
 interface LibraryRepo {
   id: string;
@@ -23,7 +24,7 @@ interface OwnRepo {
 }
 
 function isAppKiller(aiAnalysis: string | null): boolean {
-  try { return Boolean(JSON.parse(aiAnalysis ?? '').enterpriseTier); } catch { return false; }
+  try { return classifyRepo(JSON.parse(aiAnalysis ?? '')).kind === 'app-killer'; } catch { return false; }
 }
 
 // Admin-only curation screen for the preloaded "App Killers" library: shows
