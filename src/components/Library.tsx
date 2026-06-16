@@ -143,7 +143,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         if (enterpriseOnly) {
           try {
             const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
-            matchesEnterprise = data.enterpriseTier === true;
+            matchesEnterprise = data.enterpriseTier === true && typeof data.comparableApp === 'string' && data.comparableApp.trim().length > 0;
           } catch { matchesEnterprise = false; }
           if (matchesEnterprise && appKillersMode) {
             const lic = (repo.license || '').toUpperCase();
@@ -537,10 +537,10 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                               {compareIds.has(repo.id) && <Check className="w-3 h-3 text-white" />}
                             </button>
                             {formatRepoName(repo.id)}
-                            {aiData?.enterpriseTier && (
+                            {aiData?.enterpriseTier && aiData?.comparableApp && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
                                 <Flame className="w-2.5 h-2.5" />
-                                {aiData.comparableApp ? `vs ${aiData.comparableApp}` : 'App Killer'}
+                                vs {aiData.comparableApp}
                               </span>
                             )}
                           </div>
@@ -625,11 +625,11 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   className={`glass-card rounded-2xl overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
                 >
                   <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
-                    {/* Enterprise badge — always reserves height so card doesn't jump */}
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${aiData?.enterpriseTier ? 'bg-black/40 visible' : 'invisible'}`}>
+                    {/* Enterprise badge — only when we know what it replaces; always reserves height so card doesn't jump */}
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${aiData?.enterpriseTier && aiData?.comparableApp ? 'bg-black/40 visible' : 'invisible'}`}>
                       <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
                       <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
-                        Replaces {aiData?.comparableApp || 'Paid SaaS'}
+                        Replaces {aiData?.comparableApp}
                       </span>
                     </div>
                     <div className="p-5">
