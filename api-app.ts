@@ -10,6 +10,8 @@ import { clerkMiddleware, getAuth, clerkClient } from "@clerk/express";
 import { all, get, run, execScript } from "./db";
 import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
 import { rescanOldestRepos } from "./lib/rescan";
+import { buildAnalysisPrompt, analyzeRepo } from "./lib/analyze";
+import { reclassifyBatch, reclassifyStats } from "./lib/reclassify";
 
 // When CLERK_SECRET_KEY is absent we run with auth disabled and scope all data
 // to a single dev tenant — keeps the app runnable offline / in CI / sandboxes.
@@ -640,79 +642,18 @@ export function createApiApp(): express.Express {
   }
 
   async function deepseekAnalyze(id: string, description: string, language: string | null, topics: string[], readme: string | null, fallbackCategory: string, tenantId?: string): Promise<any> {
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) return null;
-
-    const prompt = `You are a software repository analyst. Analyze this GitHub repository and return a JSON object.
-
-Repository: ${id}
-Language: ${language || 'unknown'}
-Topics: ${topics.join(', ') || 'none'}
-Description: ${description || 'none'}
-README (first 2000 chars): ${(readme || '').slice(0, 2000)}
-
-Return ONLY valid JSON with this exact structure:
-{
-  "category": "one of: Frontend, Backend, AI/ML, DevOps, Database, Tooling, Mobile, Security, General",
-  "tags": ["array", "of", "3-6", "relevant", "tech", "tags"],
-  "summary": "2-3 sentence plain English summary of what this repo does and who it's for",
-  "useCases": ["3-5 specific use case strings"],
-  "integrationNotes": [
-    { "platform": "e.g. Next.js", "match": "Perfect Match or Good Fit", "description": "one sentence" }
-  ],
-  "productClass": "one of: app-killer, saas-ready, none",
-  "comparableApp": "Name of the well-known paid product this replaces, or null",
-  "demoUrl": "URL of a live demo or hosted homepage if one is mentioned in the README/description, else null",
-  "enterpriseTier": true or false
-}
-
-Classification rules — be strict. "productClass" describes ONLY standalone,
-production-ready, self-hostable end-user applications (something a non-developer
-could deploy and use as a running service with a UI). Decide as follows:
-- "app-killer": it is a credible drop-in replacement for a SPECIFIC, well-known
-  paid SaaS product. Set "comparableApp" to that product's name and set
-  "enterpriseTier" to true. Examples: Coolify replaces Heroku/Vercel, Supabase
-  replaces Firebase, Plausible replaces Google Analytics.
-- "saas-ready": it is a standalone self-hostable SaaS-style application, but it
-  does NOT cleanly replace one single named product (it may overlap several, or
-  be a novel category). Set "comparableApp" to null and "enterpriseTier" to false.
-- "none": EVERYTHING ELSE. This includes libraries, SDKs, frameworks, CLI tools,
-  developer utilities, plugins/extensions/themes, bridges or connectors, API
-  wrappers, model weights, inference-engine adapters/add-ons, datasets, demos,
-  templates, and anything that is a building block rather than a runnable app.
-  Set "comparableApp" to null and "enterpriseTier" to false.
-When unsure between "saas-ready" and "none", choose "none". A repo that merely
-talks to or augments another service (a bridge, add-on, or adapter) is "none".`;
+    if (!process.env.DEEPSEEK_API_KEY) return null;
+    const promptLen = buildAnalysisPrompt(id, description, language, topics, readme).length;
 
     try {
-      const res = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 800,
-          temperature: 0.3
-        })
-      });
-      if (!res.ok) {
-        console.warn(`DeepSeek API error ${res.status}: ${res.statusText}`);
-        trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
-        return null;
-      }
-      const data: any = await res.json();
-      const inputTokens  = data.usage?.prompt_tokens     ?? Math.ceil(prompt.length / 4);
-      const outputTokens = data.usage?.completion_tokens ?? 0;
-      const text = data.choices?.[0]?.message?.content || '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      const { parsed, inputTokens, outputTokens } = await analyzeRepo(id, description, language, topics, readme);
       trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: inputTokens, outputUnits: outputTokens, ok: !!parsed });
       if (!parsed) return null;
       console.log(`DeepSeek analyzed ${id} → ${parsed.category}`);
       return parsed;
     } catch (err: any) {
       console.warn(`DeepSeek analysis failed for ${id}: ${err.message}`);
-      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'analyze-repo', tenantId, inputUnits: Math.ceil(promptLen / 4), ok: false });
       return null;
     }
   }
@@ -1797,91 +1738,33 @@ talks to or augments another service (a bridge, add-on, or adapter) is "none".`;
   });
 
   // ── Admin: global reclassification sweep ────────────────────────────────────
-  // Re-runs the AI analysis across ALL tenants for repos whose stored analysis
-  // predates the current classification schema (missing `productClass`). Lets
-  // admins refresh the library after we tighten or change the prompt.
-  //
-  // A timer (RECLASSIFY_INTERVAL_HOURS, default 24h, set 0 to disable) auto-runs
-  // the same sweep so the library stays current without manual prodding.
-  let reclassifyStatus: {
-    running: boolean;
-    total: number;
-    done: number;
-    failed: number;
-    startedAt: string | null;
-    finishedAt: string | null;
-    trigger: 'manual' | 'auto' | null;
-  } = { running: false, total: 0, done: 0, failed: 0, startedAt: null, finishedAt: null, trigger: null };
-
-  async function runReclassifySweep(trigger: 'manual' | 'auto', force: boolean) {
-    if (reclassifyStatus.running) return;
-
-    const allRepos = await all<any>("SELECT tenant_id, id, description, language, readme, ai_analysis FROM repos");
-    const needsUpdate = allRepos.filter(r => {
-      if (force) return true;
-      try {
-        const a = r.ai_analysis ? JSON.parse(r.ai_analysis) : {};
-        return typeof a.productClass !== 'string';
-      } catch { return true; }
-    });
-
-    reclassifyStatus = {
-      running: true,
-      total: needsUpdate.length,
-      done: 0,
-      failed: 0,
-      startedAt: new Date().toISOString(),
-      finishedAt: null,
-      trigger,
-    };
-    console.log(`Reclassify sweep (${trigger}) starting — ${needsUpdate.length} repos`);
-
-    for (const repo of needsUpdate) {
-      try {
-        let existing: any = {};
-        try { existing = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {}; } catch {}
-        const topics = existing.tags || [];
-        const category = existing.category || 'General';
-
-        const fresh = await deepseekAnalyze(repo.id, repo.description || '', repo.language, topics, repo.readme, category, repo.tenant_id);
-        if (fresh) {
-          const merged = { ...existing, ...fresh };
-          await run("UPDATE repos SET ai_analysis = ? WHERE tenant_id = ? AND id = ?", [JSON.stringify(merged), repo.tenant_id, repo.id]);
-        }
-        reclassifyStatus.done++;
-      } catch (err: any) {
-        console.warn(`Reclassify failed for ${repo.id}: ${err.message}`);
-        reclassifyStatus.failed++;
-        reclassifyStatus.done++;
-      }
-      await new Promise(r => setTimeout(r, 200));
-    }
-
-    reclassifyStatus.running = false;
-    reclassifyStatus.finishedAt = new Date().toISOString();
-    console.log(`Reclassify sweep complete — ${reclassifyStatus.total} processed, ${reclassifyStatus.failed} failed`);
-  }
-
-  app.get("/api/admin/reclassify/status", (req, res) => {
+  // Re-runs AI analysis across ALL tenants for repos whose stored analysis
+  // predates the current classifier, so admins can refresh the library after we
+  // tighten the prompt. The API runs as a single serverless function, so the
+  // sweep is processed in small awaited batches (see lib/reclassify.ts): the
+  // frontend repeats the call until `remaining` hits 0, and a Netlify scheduled
+  // function (netlify/functions/reclassify.ts) drains the backlog periodically.
+  app.get("/api/admin/reclassify/status", async (req, res) => {
     if (!requireAdmin(req, res)) return;
-    res.json(reclassifyStatus);
+    try {
+      res.json(await reclassifyStats());
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.post("/api/admin/reclassify", async (req, res) => {
     if (!requireAdmin(req, res)) return;
-    if (reclassifyStatus.running) return res.json({ message: 'Sweep already running', ...reclassifyStatus });
+    const limit = parseInt((req.query.limit as string) || "15");
     const force = req.query.force === 'true' || req.body?.force === true;
-    res.json({ message: 'Sweep started', force });
-    runReclassifySweep('manual', force).catch(err => console.warn('Reclassify sweep error:', err.message));
+    const forceSince = force ? ((req.query.since as string) || req.body?.since || new Date().toISOString()) : null;
+    try {
+      const result = await reclassifyBatch({ limit, forceSince });
+      res.json({ ...result, since: forceSince });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
-
-  // Periodic auto-rescan. Default 24h; set RECLASSIFY_INTERVAL_HOURS=0 to disable.
-  const reclassifyIntervalHours = Number(process.env.RECLASSIFY_INTERVAL_HOURS ?? '24');
-  if (reclassifyIntervalHours > 0) {
-    setInterval(() => {
-      runReclassifySweep('auto', false).catch(err => console.warn('Auto reclassify error:', err.message));
-    }, reclassifyIntervalHours * 60 * 60 * 1000);
-  }
 
   // ── Embedding sweep endpoints ────────────────────────────────────────────────
   let embedSweepStatus = { running: false, total: 0, done: 0, failed: 0 };

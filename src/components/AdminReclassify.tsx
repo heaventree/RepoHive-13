@@ -1,54 +1,83 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { RefreshCw, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-interface SweepStatus {
-  running: boolean;
+interface Stats {
   total: number;
-  done: number;
-  failed: number;
-  startedAt: string | null;
-  finishedAt: string | null;
-  trigger: 'manual' | 'auto' | null;
+  pending: number;
+  classified: number;
+  classifierVersion: number;
 }
 
-// Admin panel for the global reclassification sweep — re-runs AI analysis
-// across every tenant so the library picks up changes to the classification
-// engine (productClass / comparableApp / demoUrl). Auto-runs once a day in
-// the background; this UI lets an admin force it on demand.
-export const AdminReclassify: React.FC = () => {
-  const [status, setStatus] = useState<SweepStatus | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface BatchResult {
+  processed: number;
+  updated: number;
+  failed: number;
+  remaining: number;
+  since?: string | null;
+}
 
-  const load = async () => {
+// Admin panel for the global reclassification sweep. The backend processes the
+// work in small awaited batches (serverless-safe); this component drives the
+// loop — repeatedly POSTing until nothing remains — and shows live progress.
+export const AdminReclassify: React.FC = () => {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [running, setRunning] = useState(false);
+  const [mode, setMode] = useState<'normal' | 'force' | null>(null);
+  const [progress, setProgress] = useState({ processed: 0, updated: 0, failed: 0, remaining: 0 });
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const cancelRef = useRef(false);
+
+  const loadStats = async () => {
     try {
       const r = await fetch('/api/admin/reclassify/status');
-      if (r.ok) setStatus(await r.json());
+      if (r.ok) setStats(await r.json());
     } catch {}
   };
 
-  useEffect(() => {
-    load();
-    const t = setInterval(load, 3000);
-    return () => clearInterval(t);
-  }, []);
+  useEffect(() => { loadStats(); }, []);
 
-  const start = async (force: boolean) => {
-    setBusy(true);
+  const run = async (force: boolean) => {
     setError(null);
+    setDone(false);
+    setRunning(true);
+    setMode(force ? 'force' : 'normal');
+    cancelRef.current = false;
+    const totals = { processed: 0, updated: 0, failed: 0, remaining: 0 };
+    const since = force ? new Date().toISOString() : null;
+
     try {
-      const r = await fetch(`/api/admin/reclassify${force ? '?force=true' : ''}`, { method: 'POST' });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      await load();
+      // Loop batches until the backlog is drained (or the user stops / it stalls).
+      for (let i = 0; i < 1000; i++) {
+        if (cancelRef.current) break;
+        const qs = new URLSearchParams({ limit: '15' });
+        if (force && since) { qs.set('force', 'true'); qs.set('since', since); }
+        const r = await fetch(`/api/admin/reclassify?${qs.toString()}`, { method: 'POST' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const result: BatchResult = await r.json();
+
+        totals.processed += result.processed;
+        totals.updated += result.updated;
+        totals.failed += result.failed;
+        totals.remaining = result.remaining;
+        setProgress({ ...totals });
+
+        if (result.processed === 0 || result.remaining === 0) break;
+      }
+      setDone(true);
     } catch (e: any) {
-      setError(e.message || 'Failed to start sweep');
+      setError(e.message || 'Sweep failed');
     } finally {
-      setBusy(false);
+      setRunning(false);
+      setMode(null);
+      loadStats();
     }
   };
 
-  const pct = status && status.total > 0 ? Math.round((status.done / status.total) * 100) : 0;
-  const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString() : '—';
+  const stop = () => { cancelRef.current = true; };
+
+  const total = progress.processed + progress.remaining;
+  const pct = total > 0 ? Math.round((progress.processed / total) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -59,28 +88,39 @@ export const AdminReclassify: React.FC = () => {
               <Sparkles className="w-5 h-5 text-accent-blue" /> Reclassification Sweep
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-              Re-runs the AI analysis on every repo that doesn't yet have the current
-              classification (productClass). Use this after tweaking the classification
-              prompt so the library reflects the new rules. Force-rescan re-analyses
-              everything regardless of state.
+              Re-runs the AI analysis on every repo whose classification predates the
+              current engine (v{stats?.classifierVersion ?? '—'}). Use this after the
+              classification rules change. "Force rescan" re-analyses everything,
+              regardless of state. Runs in batches — keep this tab open until it finishes.
             </p>
           </div>
           <div className="flex items-center gap-2 flex-none">
-            <button
-              onClick={() => start(false)}
-              disabled={busy || status?.running}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-accent-blue/15 border border-accent-blue/40 text-accent-blue text-xs font-bold font-mono uppercase hover:bg-accent-blue/25 disabled:opacity-40"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${status?.running ? 'animate-spin' : ''}`} />
-              Run Now
-            </button>
-            <button
-              onClick={() => start(true)}
-              disabled={busy || status?.running}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono uppercase hover:bg-amber-500/20 disabled:opacity-40"
-            >
-              Force Rescan All
-            </button>
+            {running ? (
+              <button
+                onClick={stop}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold font-mono uppercase hover:bg-red-500/20"
+              >
+                Stop
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => run(false)}
+                  disabled={running}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-accent-blue/15 border border-accent-blue/40 text-accent-blue text-xs font-bold font-mono uppercase hover:bg-accent-blue/25 disabled:opacity-40"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Run Now
+                </button>
+                <button
+                  onClick={() => run(true)}
+                  disabled={running}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-mono uppercase hover:bg-amber-500/20 disabled:opacity-40"
+                >
+                  Force Rescan All
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -90,34 +130,31 @@ export const AdminReclassify: React.FC = () => {
           </div>
         )}
 
-        {status && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
-              <Stat label="Status" value={status.running ? 'Running' : (status.startedAt ? 'Idle' : 'Never run')} accent={status.running ? 'text-accent-blue' : 'text-slate-300'} />
-              <Stat label="Processed" value={`${status.done} / ${status.total}`} />
-              <Stat label="Failed" value={String(status.failed)} accent={status.failed > 0 ? 'text-amber-300' : 'text-slate-300'} />
-              <Stat label="Trigger" value={status.trigger ?? '—'} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono mb-4">
+          <Stat label="Total repos" value={String(stats?.total ?? '—')} />
+          <Stat label="Pending" value={String(stats?.pending ?? '—')} accent={(stats?.pending ?? 0) > 0 ? 'text-amber-300' : 'text-emerald-400'} />
+          <Stat label="Classified" value={String(stats?.classified ?? '—')} />
+          <Stat label="Engine" value={`v${stats?.classifierVersion ?? '—'}`} />
+        </div>
+
+        {(running || progress.processed > 0) && (
+          <div className="space-y-2">
+            <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className="h-full bg-accent-blue transition-all" style={{ width: `${pct}%` }} />
             </div>
-
-            {status.running && (
-              <div>
-                <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
-                  <div className="h-full bg-accent-blue transition-all" style={{ width: `${pct}%` }} />
-                </div>
-                <div className="text-[10px] font-mono text-slate-500 mt-1">{pct}%</div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono text-slate-500 pt-2 border-t border-white/5">
-              <div>Started: <span className="text-slate-300">{fmt(status.startedAt)}</span></div>
-              <div>Finished: <span className="text-slate-300">{fmt(status.finishedAt)}</span></div>
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <span>
+                {running ? (mode === 'force' ? 'Force rescanning…' : 'Reclassifying…') : 'Last run'} —
+                {' '}{progress.processed} processed, {progress.updated} updated, {progress.failed} failed
+              </span>
+              <span>{progress.remaining} remaining</span>
             </div>
+          </div>
+        )}
 
-            {!status.running && status.finishedAt && status.failed === 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-                <CheckCircle2 className="w-4 h-4" /> Last sweep completed cleanly.
-              </div>
-            )}
+        {done && !running && progress.failed === 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-400 mt-3">
+            <CheckCircle2 className="w-4 h-4" /> Sweep complete.
           </div>
         )}
       </div>
@@ -125,8 +162,10 @@ export const AdminReclassify: React.FC = () => {
       <div className="glass-card rounded-xl p-6">
         <h4 className="text-sm font-bold text-white font-mono mb-2">Automatic schedule</h4>
         <p className="text-xs text-slate-500">
-          A background timer reruns this sweep every <code className="text-slate-300">RECLASSIFY_INTERVAL_HOURS</code> hours
-          (default <span className="text-slate-300">24</span>). Set the env var to <code className="text-slate-300">0</code> to disable auto-runs.
+          A Netlify scheduled function drains the backlog automatically every day at
+          02:00 UTC, so the library stays current even if no one runs it manually.
+          Newly ingested repos are already classified at ingest time — this sweep is
+          only for back-filling existing repos after a rules change.
         </p>
       </div>
     </div>
