@@ -44,7 +44,9 @@ export function classifyRepo(aiData: any): RepoClassification {
   const demoUrl = cleanUrl(aiData.demoUrl);
 
   let kind: ProductClass = null;
-  const pc = typeof aiData.productClass === 'string' ? aiData.productClass.toLowerCase().trim() : null;
+  // Normalise spellings: 'saas_ready', 'SaaS Ready', 'app killer' all map.
+  const raw = typeof aiData.productClass === 'string' ? aiData.productClass : null;
+  const pc = raw ? raw.toLowerCase().trim().replace(/[\s_]+/g, '-') : null;
 
   if (pc === 'app-killer') {
     // A killer with no named product is really just a SaaS-ready app.

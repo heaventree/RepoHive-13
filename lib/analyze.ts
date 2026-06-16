@@ -7,7 +7,7 @@
 // Bump this whenever the prompt / classification schema changes. The reclassify
 // sweep treats any stored analysis with an older (or missing) classifierVersion
 // as needing a refresh, so the library converges on the latest rules.
-export const CLASSIFIER_VERSION = 2;
+export const CLASSIFIER_VERSION = 3;
 
 export function buildAnalysisPrompt(
   id: string,
@@ -39,23 +39,35 @@ Return ONLY valid JSON with this exact structure:
   "enterpriseTier": true or false
 }
 
-Classification rules — be strict. "productClass" describes ONLY standalone,
+Classification rules. "productClass" describes ONLY standalone,
 production-ready, self-hostable end-user applications (something a non-developer
 could deploy and use as a running service with a UI). Decide as follows:
-- "app-killer": it is a credible drop-in replacement for a SPECIFIC, well-known
-  paid SaaS product. Set "comparableApp" to that product's name and set
-  "enterpriseTier" to true. Examples: Coolify replaces Heroku/Vercel, Supabase
-  replaces Firebase, Plausible replaces Google Analytics.
-- "saas-ready": it is a standalone self-hostable SaaS-style application, but it
-  does NOT cleanly replace one single named product (it may overlap several, or
-  be a novel category). Set "comparableApp" to null and "enterpriseTier" to false.
-- "none": EVERYTHING ELSE. This includes libraries, SDKs, frameworks, CLI tools,
-  developer utilities, plugins/extensions/themes, bridges or connectors, API
-  wrappers, model weights, inference-engine adapters/add-ons, datasets, demos,
-  templates, and anything that is a building block rather than a runnable app.
-  Set "comparableApp" to null and "enterpriseTier" to false.
-When unsure between "saas-ready" and "none", choose "none". A repo that merely
-talks to or augments another service (a bridge, add-on, or adapter) is "none".`;
+
+- "app-killer": a credible drop-in replacement for a SPECIFIC, well-known paid
+  SaaS product. Set "comparableApp" to that product's name and "enterpriseTier"
+  to true. Examples: Coolify (Heroku/Vercel), Supabase (Firebase), Plausible
+  (Google Analytics), Cal.com (Calendly), Mattermost (Slack), Outline (Notion),
+  Ghost (Substack), Listmonk (Mailchimp), n8n (Zapier), Posthog (Mixpanel).
+
+- "saas-ready": a standalone, self-hostable SaaS-style application that runs
+  as a service with its own UI, but which does NOT cleanly replace one single
+  named product. It may straddle several categories, be a novel category, or
+  be a strong but more general open-source app. Set "comparableApp" to null and
+  "enterpriseTier" to false. Examples: Nextcloud (file/collab suite spanning
+  Dropbox+Google Workspace+more), Immich (self-hosted photo platform), Jellyfin
+  (media server), Home Assistant (home automation platform), Bookstack (wiki),
+  Vikunja (project tracker), Paperless-ngx (document archive), AppFlowy,
+  AppSmith, Budibase, Rocket.Chat, Wallabag, FreshRSS, Linkwarden.
+
+- "none": building blocks rather than runnable end-user apps. Libraries, SDKs,
+  frameworks, CLI tools, developer utilities, plugins/extensions/themes,
+  bridges, connectors, API wrappers, model weights, inference-engine
+  adapters/add-ons, datasets, demos, templates, starter kits.
+
+Tie-breaker: if the repo runs as a deployable app with its own UI that a
+non-developer could use, lean toward "saas-ready" rather than "none". A repo
+that merely talks to, augments, or extends another service (a bridge, add-on,
+adapter, or plugin) is "none".`;
 }
 
 export interface AnalyzeResult {
