@@ -257,9 +257,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
   return (
     <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
-      <div className="glass-header flex-none p-6 pb-4 flex items-end justify-between">
+      <div className="glass-header flex-none px-6 py-3 flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold font-mono tracking-tight text-white flex items-center gap-2">
             <span className="text-accent-blue">~/</span>Repositories
           </h2>
         </div>
@@ -332,7 +332,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         </div>
       )}
 
-      <div className="flex-none px-6 py-3 mb-6 flex flex-col gap-3 border-b border-white/5">
+      <div className="flex-none px-6 py-2 flex flex-col gap-2 border-b border-white/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5 mr-2 shadow-inner">
@@ -779,20 +779,20 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
                     title="Add to compare"
-                    className={`absolute top-3 right-3 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${compareIds.has(repo.id) ? 'bg-accent-blue border-accent-blue' : 'border-slate-600 bg-bg-dark/60 hover:border-accent-blue'}`}
+                    className={`absolute top-3 left-3 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${compareIds.has(repo.id) ? 'bg-accent-blue border-accent-blue' : 'border-slate-600 bg-bg-dark/60 hover:border-accent-blue'}`}
                   >
                     {compareIds.has(repo.id) && <span className="text-white text-xs leading-3">✓</span>}
                   </button>
-                  <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
-                    {aiData?.enterpriseTier && (
-                      <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border-b border-amber-500/25">
-                        <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
-                          Replaces {aiData.comparableApp || 'Paid SaaS'}
-                        </span>
-                      </div>
-                    )}
-                    <div className={`flex justify-between items-start mb-4 ${aiData?.enterpriseTier ? 'mt-7' : ''}`}>
+                  <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
+                    {/* Enterprise badge — always reserves height so card doesn't jump on load */}
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${aiData?.enterpriseTier ? 'bg-black/40 visible' : 'invisible'}`}>
+                      <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
+                        Replaces {aiData?.comparableApp || 'Paid SaaS'}
+                      </span>
+                    </div>
+                    <div className="p-5">
+                    <div className="flex justify-between items-start mb-4">
                       <div className="flex flex-col">
                         <h4 className="text-lg font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate max-w-[180px]">
                           {formatRepoName(repo.id)}
@@ -842,6 +842,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                    </div>{/* /p-5 */}
                   </div>
 
                   <div className="p-5 flex-1 space-y-4">
