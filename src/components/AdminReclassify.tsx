@@ -50,7 +50,7 @@ export const AdminReclassify: React.FC = () => {
       // Loop batches until the backlog is drained (or the user stops / it stalls).
       for (let i = 0; i < 1000; i++) {
         if (cancelRef.current) break;
-        const qs = new URLSearchParams({ limit: '15' });
+        const qs = new URLSearchParams();
         if (force && since) { qs.set('force', 'true'); qs.set('since', since); }
         const r = await fetch(`/api/admin/reclassify?${qs.toString()}`, { method: 'POST' });
         if (!r.ok) throw new Error(`HTTP ${r.status}`);

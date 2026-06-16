@@ -71,15 +71,22 @@ export interface ReclassifyBatchResult {
 
 export interface ReclassifyBatchOpts {
   limit?: number;
+  /** Wall-clock budget (ms). Stops early so the request returns before the
+   *  serverless function times out, however slow DeepSeek is. */
+  maxMs?: number;
   /** When set, re-analyse every repo not yet processed at/after this ISO time. */
   forceSince?: string | null;
 }
 
-// Process up to `limit` repos that still need work, awaiting each so the result
-// is persisted before we return. Returns how many remain so the caller can loop.
+// Process repos that still need work — up to `limit`, and only while under the
+// time budget — awaiting each so the result is persisted before we return.
+// Returns how many remain so the caller can loop. The time budget is what keeps
+// a single request under the Netlify function timeout (DeepSeek calls are slow).
 export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<ReclassifyBatchResult> {
-  const limit = Math.min(Math.max(opts.limit ?? 15, 1), 50);
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
+  const maxMs = Math.min(Math.max(opts.maxMs ?? 7000, 1000), 20000);
   const force = !!opts.forceSince;
+  const start = Date.now();
 
   const rows = await all<RepoRow>("SELECT tenant_id, id, description, language, readme, ai_analysis FROM repos");
 
@@ -88,10 +95,11 @@ export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<R
     return force ? !processedSince(ai, opts.forceSince!) : needsReclassify(ai);
   });
 
-  const batch = candidates.slice(0, limit);
-  let updated = 0, failed = 0;
+  let processed = 0, updated = 0, failed = 0;
 
-  for (const repo of batch) {
+  for (const repo of candidates) {
+    if (processed >= limit || Date.now() - start >= maxMs) break;
+    processed++;
     try {
       const existing = parse(repo.ai_analysis);
       const topics = Array.isArray(existing.tags) ? existing.tags : [];
@@ -112,24 +120,23 @@ export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<R
       console.warn(`[reclassify] ${repo.id} failed: ${err.message}`);
       failed++;
     }
-    await new Promise(r => setTimeout(r, 150));
   }
 
   return {
-    processed: batch.length,
+    processed,
     updated,
     failed,
-    remaining: Math.max(0, candidates.length - batch.length),
+    remaining: Math.max(0, candidates.length - processed),
   };
 }
 
 // Drains the entire backlog in batches, up to a safety cap on iterations.
 // Used by the scheduled function. Each batch is awaited and persisted, so even
 // if the function is killed mid-run the next schedule resumes where it left off.
-export async function reclassifyDrain(maxBatches = 40, limit = 15): Promise<ReclassifyBatchResult> {
+export async function reclassifyDrain(maxBatches = 40, limit = 25): Promise<ReclassifyBatchResult> {
   const totals: ReclassifyBatchResult = { processed: 0, updated: 0, failed: 0, remaining: 0 };
   for (let i = 0; i < maxBatches; i++) {
-    const r = await reclassifyBatch({ limit });
+    const r = await reclassifyBatch({ limit, maxMs: 20000 });
     totals.processed += r.processed;
     totals.updated += r.updated;
     totals.failed += r.failed;
