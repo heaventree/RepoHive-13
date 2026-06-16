@@ -200,25 +200,6 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
   return (
     <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
-      {/* Header — minimal: refresh icon + Import button */}
-      <div className="glass-header flex-none px-6 py-3 flex items-center justify-end gap-2">
-        <button
-          onClick={handleRescanAll}
-          disabled={isRescanning || repos.length === 0}
-          title="Refresh library"
-          className="bg-bg-panel hover:bg-slate-800 disabled:opacity-50 text-slate-200 p-2 rounded-sm shadow-sm transition-colors border border-border-main"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRescanning ? 'animate-spin' : ''}`} />
-        </button>
-        <button
-          onClick={onBulkIngest}
-          className="bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-blue-500"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Import</span>
-        </button>
-      </div>
-
       {/* Compare action bar */}
       {compareIds.size > 0 && (
         <div className="flex-none px-6 py-2 flex items-center justify-between border-b border-border-main/30" style={{ background: 'rgba(77,142,255,0.08)' }}>
@@ -241,8 +222,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
       )}
 
       {/* Single toolbar row */}
-      <div className="flex-none px-6 py-3 flex items-center justify-between gap-3 border-b border-white/5">
-        <div className="flex items-center gap-3">
+      <div className="glass-header flex-none px-6 py-3 flex items-center justify-between gap-3 border-b border-white/5">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5 shadow-inner">
             <button
               onClick={() => setViewMode('list')}
@@ -262,9 +243,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           <div className="text-xs text-slate-500 font-mono whitespace-nowrap">
             Showing <span className="text-slate-200 font-bold">{filteredRepos.length}</span> of <span className="text-slate-200">{repos.length}</span>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsFilterModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-bg-panel border border-border-main rounded-sm text-xs font-bold text-slate-300 hover:text-white hover:border-accent-blue transition-all"
@@ -316,6 +295,24 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               </button>
             )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-none">
+          <button
+            onClick={handleRescanAll}
+            disabled={isRescanning || repos.length === 0}
+            title="Refresh library"
+            className="bg-bg-panel hover:bg-slate-800 disabled:opacity-50 text-slate-200 p-2 rounded-sm shadow-sm transition-colors border border-border-main"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRescanning ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={onBulkIngest}
+            className="bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-blue-500"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Import</span>
+          </button>
         </div>
       </div>
 
