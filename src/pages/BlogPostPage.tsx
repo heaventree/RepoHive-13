@@ -11,6 +11,8 @@ interface BlogPost {
   title: string;
   excerpt: string | null;
   bodyMd: string | null;
+  bodyHtml: string | null;
+  format: string | null;
   ogImage: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
@@ -50,7 +52,9 @@ export const BlogPostPage: React.FC = () => {
     </div>
   );
 
-  const html = post.bodyMd ? marked.parse(post.bodyMd) as string : '';
+  const html = post.format === 'html'
+    ? (post.bodyHtml || '')
+    : (post.bodyMd ? marked.parse(post.bodyMd) as string : '');
   const schema = post.publishedAt
     ? buildArticleSchema(post.title, post.publishedAt, {
         description: post.excerpt ?? undefined,

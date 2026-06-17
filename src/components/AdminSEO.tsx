@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   FileText, Sparkles, Save, RefreshCw, AlertCircle, CheckCircle2, Plus,
   Settings as SettingsIcon, Trash2, Edit3, Eye, Zap, Globe, Search, Loader,
+  Ship, Star, GitFork, Wand2,
 } from 'lucide-react';
 
 interface SeoPage {
@@ -24,14 +25,19 @@ interface BlogRow {
   title: string;
   excerpt: string | null;
   status: 'draft' | 'published';
+  source: string | null;
+  format: string | null;
+  featuredRepoId: string | null;
   publishedAt: string | null;
   updatedAt: string;
 }
 
-type Sub = 'pages' | 'settings' | 'blog';
+type Sub = 'pages' | 'settings' | 'blog' | 'harbor' | 'promo';
 
 export const AdminSEO: React.FC = () => {
   const [sub, setSub] = useState<Sub>('pages');
+  // Draft handed off from the promo generator, picked up by BlogPanel's editor.
+  const [pendingDraft, setPendingDraft] = useState<Partial<BlogPost> | null>(null);
 
   return (
     <div className="space-y-6">
@@ -40,6 +46,8 @@ export const AdminSEO: React.FC = () => {
           { id: 'pages',    label: 'Pages',    icon: FileText },
           { id: 'settings', label: 'Settings', icon: SettingsIcon },
           { id: 'blog',     label: 'Blog',     icon: Edit3 },
+          { id: 'harbor',   label: 'Harbor',   icon: Ship },
+          { id: 'promo',    label: 'Promo',    icon: Wand2 },
         ] as const).map(t => (
           <button
             key={t.id}
@@ -57,7 +65,18 @@ export const AdminSEO: React.FC = () => {
 
       {sub === 'pages' && <PagesPanel />}
       {sub === 'settings' && <SettingsPanel />}
-      {sub === 'blog' && <BlogPanel />}
+      {sub === 'blog' && (
+        <BlogPanel
+          pendingDraft={pendingDraft}
+          onPendingDraftConsumed={() => setPendingDraft(null)}
+        />
+      )}
+      {sub === 'harbor' && <HarborPanel />}
+      {sub === 'promo' && (
+        <PromoPanel
+          onDraftReady={(draft) => { setPendingDraft(draft); setSub('blog'); }}
+        />
+      )}
     </div>
   );
 };
@@ -362,9 +381,15 @@ interface BlogPost {
   tags: string | null;
   author: string | null;
   status: 'draft' | 'published';
+  source?: string | null;
+  format?: string | null;
+  featured_repo_id?: string | null;
 }
 
-function BlogPanel() {
+function BlogPanel({ pendingDraft, onPendingDraftConsumed }: {
+  pendingDraft?: Partial<BlogPost> | null;
+  onPendingDraftConsumed?: () => void;
+}) {
   const [posts, setPosts] = useState<BlogRow[]>([]);
   const [editing, setEditing] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -378,6 +403,17 @@ function BlogPanel() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (pendingDraft) {
+      setEditing({
+        slug: '', title: '', excerpt: '', body_md: '', og_image: '', seo_title: '', seo_description: '',
+        tags: '', author: '', status: 'draft',
+        ...pendingDraft,
+      } as BlogPost);
+      onPendingDraftConsumed?.();
+    }
+  }, [pendingDraft]);
 
   const openNew = () => setEditing({
     slug: '', title: '', excerpt: '', body_md: '', og_image: '', seo_title: '', seo_description: '', tags: '', author: '', status: 'draft',
@@ -416,6 +452,7 @@ function BlogPanel() {
               <tr className="text-left text-[10px] uppercase tracking-widest text-slate-600 border-b border-border-main/40">
                 <th className="py-2 pr-3">Title</th>
                 <th className="py-2 pr-3">Slug</th>
+                <th className="py-2 pr-3">Source</th>
                 <th className="py-2 pr-3">Status</th>
                 <th className="py-2 pr-3">Published</th>
                 <th className="py-2 text-right">Actions</th>
@@ -426,6 +463,13 @@ function BlogPanel() {
                 <tr key={p.id} className="border-b border-border-main/20 hover:bg-white/[0.02]">
                   <td className="py-2.5 pr-3 text-slate-200 max-w-[300px] truncate" title={p.title}>{p.title}</td>
                   <td className="py-2.5 pr-3 text-accent-blue">/blog/{p.slug}</td>
+                  <td className="py-2.5 pr-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ${
+                      p.source === 'harbor' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
+                        : p.source === 'promo' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/30'
+                        : 'bg-slate-700 text-slate-400'
+                    }`}>{p.source || 'manual'}</span>
+                  </td>
                   <td className="py-2.5 pr-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider ${p.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-400'}`}>{p.status}</span>
                   </td>
@@ -565,6 +609,233 @@ function BlogEditor({ post, onSave, onCancel }: { post: BlogPost; onSave: () => 
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Harbor panel ───────────────────────────────────────────────────────────
+// Harbor owns discovery + writing; we only import finished articles and
+// auto-publish them. No generation is triggered from here — pull only.
+interface HarborStatus {
+  configured: boolean;
+  account?: { articles_remaining: number; articles_monthly_limit: number; plan: string } | null;
+  lastImport?: { publishedAt: string | null; title: string } | null;
+  counts?: { total: number; published: number } | null;
+  error?: string;
+}
+
+function HarborPanel() {
+  const [status, setStatus] = useState<HarborStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [pulling, setPulling] = useState(false);
+  const [result, setResult] = useState<{ imported: number; skipped: number; items: { id: string; slug: string; title: string }[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const d = await fetch('/api/admin/harbor/status').then(r => r.json());
+      setStatus(d);
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const pull = async () => {
+    setPulling(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await fetch('/api/admin/harbor/pull', { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || 'Pull failed'); return; }
+      setResult(d);
+      await load();
+    } catch {
+      setError('Network error');
+    } finally { setPulling(false); }
+  };
+
+  if (loading) return <p className="text-xs text-slate-600 italic font-mono p-6">Loading…</p>;
+
+  if (!status?.configured) return (
+    <div className="glass-card rounded-2xl p-6 shadow-xl">
+      <div className="flex items-center gap-2 mb-2">
+        <Ship className="w-4 h-4 text-cyan-400" />
+        <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">Harbor</h3>
+      </div>
+      <p className="text-xs text-slate-400 font-mono">
+        HARBOR_API_KEY is not set. Add it to the server environment to enable importing Harbor articles.
+      </p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
+            <Ship className="w-4 h-4 text-cyan-400" /> Harbor import
+          </h3>
+          <button onClick={load} className="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-white">
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4 mb-5">
+          <div className="p-3 rounded-lg bg-bg-dark border border-border-main">
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Plan</div>
+            <div className="text-sm text-slate-200 font-mono">{status.account?.plan ?? '—'}</div>
+          </div>
+          <div className="p-3 rounded-lg bg-bg-dark border border-border-main">
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Articles remaining</div>
+            <div className="text-sm text-slate-200 font-mono">
+              {status.account ? `${status.account.articles_remaining} / ${status.account.articles_monthly_limit}` : '—'}
+            </div>
+          </div>
+          <div className="p-3 rounded-lg bg-bg-dark border border-border-main">
+            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-mono mb-1">Imported so far</div>
+            <div className="text-sm text-slate-200 font-mono">{status.counts?.total ?? 0} ({status.counts?.published ?? 0} published)</div>
+          </div>
+        </div>
+
+        {status.lastImport && (
+          <p className="text-[11px] text-slate-500 font-mono mb-4">
+            Last import: <span className="text-slate-300">{status.lastImport.title}</span>
+            {status.lastImport.publishedAt && ` · ${new Date(status.lastImport.publishedAt).toLocaleString()}`}
+          </p>
+        )}
+
+        {status.error && (
+          <p className="text-[11px] text-amber-400 font-mono mb-4 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {status.error}</p>
+        )}
+
+        <button
+          onClick={pull}
+          disabled={pulling}
+          className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold hover:bg-cyan-500/30 disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {pulling ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Ship className="w-3.5 h-3.5" />}
+          {pulling ? 'Pulling…' : 'Pull from Harbor now'}
+        </button>
+
+        {error && <p className="text-[11px] text-red-400 font-mono mt-3 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {error}</p>}
+
+        {result && (
+          <div className="mt-4 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+            <p className="text-[11px] text-emerald-300 font-mono mb-2">
+              Imported {result.imported}, skipped {result.skipped}.
+            </p>
+            {result.items.length > 0 && (
+              <ul className="space-y-1">
+                {result.items.map(i => (
+                  <li key={i.id} className="text-[11px] font-mono">
+                    <a href={`/blog/${i.slug}`} target="_blank" rel="noopener noreferrer" className="text-accent-blue hover:underline">{i.title}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Promo panel ─────────────────────────────────────────────────────────────
+// Pick a high-hitter repo from the library and write an internal promo
+// article about it, closing with a CTA to build a RepoHive toolbox.
+interface PromoCandidate {
+  id: string;
+  owner: string;
+  name: string;
+  url: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  forks: number;
+  score: number | null;
+  ai_analysis: any;
+}
+
+function PromoPanel({ onDraftReady }: { onDraftReady: (draft: Partial<BlogPost>) => void }) {
+  const [candidates, setCandidates] = useState<PromoCandidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const d = await fetch('/api/admin/blog/promo/suggest').then(r => r.json());
+      if (Array.isArray(d)) setCandidates(d);
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const feature = async (repoId: string) => {
+    setGenerating(repoId);
+    setError(null);
+    try {
+      const r = await fetch('/api/admin/blog/promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoId }),
+      });
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || 'Generation failed'); return; }
+      onDraftReady(d);
+    } catch {
+      setError('Network error');
+    } finally { setGenerating(null); }
+  };
+
+  return (
+    <div className="glass-card rounded-2xl p-6 shadow-xl">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
+          <Wand2 className="w-4 h-4 text-purple-400" /> Featured-repo candidates
+        </h3>
+        <button onClick={load} className="p-2 rounded bg-slate-800 border border-slate-700 text-slate-400 hover:text-white">
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      <p className="text-[11px] text-slate-500 font-mono mb-4">
+        Top-scoring repos that haven't been featured yet. Pick one — DeepSeek writes a piece on it with a CTA to build a RepoHive toolbox.
+      </p>
+
+      {error && <p className="text-[11px] text-red-400 font-mono mb-4 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {error}</p>}
+
+      {loading ? <p className="text-xs text-slate-600 italic font-mono">Loading…</p> : candidates.length === 0 ? (
+        <p className="text-xs text-slate-600 italic font-mono">No candidates left — every high-scoring repo has been featured.</p>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-3">
+          {candidates.map(c => (
+            <div key={c.id} className="p-4 rounded-lg bg-bg-dark border border-border-main flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-blue font-mono hover:underline truncate">{c.owner}/{c.name}</a>
+                {c.score != null && <span className="text-[10px] font-mono text-emerald-400">{c.score}/100</span>}
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono line-clamp-2">{c.description || '—'}</p>
+              <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono">
+                <span className="flex items-center gap-1"><Star className="w-3 h-3" /> {c.stars}</span>
+                <span className="flex items-center gap-1"><GitFork className="w-3 h-3" /> {c.forks}</span>
+                {c.language && <span>{c.language}</span>}
+              </div>
+              <button
+                onClick={() => feature(c.id)}
+                disabled={generating === c.id}
+                className="mt-1 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[11px] font-mono font-bold hover:bg-purple-500/30 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {generating === c.id ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                {generating === c.id ? 'Writing…' : 'Feature this repo'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

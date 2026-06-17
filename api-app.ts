@@ -12,6 +12,7 @@ import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
 import { rescanOldestRepos } from "./lib/rescan";
 import { buildAnalysisPrompt, analyzeRepo } from "./lib/analyze";
 import { reclassifyBatch, reclassifyStats, reclassifyDistribution, reclassifyTenantBreakdown } from "./lib/reclassify";
+import { pullCompletedArticles, getAccount as harborGetAccount, HarborError, type HarborJob } from "./lib/harbor";
 
 // When CLERK_SECRET_KEY is absent we run with auth disabled and scope all data
 // to a single dev tenant — keeps the app runnable offline / in CI / sandboxes.
@@ -397,6 +398,17 @@ async function runMigrations() {
     // Phase 2: shareable projects
     "ALTER TABLE projects ADD COLUMN is_public INTEGER DEFAULT 0",
     "ALTER TABLE projects ADD COLUMN public_slug TEXT",
+    // Phase 3: split blog content into Harbor-sourced imports vs internal
+    // promo articles vs manually-written ones. format lets us store Harbor's
+    // HTML alongside our markdown posts; harbor_job_id dedupes imports;
+    // featured_repo_id links a promo article to the repo it features so we
+    // never feature the same repo twice.
+    "ALTER TABLE blog_posts ADD COLUMN source TEXT DEFAULT 'manual'",
+    "ALTER TABLE blog_posts ADD COLUMN format TEXT DEFAULT 'md'",
+    "ALTER TABLE blog_posts ADD COLUMN body_html TEXT",
+    "ALTER TABLE blog_posts ADD COLUMN harbor_job_id TEXT",
+    "ALTER TABLE blog_posts ADD COLUMN featured_repo_id TEXT",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_blog_harbor_job_id ON blog_posts(harbor_job_id) WHERE harbor_job_id IS NOT NULL",
   ];
   for (const sql of migrations) {
     try { await run(sql); } catch { /* column already exists — ok */ }
@@ -2000,7 +2012,8 @@ Return ONLY valid JSON with this exact structure:
   // Public — single post by slug.
   app.get("/api/blog/:slug", async (req, res) => {
     const post = await get(
-      `SELECT slug, title, excerpt, body_md AS bodyMd, og_image AS ogImage,
+      `SELECT slug, title, excerpt, body_md AS bodyMd, body_html AS bodyHtml,
+              format, og_image AS ogImage,
               seo_title AS seoTitle, seo_description AS seoDescription,
               tags, author, published_at AS publishedAt
        FROM blog_posts WHERE slug = ? AND status = 'published'`,
@@ -2014,7 +2027,8 @@ Return ONLY valid JSON with this exact structure:
   app.get("/api/admin/blog", async (req, res) => {
     if (!requireAdmin(req, res)) return;
     const posts = await all(
-      `SELECT id, slug, title, excerpt, status, published_at AS publishedAt, updated_at AS updatedAt
+      `SELECT id, slug, title, excerpt, status, source, format, featured_repo_id AS featuredRepoId,
+              published_at AS publishedAt, updated_at AS updatedAt
        FROM blog_posts ORDER BY updated_at DESC`,
     );
     res.json(posts);
@@ -2029,27 +2043,31 @@ Return ONLY valid JSON with this exact structure:
 
   app.post("/api/admin/blog", async (req, res) => {
     if (!requireAdmin(req, res)) return;
-    const { id, slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status } = req.body ?? {};
+    const {
+      id, slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status,
+      source, format, body_html, featured_repo_id,
+    } = req.body ?? {};
     if (!title) return res.status(400).json({ error: "title is required" });
     const finalSlug = slug || slugify(title);
     const publishedAt = status === 'published' ? new Date().toISOString() : null;
     if (id) {
       await run(
         `UPDATE blog_posts SET slug=?, title=?, excerpt=?, body_md=?, og_image=?, seo_title=?, seo_description=?,
-           tags=?, author=?, status=?,
+           tags=?, author=?, status=?, source=?, format=?, body_html=?, featured_repo_id=?,
            published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN CURRENT_TIMESTAMP ELSE published_at END,
            updated_at = CURRENT_TIMESTAMP
          WHERE id=?`,
         [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
-         tags ?? null, author ?? null, status ?? 'draft', status ?? 'draft', id],
+         tags ?? null, author ?? null, status ?? 'draft', source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null,
+         status ?? 'draft', id],
       );
       res.json({ success: true, id });
     } else {
       const result = await run(
-        `INSERT INTO blog_posts (slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO blog_posts (slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status, published_at, source, format, body_html, featured_repo_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
-         tags ?? null, author ?? null, status ?? 'draft', publishedAt],
+         tags ?? null, author ?? null, status ?? 'draft', publishedAt, source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null],
       );
       res.json({ success: true, id: Number(result.lastInsertRowid) });
     }
@@ -2169,6 +2187,225 @@ Return ONLY a single valid JSON object (no markdown wrapper, no explanation befo
         if (!match) return res.status(502).json({ error: "AI returned no JSON" });
         res.json(JSON.parse(match[0]));
       }
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ─── Harbor blog import ─────────────────────────────────────────────────────
+  // Harbor (harbor.app) owns topic discovery, writing, images, headings — we
+  // only import the finished articles and auto-publish them. Deduped by Harbor
+  // job id so the same article can never land twice.
+  app.get("/api/admin/harbor/status", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    if (!process.env.HARBOR_API_KEY) {
+      return res.json({ configured: false });
+    }
+    const lastImport = await get<any>(
+      "SELECT published_at AS publishedAt, title FROM blog_posts WHERE source = 'harbor' ORDER BY id DESC LIMIT 1",
+    );
+    const counts = await get<any>(
+      "SELECT COUNT(*) AS total, SUM(CASE WHEN status='published' THEN 1 ELSE 0 END) AS published FROM blog_posts WHERE source = 'harbor'",
+    );
+    let account: any = null;
+    try { account = await harborGetAccount(); } catch (e: any) {
+      return res.json({ configured: true, account: null, lastImport, counts, error: e.message });
+    }
+    res.json({ configured: true, account, lastImport, counts });
+  });
+
+  app.post("/api/admin/harbor/pull", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    if (!process.env.HARBOR_API_KEY) {
+      return res.status(400).json({ error: "HARBOR_API_KEY is not set" });
+    }
+    try {
+      const seenRows = await all<{ harbor_job_id: string }>(
+        "SELECT harbor_job_id FROM blog_posts WHERE harbor_job_id IS NOT NULL",
+      );
+      const seen = new Set(seenRows.map(r => r.harbor_job_id));
+      const fresh = await pullCompletedArticles(seen);
+
+      let imported = 0, skipped = 0;
+      const items: { id: string; slug: string; title: string }[] = [];
+      for (const job of fresh) {
+        if (!job.content || !job.title) { skipped++; continue; }
+        const baseSlug = job.url_slug || job.slug || slugify(job.title);
+        const slug = await uniqueBlogSlug(baseSlug);
+        const tags = Array.isArray(job.tags) ? job.tags.join(',')
+                   : Array.isArray(job.keywords) ? job.keywords.join(',')
+                   : null;
+        const excerpt = job.excerpt || job.meta_description || job.seo_description || null;
+        const seoTitle = job.seo_title || job.title;
+        const seoDescription = job.seo_description || job.meta_description || null;
+        const ogImage = job.og_image || job.cover_image || null;
+
+        await run(
+          `INSERT INTO blog_posts
+             (slug, title, excerpt, body_html, format, og_image, seo_title, seo_description, tags, author,
+              status, published_at, source, harbor_job_id)
+           VALUES (?, ?, ?, ?, 'html', ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'harbor', ?)`,
+          [slug, job.title, excerpt, job.content, ogImage, seoTitle, seoDescription, tags, 'Harbor', job.id],
+        );
+        imported++;
+        items.push({ id: job.id, slug, title: job.title });
+      }
+
+      res.json({ imported, skipped, items });
+    } catch (err: any) {
+      const status = err instanceof HarborError ? err.status : 500;
+      res.status(status >= 400 && status < 600 ? status : 500).json({ error: err.message, code: err.code });
+    }
+  });
+
+  async function uniqueBlogSlug(base: string): Promise<string> {
+    let slug = base;
+    let n = 2;
+    while (await get("SELECT 1 FROM blog_posts WHERE slug = ?", [slug])) {
+      slug = `${base}-${n++}`;
+      if (n > 50) { slug = `${base}-${Date.now()}`; break; }
+    }
+    return slug;
+  }
+
+  // ─── Internal promo articles ────────────────────────────────────────────────
+  // Featured-repo posts: pick a real high-hitter repo and write a piece on it,
+  // always closing with a CTA about building a personal RepoHive toolbox.
+  app.get("/api/admin/blog/promo/suggest", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    // Top-scoring repos in the preloaded library that haven't been featured yet.
+    const candidates = await all<any>(
+      `SELECT r.id, r.owner, r.name, r.url, r.description, r.language, r.license,
+              r.stars, r.forks, r.score, r.ai_analysis
+       FROM repos r
+       WHERE r.tenant_id = '__library__'
+         AND r.id NOT IN (SELECT featured_repo_id FROM blog_posts WHERE featured_repo_id IS NOT NULL)
+       ORDER BY r.score DESC, r.stars DESC
+       LIMIT 12`,
+    );
+    res.json(candidates.map((r: any) => ({
+      ...r,
+      ai_analysis: r.ai_analysis ? safeParse(r.ai_analysis) : null,
+    })));
+  });
+
+  function safeParse(s: string): any { try { return JSON.parse(s); } catch { return null; } }
+
+  app.post("/api/admin/blog/promo", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { repoId } = req.body ?? {};
+    if (!repoId) return res.status(400).json({ error: "repoId is required" });
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "DEEPSEEK_API_KEY not set" });
+
+    // Pull the richest copy of the repo (preloaded library has best metadata).
+    const repo = await get<any>(
+      `SELECT id, owner, name, url, description, language, license, stars, forks, issues, last_push, ai_analysis
+       FROM repos WHERE id = ? ORDER BY (tenant_id = '__library__') DESC LIMIT 1`,
+      [repoId],
+    );
+    if (!repo) return res.status(404).json({ error: "Repo not found" });
+
+    const ai = repo.ai_analysis ? safeParse(repo.ai_analysis) : {};
+    const demoUrl = ai?.demoUrl || null;
+    const comparableApp = ai?.comparableApp || null;
+    const productClass = ai?.productClass || null;
+    const useCases = Array.isArray(ai?.useCases) ? ai.useCases.join('; ') : '';
+
+    const SYSTEM_PROMPT = `You are the staff writer for the RepoHive blog, writing a featured-repo article — a deep look at one notable open-source repository, with a clear CTA at the end about using RepoHive to curate a personal toolbox of repos like it.
+
+## Voice & Tone
+- Opinionated, precise, peer-to-peer with technical readers (senior engineers, tech leads).
+- Active voice. Sentences under 25 words for technical claims.
+- No marketing fluff: no "game-changer", "revolutionary", "unlock", "leverage", "empower", "deep dive", "in today's fast-paced world".
+- Dry wit acceptable; enthusiasm not.
+
+## Structure (must follow)
+- Opening: 2–3 sentences, no heading. State what the repo does and the specific problem it solves. Name the repo and link to it inline.
+- Body: 4–5 H2 sections covering:
+  1. What it actually does (concrete, technical)
+  2. Why it stands out — cite real signals (stars, forks, recent activity, license, what it replaces if anything)
+  3. Who it's for / when to reach for it
+  4. Honest tradeoffs and where it doesn't fit
+  5. (If demoUrl provided) How to try it in 5 minutes — concrete steps
+- Include at least one fenced code block (install command, config snippet, or curl).
+- Closing H2: "Build your own repo toolbox with RepoHive". 2–3 sentences explaining how RepoHive helps engineers track repos like this — AI scoring, classification (App Killer / SaaS Ready), comparisons, and a personal curated library. Include a link to https://repohive.app with anchor text "start your toolbox" or "explore RepoHive".
+
+## Linking Rules
+- Link to the GitHub repo at first mention using its URL.
+- If a demo URL is provided, link to it in the "try it" section as "live demo".
+- Use the comparableApp name when relevant ("an open-source alternative to <comparableApp>").
+
+## SEO Requirements
+- Title: 50–60 chars, includes the repo name (e.g. "<Repo>: <one-line value prop>")
+- Slug: include the repo name, 3–6 words, lowercase, hyphens
+- seo_title: 50–60 chars, repo name early
+- seo_description: 140–160 chars, repo name + concrete benefit
+- Tags: 3–5 — include "featured", repo language, and topic tags
+
+## Hard Prohibitions
+- No fabricated stats. Use only the numbers in the repo metadata provided.
+- No generic "Conclusion" section that recaps.
+- No padding to word count — minimum 900 words, target 1100–1300.`;
+
+    const userPrompt = `Write a featured-repo article for RepoHive.
+
+Repo: ${repo.id}
+URL: ${repo.url}
+Description: ${repo.description || '(none)'}
+Language: ${repo.language || 'unknown'}
+License: ${repo.license || 'unknown'}
+Stars: ${repo.stars}
+Forks: ${repo.forks}
+Open issues: ${repo.issues}
+Last pushed: ${repo.last_push}
+RepoHive AI score (0-100): ${repo.score}
+AI summary: ${ai?.summary || '(none)'}
+Use cases: ${useCases || '(none provided)'}
+Classification: ${productClass || 'unclassified'}${comparableApp ? `\nReplaces: ${comparableApp}` : ''}${demoUrl ? `\nDemo URL: ${demoUrl}` : ''}
+
+Return ONLY a single valid JSON object (no markdown wrapper):
+{
+  "title": "Repo-name-first title 50-60 chars",
+  "slug": "url-slug-with-repo-name",
+  "excerpt": "One sentence under 155 chars",
+  "seo_title": "Title tag 50-60 chars",
+  "seo_description": "Meta description 140-160 chars",
+  "tags": "featured,language,topic1,topic2",
+  "author": "RepoHive Team",
+  "body_md": "Full markdown 1100-1300 words following the structure rules. Include the repo link, real numbers from above, code block, and the closing CTA H2."
+}`;
+
+    try {
+      const r = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt },
+          ],
+          max_tokens: 4000,
+          temperature: 0.55,
+          response_format: { type: 'json_object' },
+        }),
+      });
+      if (!r.ok) return res.status(502).json({ error: `DeepSeek ${r.status}` });
+      const data: any = await r.json();
+      const { userId } = getTenant(req);
+      trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'blog-promo', tenantId: userId, inputUnits: data.usage?.prompt_tokens ?? 0, outputUnits: data.usage?.completion_tokens ?? 0, ok: true });
+      const text: string = data.choices?.[0]?.message?.content || '';
+      let draft: any;
+      try { draft = JSON.parse(text); }
+      catch {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (!m) return res.status(502).json({ error: "AI returned no JSON" });
+        draft = JSON.parse(m[0]);
+      }
+      // Return the draft plus the repo id — the admin saves it as a regular
+      // blog post and we attach featured_repo_id at save time (below).
+      res.json({ ...draft, featured_repo_id: repo.id, source: 'promo' });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
