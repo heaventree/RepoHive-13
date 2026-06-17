@@ -133,7 +133,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({ repos, onClose }) =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}>
-      <div className="w-full max-w-6xl my-8" style={{ background: 'rgba(15,23,42,0.97)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
+      <div className="w-full max-w-6xl my-8" style={{ background: 'rgba(15,23,42,0.97)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '5px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border-main/30">
           <div>

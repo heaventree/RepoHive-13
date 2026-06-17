@@ -14,12 +14,16 @@
   --color-accent-amber: #f59e0b;
   --color-accent-red: #ef4444;
 
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+  /* Unified corner radius across the app — every rounded element renders at
+     5px. Pills (rounded-full) are explicitly excluded. */
+  --radius: 5px;
+  --radius-xs: 5px;
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 5px;
+  --radius-xl: 5px;
+  --radius-2xl: 5px;
+  --radius-3xl: 5px;
   --radius-full: 9999px;
 
   @keyframes spin-slow {
@@ -110,8 +114,8 @@
 .prose-blog li { margin-bottom: 0.5rem; }
 .prose-blog a { color: #4d8eff; text-decoration: underline; text-underline-offset: 2px; }
 .prose-blog a:hover { color: #adc6ff; }
-.prose-blog code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.875em; background: rgba(255,255,255,0.06); padding: 0.125rem 0.375rem; border-radius: 0.25rem; color: #adc6ff; }
-.prose-blog pre { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.06); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; }
+.prose-blog code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.875em; background: rgba(255,255,255,0.06); padding: 0.125rem 0.375rem; border-radius: 5px; color: #adc6ff; }
+.prose-blog pre { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; }
 .prose-blog pre code { background: transparent; padding: 0; color: #dae2fd; font-size: 0.85em; }
 .prose-blog blockquote { border-left: 3px solid #4d8eff; padding-left: 1rem; margin: 1.5rem 0; color: #94a3b8; font-style: italic; }
 .prose-blog strong { color: #fff; font-weight: 700; }
