@@ -364,7 +364,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
         {purposeRepo && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div className="glass-card rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden">
               <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                   <Rocket className="w-5 h-5 text-accent-blue" /> Purpose & Suitability Analysis
@@ -447,7 +447,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         {/* Unified Filter Modal — full-width, multi-select */}
         {isFilterModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsFilterModalOpen(false)}>
-            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="glass-card rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between flex-none">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                   <Filter className="w-5 h-5 text-accent-blue" /> Filters
@@ -658,7 +658,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 <div
                   key={repo.id}
                   onClick={() => onViewRepo(repo)}
-                  className={`glass-card rounded-2xl overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
+                  className={`glass-card rounded-lg overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
                 >
                   <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
                     {/* Classification badge — always reserves height so cards don't jump. */}

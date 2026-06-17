@@ -30,7 +30,7 @@ export const Monitoring: React.FC = () => {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
-            <div key={i} className="glass-card rounded-2xl p-5 shadow-xl">
+            <div key={i} className="glass-card rounded-lg p-5 shadow-xl">
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-2 rounded-md bg-slate-800 border border-border-main ${stat.color}`}>
                   <stat.icon className="w-5 h-5" />
@@ -49,7 +49,7 @@ export const Monitoring: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass-card rounded-2xl p-6">
+          <div className="lg:col-span-2 glass-card rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-accent-blue" /> Ingestion Velocity
@@ -68,7 +68,7 @@ export const Monitoring: React.FC = () => {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-6">
+          <div className="glass-card rounded-lg p-6">
             <h3 className="text-base font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-accent-green" /> Node Health Distribution
             </h3>

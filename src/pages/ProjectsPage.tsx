@@ -12,7 +12,7 @@ export function ProjectsPage() {
     >
       {/* Hero card explaining the flow */}
       <div
-        className="rounded-2xl p-8 mb-16"
+        className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
         <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -89,7 +89,7 @@ export function ProjectsPage() {
 
       {/* Example */}
       <div
-        className="rounded-2xl p-8 mb-16"
+        className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(77,142,255,0.06)', border: '1px solid rgba(77,142,255,0.18)' }}
       >
         <p className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-3">A real-shaped example</p>

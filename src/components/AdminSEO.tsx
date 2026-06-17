@@ -134,7 +134,7 @@ function PagesPanel() {
   if (editing) return <PageEditor page={editing} onSave={async () => { await load(); setEditing(null); }} onCancel={() => setEditing(null)} />;
 
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
           <Globe className="w-4 h-4 text-accent-blue" /> SEO Pages ({pages.length})
@@ -250,7 +250,7 @@ function PageEditor({ page, onSave, onCancel }: { page: SeoPage; onSave: () => v
         <button onClick={onCancel} className="text-xs text-slate-500 hover:text-white font-mono">← Back to list</button>
       </div>
 
-      <div className="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+      <div className="glass-card rounded-lg p-6 shadow-xl space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <Field label="URL path" value={f.path} onChange={(v: string) => setF({ ...f, path: v })} help="e.g. /pricing — must start with /" />
           <Field label="Label" value={f.label} onChange={(v: string) => setF({ ...f, label: v })} help="Friendly name shown in admin only" />
@@ -272,7 +272,7 @@ function PageEditor({ page, onSave, onCancel }: { page: SeoPage; onSave: () => v
       </div>
 
       {suggestions && (
-        <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="glass-card rounded-lg p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-4 h-4 text-purple-400" />
             <h4 className="text-sm font-bold text-white font-mono">AI Suggestions</h4>
@@ -342,7 +342,7 @@ function SettingsPanel() {
   ];
 
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+    <div className="glass-card rounded-lg p-6 shadow-xl space-y-4">
       <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
         <SettingsIcon className="w-4 h-4 text-accent-blue" /> Site-wide SEO settings
       </h3>
@@ -433,7 +433,7 @@ function BlogPanel({ pendingDraft, onPendingDraftConsumed }: {
   if (editing) return <BlogEditor post={editing} onSave={async () => { await load(); setEditing(null); }} onCancel={() => setEditing(null)} />;
 
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
           <Edit3 className="w-4 h-4 text-accent-blue" /> Blog Posts ({posts.length})
@@ -536,7 +536,7 @@ function BlogEditor({ post, onSave, onCancel }: { post: BlogPost; onSave: () => 
       </div>
 
       {!f.id && (
-        <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="glass-card rounded-lg p-6 shadow-xl">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-purple-400" />
             <h4 className="text-xs font-bold text-white uppercase tracking-widest font-mono">AI draft</h4>
@@ -552,7 +552,7 @@ function BlogEditor({ post, onSave, onCancel }: { post: BlogPost; onSave: () => 
         </div>
       )}
 
-      <div className="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+      <div className="glass-card rounded-lg p-6 shadow-xl space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <label className="block">
             <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">Title</div>
@@ -659,7 +659,7 @@ function HarborPanel() {
   if (loading) return <p className="text-xs text-slate-600 italic font-mono p-6">Loading…</p>;
 
   if (!status?.configured) return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center gap-2 mb-2">
         <Ship className="w-4 h-4 text-cyan-400" />
         <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">Harbor</h3>
@@ -672,7 +672,7 @@ function HarborPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="glass-card rounded-2xl p-6 shadow-xl">
+      <div className="glass-card rounded-lg p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
             <Ship className="w-4 h-4 text-cyan-400" /> Harbor import
@@ -801,7 +801,7 @@ function PromoPanel({ onDraftReady }: { onDraftReady: (draft: Partial<BlogPost>)
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
           <Wand2 className="w-4 h-4 text-purple-400" /> Featured-repo candidates

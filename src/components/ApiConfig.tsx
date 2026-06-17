@@ -83,7 +83,7 @@ export const ApiConfig: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* API Key Card */}
-          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+          <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Key className="w-24 h-24" />
             </div>
@@ -127,7 +127,7 @@ export const ApiConfig: React.FC = () => {
           </div>
 
           {/* Endpoint Card */}
-          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+          <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Terminal className="w-24 h-24" />
             </div>
@@ -173,7 +173,7 @@ export const ApiConfig: React.FC = () => {
         </div>
 
         {/* Documentation Card */}
-        <div className="glass-card rounded-2xl p-8 shadow-xl">
+        <div className="glass-card rounded-lg p-8 shadow-xl">
           <h3 className="text-lg font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-3 font-mono">
             <FileText className="w-6 h-6 text-accent-blue" /> Quick Start Guide
           </h3>

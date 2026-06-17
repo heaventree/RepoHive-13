@@ -203,7 +203,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
       {summary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}>
           <div
-            className="relative w-full max-w-sm mx-4 rounded-2xl p-8 text-center shadow-2xl"
+            className="relative w-full max-w-sm mx-4 rounded-lg p-8 text-center shadow-2xl"
             style={{
               background: 'rgba(15,23,42,0.96)',
               border: summary.stopped
@@ -220,7 +220,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
           >
             {/* Icon */}
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-5"
               style={{
                 background: summary.stopped
                   ? 'rgba(251,191,36,0.10)'
@@ -291,7 +291,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 
           {/* ── Live Monitor ── */}
-          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+          <div className="flex flex-col rounded-lg overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="flex items-center gap-3">
@@ -327,7 +327,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
               {stream.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                  <div className="w-16 h-16 rounded-2xl border border-white/10 flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <div className="w-16 h-16 rounded-lg border border-white/10 flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
                     <Rocket className="w-7 h-7 text-slate-600" />
                   </div>
                   <p className="text-slate-500 font-medium">No scans running</p>
@@ -414,7 +414,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
           </div>
 
           {/* ── URL Input ── */}
-          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+          <div className="flex flex-col rounded-lg overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div>
                 <p className="text-white font-semibold text-lg">Paste URLs</p>

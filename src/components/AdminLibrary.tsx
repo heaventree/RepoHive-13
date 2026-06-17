@@ -148,7 +148,7 @@ export const AdminLibrary: React.FC = () => {
         </div>
 
         {/* Promote from own library */}
-        <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="glass-card rounded-lg p-6 shadow-xl">
           <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1 font-mono flex items-center gap-2">
             <Plus className="w-4 h-4 text-accent-blue" /> Promote from your library
           </h3>
@@ -179,7 +179,7 @@ export const AdminLibrary: React.FC = () => {
         </div>
 
         {/* Current preloaded library */}
-        <div className="glass-card rounded-2xl p-6 shadow-xl">
+        <div className="glass-card rounded-lg p-6 shadow-xl">
           <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-1 font-mono flex items-center gap-2">
             <Flame className="w-4 h-4 text-amber-400" /> Preloaded library contents
           </h3>

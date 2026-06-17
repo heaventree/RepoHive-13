@@ -479,7 +479,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
+          <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-red-400">Analysis Failed</p>
@@ -492,7 +492,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
         {isAnalyzing && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass-card rounded-2xl overflow-hidden animate-pulse">
+              <div key={i} className="glass-card rounded-lg overflow-hidden animate-pulse">
                 <div className="p-5 space-y-3">
                   <div className="h-4 bg-white/5 rounded-lg w-2/3" />
                   <div className="h-3 bg-white/5 rounded-lg w-full" />
@@ -509,7 +509,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             {hasAnalyzed && activeProject ? (
               /* Analysis ran but nothing passed the relevance floor */
               <>
-                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 border border-amber-500/20 bg-amber-500/5">
+                <div className="w-20 h-20 rounded-xl flex items-center justify-center mb-6 border border-amber-500/20 bg-amber-500/5">
                   <AlertTriangle className="w-9 h-9 text-amber-500/60" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No relevant repos found</p>
@@ -527,7 +527,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             ) : activeProject ? (
               /* Project selected, not yet analyzed */
               <>
-                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                <div className="w-20 h-20 rounded-xl glass-card flex items-center justify-center mb-6 border border-white/10">
                   <Rocket className="w-9 h-9 text-slate-600" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No saved matches yet</p>
@@ -538,7 +538,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             ) : (
               /* No project selected */
               <>
-                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                <div className="w-20 h-20 rounded-xl glass-card flex items-center justify-center mb-6 border border-white/10">
                   <Rocket className="w-9 h-9 text-slate-600" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No project selected</p>
@@ -561,7 +561,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               const repo = repos.find(r => r.id === rec.repoId);
               if (!repo) return null;
               return (
-                <article key={idx} className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all relative">
+                <article key={idx} className="glass-card rounded-lg overflow-hidden group hover:border-white/20 transition-all relative">
                   {/* Remove button */}
                   <button
                     onClick={() => handleRemoveRecommendation(rec.repoId)}
@@ -636,7 +636,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               const repo = repos.find(r => r.id === rec.repoId);
               if (!repo) return null;
               return (
-                <div key={idx} className="glass-card rounded-2xl flex items-center overflow-hidden hover:border-white/20 transition-all group">
+                <div key={idx} className="glass-card rounded-lg flex items-center overflow-hidden hover:border-white/20 transition-all group">
                   {/* Fit score */}
                   <div className="w-16 h-16 bg-emerald-500/10 border-r border-white/8 flex flex-col items-center justify-center flex-shrink-0">
                     <span className="text-[8px] text-emerald-400 font-bold uppercase leading-none mb-0.5">FIT</span>

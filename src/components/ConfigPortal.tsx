@@ -93,7 +93,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Scoring Weights Card */}
-          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+          <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <Sliders className="w-24 h-24" />
             </div>
@@ -124,7 +124,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
 
           <div className="space-y-8">
             {/* Project Types Card */}
-            <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <LayoutGrid className="w-24 h-24" />
               </div>
@@ -167,7 +167,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
             </div>
 
             {/* Logic Visualizer Card */}
-            <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+            <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Zap className="w-24 h-24" />
               </div>
@@ -188,7 +188,7 @@ export const ConfigPortal: React.FC<ConfigPortalProps> = ({ onBack }) => {
         </div>
 
         {/* Scan Schedule Card */}
-        <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
+        <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden group hover:border-white/20 transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <Clock className="w-24 h-24" />
           </div>

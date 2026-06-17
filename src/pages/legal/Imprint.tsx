@@ -12,7 +12,7 @@ export default function ImprintPage() {
           Back to Home
         </Link>
         
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12">
+        <div className="bg-white/5 border border-white/10 rounded-lg p-8 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Legal Disclosure (Imprint)</h1>
           <p className="text-gray-400 mb-8">Information provided in accordance with applicable commercial, digital services, and consumer protection regulations</p>
           

@@ -26,7 +26,7 @@ export function IntegrationsPage() {
     >
       {/* The mental model */}
       <div
-        className="rounded-2xl p-8 mb-16"
+        className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
         <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-6">The idea</h2>
@@ -74,7 +74,7 @@ export function IntegrationsPage() {
 
       {/* Endpoint example */}
       <div
-        className="rounded-2xl p-8 mb-16"
+        className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
         <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-3 flex items-center gap-2">

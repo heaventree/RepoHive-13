@@ -57,7 +57,7 @@ export const BlogIndexPage: React.FC = () => {
                 <Link
                   key={p.slug}
                   to={`/blog/${p.slug}`}
-                  className="block rounded-2xl p-6 hover:border-accent-blue/40 transition-all group"
+                  className="block rounded-lg p-6 hover:border-accent-blue/40 transition-all group"
                   style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
                   <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500 mb-2">

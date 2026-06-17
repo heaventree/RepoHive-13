@@ -137,7 +137,7 @@ export const Policies: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {policies.map((policy) => (
-            <div key={policy.id} className="glass-card rounded-2xl p-5 hover:border-white/20 transition-all group flex flex-col h-full shadow-xl">
+            <div key={policy.id} className="glass-card rounded-lg p-5 hover:border-white/20 transition-all group flex flex-col h-full shadow-xl">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[10px] font-mono text-slate-500 bg-bg-dark px-1.5 py-0.5 rounded border border-border-main">{policy.id}</span>
@@ -177,7 +177,7 @@ export const Policies: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
-          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden">
+          <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <Lock className="w-24 h-24" />
             </div>
@@ -212,7 +212,7 @@ export const Policies: React.FC = () => {
             </div>
           </div>
 
-          <div className="glass-card rounded-2xl p-8 shadow-xl relative overflow-hidden">
+          <div className="glass-card rounded-lg p-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <CheckCircle2 className="w-24 h-24" />
             </div>

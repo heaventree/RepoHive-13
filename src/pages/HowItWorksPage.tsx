@@ -61,7 +61,7 @@ export function HowItWorksPage() {
 
       {/* The big idea */}
       <div
-        className="rounded-2xl p-10 mb-20 text-center"
+        className="rounded-lg p-10 mb-20 text-center"
         style={{ background: 'rgba(77,142,255,0.06)', border: '1px solid rgba(77,142,255,0.18)' }}
       >
         <Zap className="w-8 h-8 mx-auto mb-4" style={{ color: '#4d8eff' }} />

@@ -118,7 +118,7 @@ export const AdminCosts: React.FC = () => {
           { icon: Zap,        label: 'Failed calls',     value: String(data.allTime.failedCalls ?? 0), sub: 'across all providers' },
           { icon: BarChart2,  label: 'Models tracked',   value: String(new Set(data.byModel.map(r => r.model)).size), sub: `${data.byModel.length} operation types` },
         ].map(({ icon: Icon, label, value, sub }) => (
-          <div key={label} className="glass-card rounded-2xl p-5 shadow-xl">
+          <div key={label} className="glass-card rounded-lg p-5 shadow-xl">
             <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
               <Icon className="w-3.5 h-3.5 text-accent-blue" /> {label}
             </div>
@@ -140,7 +140,7 @@ export const AdminCosts: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Daily spend chart */}
-        <div className="glass-card rounded-2xl p-5 shadow-xl col-span-2">
+        <div className="glass-card rounded-lg p-5 shadow-xl col-span-2">
           <div className="flex items-center justify-between mb-4">
             <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
               <BarChart2 className="w-3.5 h-3.5 text-accent-blue" /> Daily spend — last 30 days
@@ -157,7 +157,7 @@ export const AdminCosts: React.FC = () => {
         </div>
 
         {/* Budget config */}
-        <div className="glass-card rounded-2xl p-5 shadow-xl">
+        <div className="glass-card rounded-lg p-5 shadow-xl">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-4">
             <Settings2 className="w-3.5 h-3.5 text-accent-blue" /> Monthly budget alert
           </div>
@@ -204,7 +204,7 @@ export const AdminCosts: React.FC = () => {
       </div>
 
       {/* Per-model breakdown */}
-      <div className="glass-card rounded-2xl p-5 shadow-xl">
+      <div className="glass-card rounded-lg p-5 shadow-xl">
         <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-4">
           <Zap className="w-3.5 h-3.5 text-accent-blue" /> Cost by provider / model / operation
         </div>
@@ -262,7 +262,7 @@ export const AdminCosts: React.FC = () => {
       </div>
 
       {/* Recent event log */}
-      <div className="glass-card rounded-2xl p-5 shadow-xl">
+      <div className="glass-card rounded-lg p-5 shadow-xl">
         <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 flex items-center gap-1.5 mb-4">
           <Activity className="w-3.5 h-3.5 text-accent-blue" /> Recent events (last 50)
         </div>

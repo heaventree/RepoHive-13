@@ -126,7 +126,7 @@ export const PublicProjectPage: React.FC = () => {
                   href={rec.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block glass-card rounded-2xl p-5 hover:border-accent-blue/40 transition-all group"
+                  className="block glass-card rounded-lg p-5 hover:border-accent-blue/40 transition-all group"
                   style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
@@ -161,7 +161,7 @@ export const PublicProjectPage: React.FC = () => {
         )}
 
         {/* CTA */}
-        <div className="mt-12 p-8 rounded-2xl text-center" style={{ background: 'rgba(77,142,255,0.08)', border: '1px solid rgba(77,142,255,0.2)' }}>
+        <div className="mt-12 p-8 rounded-lg text-center" style={{ background: 'rgba(77,142,255,0.08)', border: '1px solid rgba(77,142,255,0.2)' }}>
           <h3 className="text-xl font-bold text-white font-mono mb-2">Build your own curated list</h3>
           <p className="text-sm text-slate-400 mb-4">RepoHive helps you find the right open-source repos for any project. Free tier includes 50 repos.</p>
           <Link to="/sign-up" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-accent-blue text-white font-mono font-bold text-sm hover:bg-accent-blue/80">

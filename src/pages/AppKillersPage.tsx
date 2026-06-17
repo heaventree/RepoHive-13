@@ -47,7 +47,7 @@ export function AppKillersPage() {
 
       {/* Sample list */}
       <div
-        className="rounded-2xl p-8 mb-16"
+        className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
         <div className="flex items-center gap-2 mb-6">
@@ -92,7 +92,7 @@ export function AppKillersPage() {
 
       {/* Plan note */}
       <div
-        className="rounded-2xl p-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+        className="rounded-lg p-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center gap-4"
         style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}
       >
         <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-none"

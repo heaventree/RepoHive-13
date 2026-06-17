@@ -10,7 +10,7 @@ export default function AcceptableUsePolicyPage() {
           Back to Home
         </Link>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12">
+        <div className="bg-white/5 border border-white/10 rounded-lg p-8 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Acceptable Use Policy</h1>
           <p className="text-gray-400 mb-8">Effective Date: 12 June 2026</p>
 

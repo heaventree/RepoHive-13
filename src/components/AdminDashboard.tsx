@@ -42,7 +42,7 @@ function StatCard({ icon: Icon, label, value, sub }: {
   label: string; value: string | number; sub?: string;
 }) {
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-3">
         <Icon className="w-3.5 h-3.5 text-accent-blue" /> {label}
       </div>
@@ -95,7 +95,7 @@ function Overview() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={KeyRound} label="API keys" value={stats.apiKeys} sub="active across all accounts" />
         <StatCard icon={Rocket} label="Projects" value={stats.projects} sub="workspaces created" />
-        <div className="glass-card rounded-2xl p-6 shadow-xl col-span-2">
+        <div className="glass-card rounded-lg p-6 shadow-xl col-span-2">
           <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-4">
             <LayoutDashboard className="w-3.5 h-3.5 text-accent-blue" /> Plan distribution
           </div>
@@ -117,7 +117,7 @@ function Overview() {
       </div>
 
       {/* Maintenance actions */}
-      <div className="glass-card rounded-2xl p-6 shadow-xl">
+      <div className="glass-card rounded-lg p-6 shadow-xl">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">
@@ -178,7 +178,7 @@ function TenantsTable() {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 shadow-xl">
+    <div className="glass-card rounded-lg p-6 shadow-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono flex items-center gap-2">
           <Users className="w-4 h-4 text-accent-blue" /> Accounts ({tenants.length})
