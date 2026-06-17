@@ -707,7 +707,16 @@ function HarborPanel() {
         )}
 
         {status.error && (
-          <p className="text-[11px] text-amber-400 font-mono mb-4 flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" /> {status.error}</p>
+          <div className="mb-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/30">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400 flex-none mt-0.5" />
+              <div className="text-[11px] text-amber-300 font-mono">
+                <div className="font-bold mb-1">Harbor API rejected the key</div>
+                <div className="text-amber-200/80">{status.error}</div>
+                <div className="text-amber-200/60 mt-2">Check that HARBOR_API_KEY is set correctly in the server environment and that the key is still valid in Harbor.</div>
+              </div>
+            </div>
+          </div>
         )}
 
         <button

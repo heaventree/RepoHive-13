@@ -2306,8 +2306,19 @@ Return ONLY a single valid JSON object (no markdown wrapper, no explanation befo
 
       res.json({ imported, skipped, items });
     } catch (err: any) {
-      const status = err instanceof HarborError ? err.status : 500;
-      res.status(status >= 400 && status < 600 ? status : 500).json({ error: err.message, code: err.code });
+      // Don't propagate Harbor's own 401/403 — the browser would mistake it
+      // for a failure of OUR auth gate. Map upstream auth/quota errors to 502
+      // so the UI shows "Harbor rejected our key" instead of "you're signed out".
+      if (err instanceof HarborError) {
+        const upstream = err.status;
+        const ourStatus = upstream === 401 || upstream === 403 ? 502 : (upstream >= 400 && upstream < 600 ? upstream : 502);
+        return res.status(ourStatus).json({
+          error: `Harbor API ${upstream}: ${err.message}`,
+          code: err.code,
+          upstreamStatus: upstream,
+        });
+      }
+      res.status(500).json({ error: err.message });
     }
   });
 
