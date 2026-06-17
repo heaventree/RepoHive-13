@@ -1916,26 +1916,71 @@ export function createApiApp(): express.Express {
 
   // DeepSeek-powered SEO audit: scores a page's metadata 0-100 and returns
   // ranked suggestions for title, description, keywords, structure.
+  //
+  // The auditor needs two things the original version was missing:
+  //  1. RepoHive product context — "App Killer" / "SaaS Ready" are RepoHive
+  //     repo classifications, NOT Android task-killers or generic SaaS terms.
+  //     Without this glossary the model hallucinates wildly off-topic.
+  //  2. The actual page content — we fetch the rendered HTML and pass the
+  //     visible text so suggestions match what the page is about, not just
+  //     the path slug.
+  const REPOHIVE_BRIEF = `## About RepoHive
+RepoHive is a SaaS tool for engineering teams to discover, score, and curate open-source GitHub repositories. It uses AI to classify repos and surface OSS that can replace paid SaaS products.
+
+## Glossary (RepoHive-specific terminology — DO NOT free-associate)
+- "App Killer" / "App Killers" → a curated class of OSS repos that can replace a specific paid SaaS app (e.g. an OSS Calendly alternative). It has nothing to do with Android task killers, battery savers, force-stopping background processes, or phone performance. NEVER suggest copy that implies that.
+- "SaaS Ready" → an OSS repo that is production-grade and could be self-hosted as a SaaS replacement, even if no specific named competitor exists. Not about being SaaS-friendly software in general.
+- "Toolbox" → a user's personal curated library of repos in RepoHive.
+- Audience: senior engineers, tech leads, CTOs at 5–200-engineer product companies. Peer-to-peer technical voice. No marketing fluff ("game-changer", "unlock", "leverage", "boost speed").
+
+## Hard prohibitions for suggestions
+- Never suggest copy aimed at consumer phone/Android utilities.
+- Never write generic SaaS marketing fluff.
+- Title under 60 chars, description 140-160 chars, keywords 5-8 high-intent dev/OSS terms.`;
+
+  async function fetchPageContent(path: string): Promise<string> {
+    try {
+      const base = (process.env.APP_URL || 'https://repohive.app').replace(/\/$/, '');
+      const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
+      const r = await fetch(url, { headers: { 'User-Agent': 'RepoHive-SEO-Audit/1.0' } });
+      if (!r.ok) return '';
+      const html = await r.text();
+      // Strip <script>/<style>, then tags, then collapse whitespace. Good
+      // enough to give the model the page's actual content blocks.
+      const text = html
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return text.slice(0, 4000);
+    } catch {
+      return '';
+    }
+  }
+
   async function deepseekSeoAudit(page: { path: string; title?: string; description?: string; keywords?: string }, tenantId?: string) {
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) return null;
-    const prompt = `You are an SEO expert reviewing a web page's metadata.
-
-URL path: ${page.path}
+    const pageContent = await fetchPageContent(page.path);
+    const userPrompt = `URL path: ${page.path}
 Current title: ${page.title || '(empty)'}
 Current description: ${page.description || '(empty)'}
 Current keywords: ${page.keywords || '(empty)'}
 
+Actual page content (extracted from the rendered page):
+${pageContent || '(could not fetch — base your suggestions strictly on the path and RepoHive context above; do NOT invent unrelated subject matter)'}
+
 Return ONLY valid JSON with this exact structure:
 {
   "score": 0-100 integer rating overall SEO quality,
-  "issues": ["array of specific problems with current metadata"],
+  "issues": ["array of specific problems with current metadata, grounded in what the page actually says"],
   "suggestions": {
-    "title": "improved title under 60 chars, compelling, with primary keyword early",
-    "description": "improved meta description 140-160 chars, action-oriented, with CTA",
-    "keywords": "comma-separated list of 5-8 high-intent keywords"
+    "title": "improved title under 60 chars, compelling, with primary keyword early — must match what this page is actually about",
+    "description": "improved meta description 140-160 chars, action-oriented — must reflect actual page content",
+    "keywords": "comma-separated 5-8 high-intent dev/OSS keywords aligned to the page"
   },
-  "rationale": "1-2 sentence explanation of the changes"
+  "rationale": "1-2 sentence explanation of the changes, citing specific page content"
 }`;
     try {
       const r = await fetch('https://api.deepseek.com/chat/completions', {
@@ -1943,21 +1988,29 @@ Return ONLY valid JSON with this exact structure:
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: 'deepseek-chat',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 600,
-          temperature: 0.4,
+          messages: [
+            { role: 'system', content: REPOHIVE_BRIEF },
+            { role: 'user', content: userPrompt },
+          ],
+          max_tokens: 800,
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
         }),
       });
       if (!r.ok) {
-        trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'seo-audit', tenantId, inputUnits: Math.ceil(prompt.length / 4), ok: false });
+        trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'seo-audit', tenantId, inputUnits: Math.ceil((REPOHIVE_BRIEF.length + userPrompt.length) / 4), ok: false });
         return null;
       }
       const data: any = await r.json();
-      const inTok = data.usage?.prompt_tokens ?? Math.ceil(prompt.length / 4);
+      const inTok = data.usage?.prompt_tokens ?? Math.ceil((REPOHIVE_BRIEF.length + userPrompt.length) / 4);
       const outTok = data.usage?.completion_tokens ?? 0;
       const text = data.choices?.[0]?.message?.content || '';
-      const match = text.match(/\{[\s\S]*\}/);
-      const parsed = match ? JSON.parse(match[0]) : null;
+      let parsed: any = null;
+      try { parsed = JSON.parse(text); }
+      catch {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) { try { parsed = JSON.parse(m[0]); } catch { /* leave null */ } }
+      }
       trackUsage({ provider: 'deepseek', model: 'deepseek-chat', operation: 'seo-audit', tenantId, inputUnits: inTok, outputUnits: outTok, ok: !!parsed });
       return parsed;
     } catch {
