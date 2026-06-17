@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { SEOProvider } from './lib/seo';
 import { SignIn, SignUp } from '@clerk/react';
 import { LandingPage } from './pages/LandingPage';
@@ -18,6 +18,12 @@ import AcceptableUsePage from './pages/legal/AcceptableUse';
 import ImprintPage from './pages/legal/Imprint';
 import { AUTH_ENABLED, RequireAuth } from './auth';
 import App from './App';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 
 function ClerkAuthScreen({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   // After auth, drop the user into the app — not the marketing home page.
@@ -43,6 +49,7 @@ export function Router() {
   return (
     <SEOProvider config={SEO_CONFIG}>
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<PricingPage />} />
