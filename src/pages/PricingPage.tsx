@@ -207,7 +207,7 @@ export function PricingPage() {
               return (
                 <div
                   key={plan.tier}
-                  className={`relative flex flex-col rounded-xl p-10 transition-all duration-300 ${
+                  className={`relative flex flex-col rounded-md p-10 transition-all duration-300 ${
                     isFeatured ? 'scale-105 z-10' : 'hover:bg-white/[0.02]'
                   }`}
                   style={{
@@ -280,7 +280,7 @@ export function PricingPage() {
                   {plan.tier === 'FREE' ? (
                     <Link
                       to="/sign-up"
-                      className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
+                      className="w-full text-center py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
                       style={{ background: SURFACE_HIGH, color: PRIMARY }}
                     >
                       {plan.cta}
@@ -289,7 +289,7 @@ export function PricingPage() {
                     <button
                       onClick={() => startCheckout(plan.tier)}
                       disabled={checkoutBusy !== null}
-                      className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                      className="w-full text-center py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                       style={plan.ctaStyle === 'primary'
                         ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
                         : { background: SURFACE_HIGH, color: PRIMARY }
@@ -305,7 +305,7 @@ export function PricingPage() {
 
           {/* ── Value callout ── */}
           <div
-            className="mt-12 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            className="mt-12 rounded-md p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
             style={{ background: 'rgba(77,142,255,0.05)', border: '1px solid rgba(77,142,255,0.15)' }}
           >
             <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(77,142,255,0.10)' }}>
@@ -328,7 +328,7 @@ export function PricingPage() {
               {FAQS.map((faq, i) => (
                 <div
                   key={i}
-                  className="rounded-xl overflow-hidden transition-all"
+                  className="rounded-md overflow-hidden transition-all"
                   style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
                 >
                   <button
@@ -358,7 +358,7 @@ export function PricingPage() {
 
           {/* ── System status ── */}
           <div
-            className="mt-16 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            className="mt-16 rounded-md p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
             style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
           >
             <div className="flex items-center gap-3">

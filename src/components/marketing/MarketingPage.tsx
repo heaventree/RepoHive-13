@@ -69,7 +69,7 @@ export function MarketingPage({ kicker, title, subtitle, children, seo }: Market
 export function FeatureCard({ title, body, icon: Icon }: { title: string; body: ReactNode; icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; }) {
   return (
     <div
-      className="rounded-xl p-8 h-full"
+      className="rounded-md p-8 h-full"
       style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
     >
       {Icon && (

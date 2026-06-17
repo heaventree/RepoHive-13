@@ -100,7 +100,7 @@ export const AdminReclassify: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="glass-card rounded-xl p-6">
+      <div className="glass-card rounded-md p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
@@ -221,7 +221,7 @@ export const AdminReclassify: React.FC = () => {
         )}
       </div>
 
-      <div className="glass-card rounded-xl p-6">
+      <div className="glass-card rounded-md p-6">
         <h4 className="text-sm font-bold text-white font-mono mb-2">Automatic schedule</h4>
         <p className="text-xs text-slate-500">
           A Netlify scheduled function drains the backlog automatically every day at

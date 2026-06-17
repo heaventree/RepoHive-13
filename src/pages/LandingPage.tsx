@@ -102,7 +102,7 @@ function AnimatedHeroCard() {
 
   return (
     <div
-      className="rounded-xl overflow-hidden w-full"
+      className="rounded-md overflow-hidden w-full"
       style={{
         background: 'rgba(6,14,32,0.92)',
         backdropFilter: 'blur(24px)',
@@ -379,7 +379,7 @@ export function LandingPage() {
           </div>
 
           {/* Stats strip */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-xl"
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-md"
             style={{ background: GLASS_BORDER }}>
             {STATS.map((s) => (
               <div key={s.label} className="flex flex-col items-center py-5 px-4"
@@ -409,9 +409,9 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PAIN_POINTS.map((p) => (
-              <div key={p.title} className="p-8 rounded-xl"
+              <div key={p.title} className="p-8 rounded-md"
                 style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-6"
                   style={{ background: `${p.color}18`, color: p.color }}>{p.icon}</div>
                 <h3 className="font-mono font-bold text-white text-lg mb-3">{p.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>{p.desc}</p>
@@ -440,7 +440,7 @@ export function LandingPage() {
               { step: '03', title: 'Search, monitor, build', desc: 'Ask in plain English. Get staleness alerts. Pull your library into Replit, Bolt, or Claude Code via API.', color: '#c084fc' },
             ].map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center font-mono font-black text-2xl mb-6"
+                <div className="w-14 h-14 rounded-md flex items-center justify-center font-mono font-black text-2xl mb-6"
                   style={{ background: `${s.color}15`, color: s.color, border: `1px solid ${s.color}30` }}>
                   {s.step}
                 </div>
@@ -475,7 +475,7 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
-              <div key={f.title} className="p-7 rounded-xl transition-all duration-200"
+              <div key={f.title} className="p-7 rounded-md transition-all duration-200"
                 style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${f.color}30`; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = GLASS_BORDER; }}
@@ -526,7 +526,7 @@ export function LandingPage() {
                 Integration guide <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-            <div className="rounded-xl p-6" style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
+            <div className="rounded-md p-6" style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
               <div className="text-[10px] font-mono uppercase tracking-widest mb-5" style={{ color: '#8c909f' }}>Connect to any platform</div>
               <div className="grid grid-cols-2 gap-3 mb-5">
                 {IDE_INTEGRATIONS.map((name) => (
@@ -554,7 +554,7 @@ export function LandingPage() {
       ══════════════════════════════════════════ */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-10"
+          <div className="rounded-md p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-10"
             style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: '1px solid rgba(173,198,255,0.15)' }}>
             <div className="flex-1 space-y-4">
               <div className="flex items-center gap-2">

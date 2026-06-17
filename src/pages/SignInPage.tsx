@@ -79,7 +79,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
 
         {/* Glass card */}
         <div
-          className="w-full max-w-md rounded-xl p-10"
+          className="w-full max-w-md rounded-md p-10"
           style={{
             background: 'rgba(15,23,42,0.82)',
             backdropFilter: 'blur(20px)',

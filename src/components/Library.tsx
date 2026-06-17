@@ -331,7 +331,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
       <div className="flex-1 overflow-auto px-6 pt-6 pb-6 custom-scrollbar">
 
         {appKillersMode && (
-          <div className="mb-5 rounded-xl border border-amber-500/20 px-5 py-4 flex items-start gap-4"
+          <div className="mb-5 rounded-md border border-amber-500/20 px-5 py-4 flex items-start gap-4"
             style={{ background: 'rgba(245,158,11,0.04)' }}>
             <Flame className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
@@ -347,7 +347,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         )}
 
         {saasReadyMode && (
-          <div className="mb-5 rounded-xl border border-cyan-500/25 px-5 py-4 flex items-start gap-4"
+          <div className="mb-5 rounded-md border border-cyan-500/25 px-5 py-4 flex items-start gap-4"
             style={{ background: 'rgba(6,182,212,0.05)' }}>
             <Server className="w-5 h-5 text-cyan-300 flex-shrink-0 mt-0.5" />
             <div>

@@ -256,7 +256,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
             <button
               onClick={handleDismissSummary}
-              className="mt-7 w-full py-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
+              className="mt-7 w-full py-3 rounded-md font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
               style={{
                 background: summary.stopped
                   ? 'rgba(251,191,36,0.15)'
@@ -336,7 +336,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               ) : stream.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-md border p-4"
                   style={{
                     transition: 'opacity 0.45s ease, transform 0.45s ease, max-height 0.45s ease',
                     opacity: item.removing ? 0 : 1,
@@ -453,7 +453,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   <button
                     onClick={handleStop}
                     title="Stop scan"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs tracking-wide transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md font-bold text-xs tracking-wide transition-all hover:scale-105 active:scale-95"
                     style={{
                       background: 'rgba(239,68,68,0.12)',
                       border: '1px solid rgba(239,68,68,0.35)',
@@ -468,7 +468,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   <button
                     onClick={handleInitiate}
                     disabled={repoCount === 0}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-white font-bold text-xs tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                     style={{
                       background: repoCount === 0
                         ? 'rgba(99,102,241,0.2)'

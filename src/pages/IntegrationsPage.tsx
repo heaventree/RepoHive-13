@@ -61,7 +61,7 @@ export function IntegrationsPage() {
         {TOOLS.map(t => (
           <div
             key={t.name}
-            className="rounded-xl p-6"
+            className="rounded-md p-6"
             style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
           >
             <h3 className="font-mono font-bold text-white text-lg mb-2 flex items-center gap-2">
@@ -128,7 +128,7 @@ export function IntegrationsPage() {
       <div className="text-center mt-16">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
+          className="inline-block px-8 py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
           style={{ background: '#4d8eff', color: '#00285d', boxShadow: '0 0 24px rgba(77,142,255,0.4)' }}
         >
           Get your API key

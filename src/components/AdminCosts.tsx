@@ -130,7 +130,7 @@ export const AdminCosts: React.FC = () => {
 
       {/* Budget warning + config */}
       {(overBudget || nearBudget) && (
-        <div className={`rounded-xl p-4 flex items-center gap-3 border text-sm font-mono ${overBudget ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>
+        <div className={`rounded-md p-4 flex items-center gap-3 border text-sm font-mono ${overBudget ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>
           <AlertTriangle className="w-4 h-4 flex-none" />
           {overBudget
             ? `Monthly budget exceeded — spent ${fmt(data.thisMonth.costUsd)} of ${fmt(data.budgetUsd!)} budget.`

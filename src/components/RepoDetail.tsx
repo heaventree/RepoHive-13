@@ -118,16 +118,16 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
                   href={repo.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all text-xs font-bold rounded-xl flex items-center gap-2 active:scale-95"
+                  className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all text-xs font-bold rounded-md flex items-center gap-2 active:scale-95"
                 >
                   <Github className="w-4 h-4" />
                   <span>Github</span>
                 </a>
-                <button className="px-4 py-2 bg-accent-blue/5 border border-accent-blue/20 hover:bg-accent-blue/10 text-accent-blue text-xs font-bold rounded-xl flex items-center gap-2 transition-all active:scale-95">
+                <button className="px-4 py-2 bg-accent-blue/5 border border-accent-blue/20 hover:bg-accent-blue/10 text-accent-blue text-xs font-bold rounded-md flex items-center gap-2 transition-all active:scale-95">
                   <RefreshCw className="w-4 h-4" />
                   Rescan
                 </button>
-                <button className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition-all active:scale-95">
+                <button className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 text-xs font-bold rounded-md flex items-center gap-2 transition-all active:scale-95">
                   <Bookmark className="w-4 h-4 text-slate-400" />
                   Watch
                 </button>
