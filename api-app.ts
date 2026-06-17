@@ -11,7 +11,7 @@ import { all, get, run, execScript } from "./db";
 import { planFor, isPlanId, DEFAULT_PLAN, type PlanLimits } from "./tiers";
 import { rescanOldestRepos } from "./lib/rescan";
 import { buildAnalysisPrompt, analyzeRepo } from "./lib/analyze";
-import { reclassifyBatch, reclassifyStats, reclassifyDistribution } from "./lib/reclassify";
+import { reclassifyBatch, reclassifyStats, reclassifyDistribution, reclassifyTenantBreakdown } from "./lib/reclassify";
 
 // When CLERK_SECRET_KEY is absent we run with auth disabled and scope all data
 // to a single dev tenant — keeps the app runnable offline / in CI / sandboxes.
@@ -1747,8 +1747,12 @@ export function createApiApp(): express.Express {
   app.get("/api/admin/reclassify/status", async (req, res) => {
     if (!requireAdmin(req, res)) return;
     try {
-      const [stats, distribution] = await Promise.all([reclassifyStats(), reclassifyDistribution()]);
-      res.json({ ...stats, distribution });
+      const [stats, distribution, tenants] = await Promise.all([
+        reclassifyStats(),
+        reclassifyDistribution(),
+        reclassifyTenantBreakdown(),
+      ]);
+      res.json({ ...stats, distribution, tenants });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }

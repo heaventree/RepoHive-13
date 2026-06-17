@@ -8,12 +8,23 @@ interface Distribution {
   unclassified: number;
 }
 
+interface TenantRow {
+  tenant_id: string;
+  total: number;
+  appKiller: number;
+  saasReady: number;
+  none: number;
+  unclassified: number;
+  sampleSaasReady: string[];
+}
+
 interface Stats {
   total: number;
   pending: number;
   classified: number;
   classifierVersion: number;
   distribution?: Distribution;
+  tenants?: TenantRow[];
 }
 
 interface BatchResult {
@@ -151,6 +162,40 @@ export const AdminReclassify: React.FC = () => {
             <Stat label="SaaS Ready" value={String(stats.distribution.saasReady)} accent="text-cyan-300" />
             <Stat label="None" value={String(stats.distribution.none)} accent="text-slate-400" />
             <Stat label="Unclassified" value={String(stats.distribution.unclassified)} accent="text-slate-500" />
+          </div>
+        )}
+
+        {stats?.tenants && stats.tenants.length > 0 && (
+          <div className="rounded-lg border border-white/5 bg-bg-panel/40 overflow-hidden">
+            <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest text-slate-500 border-b border-white/5">
+              Per-tenant classification (verifies the badge data reached every tenant copy)
+            </div>
+            <table className="w-full text-xs font-mono">
+              <thead className="text-[10px] uppercase text-slate-600">
+                <tr>
+                  <th className="text-left px-3 py-1.5">Tenant</th>
+                  <th className="text-right px-3 py-1.5">Total</th>
+                  <th className="text-right px-3 py-1.5 text-amber-300">Killer</th>
+                  <th className="text-right px-3 py-1.5 text-cyan-300">SaaS</th>
+                  <th className="text-right px-3 py-1.5 text-slate-400">None</th>
+                  <th className="text-right px-3 py-1.5 text-slate-500">Unclassified</th>
+                  <th className="text-left px-3 py-1.5">SaaS sample</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.tenants.map(t => (
+                  <tr key={t.tenant_id} className="border-t border-white/5">
+                    <td className="px-3 py-1.5 text-slate-300 truncate max-w-[16ch]" title={t.tenant_id}>{t.tenant_id}</td>
+                    <td className="px-3 py-1.5 text-right text-slate-300">{t.total}</td>
+                    <td className="px-3 py-1.5 text-right text-amber-300">{t.appKiller}</td>
+                    <td className="px-3 py-1.5 text-right text-cyan-300">{t.saasReady}</td>
+                    <td className="px-3 py-1.5 text-right text-slate-400">{t.none}</td>
+                    <td className="px-3 py-1.5 text-right text-slate-500">{t.unclassified}</td>
+                    <td className="px-3 py-1.5 text-slate-500 truncate max-w-[28ch]" title={t.sampleSaasReady.join('\n')}>{t.sampleSaasReady.join(', ') || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 

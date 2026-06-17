@@ -105,6 +105,50 @@ export async function reclassifyDistribution(): Promise<ReclassifyDistribution> 
   return dist;
 }
 
+// Per-tenant breakdown — answers "did the user's tenant actually receive the
+// new classifications?" Picks one effective kind per (tenant, id) the same way
+// the UI's classifyRepo() does.
+export interface TenantBreakdownRow {
+  tenant_id: string;
+  total: number;
+  appKiller: number;
+  saasReady: number;
+  none: number;
+  unclassified: number;
+  sampleSaasReady: string[];
+}
+
+export async function reclassifyTenantBreakdown(): Promise<TenantBreakdownRow[]> {
+  const rows = await all<{ tenant_id: string; id: string; ai_analysis: string | null }>(
+    "SELECT tenant_id, id, ai_analysis FROM repos"
+  );
+  const byTenant = new Map<string, TenantBreakdownRow>();
+  for (const r of rows) {
+    let row = byTenant.get(r.tenant_id);
+    if (!row) {
+      row = { tenant_id: r.tenant_id, total: 0, appKiller: 0, saasReady: 0, none: 0, unclassified: 0, sampleSaasReady: [] };
+      byTenant.set(r.tenant_id, row);
+    }
+    row.total++;
+    const ai = parse(r.ai_analysis);
+    const raw = typeof ai?.productClass === 'string' ? ai.productClass : null;
+    const pc = raw ? raw.toLowerCase().trim().replace(/[\s_]+/g, '-') : null;
+    const hasComparable = typeof ai?.comparableApp === 'string' && ai.comparableApp.trim().length > 0;
+    const kind = pc === 'app-killer'
+      ? (hasComparable ? 'app-killer' : 'saas-ready')
+      : pc === 'saas-ready' ? 'saas-ready'
+      : pc === 'none' ? 'none' : null;
+    if (kind === 'app-killer') row.appKiller++;
+    else if (kind === 'saas-ready') {
+      row.saasReady++;
+      if (row.sampleSaasReady.length < 5) row.sampleSaasReady.push(r.id);
+    }
+    else if (kind === 'none') row.none++;
+    else row.unclassified++;
+  }
+  return [...byTenant.values()].sort((a, b) => b.total - a.total);
+}
+
 export interface ReclassifyBatchResult {
   processed: number;
   updated: number;
