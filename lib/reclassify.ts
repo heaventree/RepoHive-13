@@ -61,19 +61,22 @@ export interface ReclassifyStats {
 }
 
 // DB-derived progress for the admin status panel — de-duplicated by repo id.
+// A repo counts as pending if ANY of its copies is still stale, so the number
+// reflects work that remains across all tenants (not just the first copy seen).
 export async function reclassifyStats(): Promise<ReclassifyStats> {
   const rows = await all<{ id: string; ai_analysis: string | null }>("SELECT id, ai_analysis FROM repos");
-  const byId = new Map<string, string | null>();
-  for (const r of rows) if (!byId.has(r.id)) byId.set(r.id, r.ai_analysis);
+  const pendingById = new Map<string, boolean>();
+  for (const r of rows) {
+    const stale = needsReclassify(parse(r.ai_analysis));
+    pendingById.set(r.id, (pendingById.get(r.id) ?? false) || stale);
+  }
 
   let pending = 0;
-  for (const ai of byId.values()) {
-    if (needsReclassify(parse(ai))) pending++;
-  }
+  for (const isPending of pendingById.values()) if (isPending) pending++;
   return {
-    total: byId.size,
+    total: pendingById.size,
     pending,
-    classified: byId.size - pending,
+    classified: pendingById.size - pending,
     classifierVersion: CLASSIFIER_VERSION,
   };
 }
@@ -178,10 +181,15 @@ export async function reclassifyBatch(opts: ReclassifyBatchOpts = {}): Promise<R
   const rows = await all<RepoRow>("SELECT tenant_id, id, description, language, readme, ai_analysis FROM repos");
   const byId = groupById(rows);
 
-  const candidates = [...byId.values()].filter(group => {
-    const ai = parse(group[0].ai_analysis);
-    return force ? !processedSince(ai, opts.forceSince!) : needsReclassify(ai);
-  });
+  // A group is a candidate if ANY of its copies still needs work — so a stale
+  // user-tenant copy isn't skipped just because the __library__ copy was
+  // already classified (the bug that left tenant copies unclassified).
+  const candidates = [...byId.values()].filter(group =>
+    group.some(row => {
+      const ai = parse(row.ai_analysis);
+      return force ? !processedSince(ai, opts.forceSince!) : needsReclassify(ai);
+    })
+  );
 
   let processed = 0, updated = 0, failed = 0;
 

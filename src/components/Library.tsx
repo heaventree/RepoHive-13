@@ -35,6 +35,7 @@ interface LibraryProps {
   onBulkIngest: () => void;
   onGoToWorkspace: () => void;
   appKillersMode?: boolean;
+  saasReadyMode?: boolean;
 }
 
 const StatusIcon = ({ className }: { className?: string }) => (
@@ -43,7 +44,7 @@ const StatusIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace, appKillersMode = false }) => {
+export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace, appKillersMode = false, saasReadyMode = false }) => {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
@@ -155,7 +156,15 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           }
         }
 
-        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise;
+        let matchesSaas = true;
+        if (saasReadyMode) {
+          try {
+            const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
+            matchesSaas = classifyRepo(data).kind === 'saas-ready';
+          } catch { matchesSaas = false; }
+        }
+
+        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise && matchesSaas;
       })
       .sort((a, b) => {
         let comparison = 0;
@@ -169,7 +178,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
 
         return sortOrder === 'asc' ? comparison : -comparison;
       });
-  }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly]);
+  }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode]);
 
   const formatRepoName = (id: string) => {
     const parts = id.split('/');
@@ -332,6 +341,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 directly replace a well-known commercial product out of the box. Each one ships with a permissive license
                 (MIT, Apache, BSD or similar) meaning you can fork, rebrand and deploy commercially with no royalties or
                 seat fees.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {saasReadyMode && (
+          <div className="mb-5 rounded-xl border border-cyan-500/25 px-5 py-4 flex items-start gap-4"
+            style={{ background: 'rgba(6,182,212,0.05)' }}>
+            <Server className="w-5 h-5 text-cyan-300 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-cyan-200 font-bold text-sm mb-1">SaaS Ready — self-hostable apps you can run as a service</p>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Production-grade, self-hostable applications with their own UI that you can deploy and run as a
+                service. Unlike App Killers, these don't map cleanly to one named commercial product — they may
+                span several categories or define a new one — but they're still complete, runnable apps rather than
+                libraries or building blocks.
               </p>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { ProjectWorkspace } from './components/ProjectWorkspace';
 import { SettingsHub } from './components/SettingsHub';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Settings, Flame, Crown } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Settings, Flame, Crown, Server } from 'lucide-react';
 import { UserButton } from '@clerk/react';
 import { AUTH_ENABLED } from './auth';
 
@@ -63,6 +63,13 @@ export default function App() {
           onBulkIngest={() => setActiveTab('ingest')}
           onGoToWorkspace={() => setActiveTab('projects')}
           appKillersMode
+        />;
+      case 'saasready':
+        return <Library
+          onViewRepo={setSelectedRepo}
+          onBulkIngest={() => setActiveTab('ingest')}
+          onGoToWorkspace={() => setActiveTab('projects')}
+          saasReadyMode
         />;
       case 'admin':
         return isAdmin ? <AdminDashboard /> : null;
@@ -136,6 +143,19 @@ export default function App() {
           >
             <Flame className="w-3.5 h-3.5" />
             App Killers
+          </button>
+
+          {/* SaaS Ready */}
+          <button
+            onClick={() => handleTabChange('saasready')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 border ${
+              activeTab === 'saasready'
+                ? 'bg-cyan-500/15 text-cyan-200 border-cyan-500/40 shadow-[0_0_16px_rgba(6,182,212,0.2)]'
+                : 'text-cyan-400/60 border-cyan-500/20 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/40'
+            }`}
+          >
+            <Server className="w-3.5 h-3.5" />
+            SaaS Ready
           </button>
 
           {/* Admin — only rendered when the backend confirms admin access */}
