@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Filter,
   PlusCircle,
@@ -61,6 +61,14 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const [enterpriseOnly, setEnterpriseOnly] = useState(appKillersMode);
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [showCompare, setShowCompare] = useState(false);
+
+  // Render pagination — only this many cards are mounted at once, with
+  // infinite scroll loading the next batch as the sentinel comes into view.
+  // Rendering all ~1k cards up-front was the dominant cost of opening the
+  // Library; capping the initial mount makes first paint near-instant.
+  const PAGE_SIZE = 40;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const toggleCompare = (id: string) => {
     setCompareIds(prev => {
@@ -179,6 +187,35 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         return sortOrder === 'asc' ? comparison : -comparison;
       });
   }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode]);
+
+  // Whenever the filter set changes, snap the visible window back to the
+  // first page so the user isn't looking at a paginated slice of the
+  // previous result set.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode]);
+
+  const visibleRepos = useMemo(
+    () => filteredRepos.slice(0, visibleCount),
+    [filteredRepos, visibleCount],
+  );
+  const hasMore = visibleCount < filteredRepos.length;
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const node = sentinelRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setVisibleCount(c => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, visibleRepos.length]);
 
   const formatRepoName = (id: string) => {
     const parts = id.split('/');
@@ -542,7 +579,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             </div>
 
             <div className="divide-y divide-border-main">
-              {filteredRepos.map(repo => {
+              {visibleRepos.map(repo => {
                 let aiData = null;
                 try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
                 const cls = classifyRepo(aiData);
@@ -648,7 +685,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredRepos.map(repo => {
+            {visibleRepos.map(repo => {
               let aiData = null;
               try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
               const cls = classifyRepo(aiData);
@@ -781,6 +818,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && filteredRepos.length > 0 && (
+          <div ref={sentinelRef} className="mt-6 flex flex-col items-center gap-3 text-xs font-mono text-slate-500">
+            <span>
+              Showing {visibleRepos.length} of {filteredRepos.length}
+            </span>
+            {hasMore && (
+              <button
+                onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                className="px-4 py-2 rounded border border-border-main bg-bg-panel hover:bg-white/5 hover:border-accent-blue text-slate-300 hover:text-accent-blue transition-all font-bold uppercase tracking-wider text-[11px]"
+              >
+                Load {Math.min(PAGE_SIZE, filteredRepos.length - visibleCount)} more
+              </button>
+            )}
           </div>
         )}
       </div>
