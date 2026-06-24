@@ -24,7 +24,8 @@ import {
   ArrowUp,
   Check,
   Play,
-  Server
+  Server,
+  Heart
 } from 'lucide-react';
 import { Repo } from '../types';
 import { classifyRepo } from '../lib/classification';
@@ -69,6 +70,39 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const PAGE_SIZE = 40;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Favourites — per-user starred repos, persisted server-side. Held as a Set
+  // for O(1) membership checks in the card render path.
+  const [favouriteIds, setFavouriteIds] = useState<Set<string>>(new Set());
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/favourites')
+      .then(r => r.json())
+      .then(d => setFavouriteIds(new Set(d?.repoIds ?? [])))
+      .catch(() => {});
+  }, []);
+
+  const toggleFavourite = (repoId: string) => {
+    const [owner, name] = repoId.split('/');
+    if (!owner || !name) return;
+    const isFav = favouriteIds.has(repoId);
+    // Optimistic — flip locally, then reconcile with the server.
+    setFavouriteIds(prev => {
+      const next = new Set(prev);
+      if (isFav) next.delete(repoId); else next.add(repoId);
+      return next;
+    });
+    fetch(`/api/favourites/${owner}/${name}`, { method: isFav ? 'DELETE' : 'PUT' })
+      .catch(() => {
+        // Revert on network failure.
+        setFavouriteIds(prev => {
+          const next = new Set(prev);
+          if (isFav) next.add(repoId); else next.delete(repoId);
+          return next;
+        });
+      });
+  };
 
   const toggleCompare = (id: string) => {
     setCompareIds(prev => {
@@ -172,7 +206,9 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           } catch { matchesSaas = false; }
         }
 
-        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise && matchesSaas;
+        const matchesFavourite = !favouritesOnly || favouriteIds.has(repo.id);
+
+        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise && matchesSaas && matchesFavourite;
       })
       .sort((a, b) => {
         let comparison = 0;
@@ -180,20 +216,21 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
         } else if (sortBy === 'score') comparison = a.score - b.score;
         else if (sortBy === 'stars') comparison = a.stars - b.stars;
+        else if (sortBy === 'forks') comparison = (a.forks || 0) - (b.forks || 0);
         else if (sortBy === 'name') comparison = a.id.localeCompare(b.id);
         else if (sortBy === 'language') comparison = (a.language || '').localeCompare(b.language || '');
         else if (sortBy === 'license') comparison = (a.license || '').localeCompare(b.license || '');
 
         return sortOrder === 'asc' ? comparison : -comparison;
       });
-  }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode]);
+  }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode, favouritesOnly, favouriteIds]);
 
   // Whenever the filter set changes, snap the visible window back to the
   // first page so the user isn't looking at a paginated slice of the
   // previous result set.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode]);
+  }, [searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode, favouritesOnly]);
 
   const visibleRepos = useMemo(
     () => filteredRepos.slice(0, visibleCount),
@@ -304,6 +341,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             )}
           </button>
 
+          <button
+            onClick={() => setFavouritesOnly(v => !v)}
+            title={favouritesOnly ? 'Showing favourites only — click to show all' : 'Show favourites only'}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-bold border transition-all ${
+              favouritesOnly
+                ? 'bg-rose-500/15 border-rose-400/50 text-rose-300 hover:bg-rose-500/25'
+                : 'bg-bg-panel border-border-main text-slate-300 hover:text-white hover:border-rose-400/60'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${favouritesOnly ? 'fill-rose-400' : ''}`} />
+            <span>Favourites</span>
+            {favouriteIds.size > 0 && (
+              <span className={`px-1.5 py-0 rounded-full text-[10px] font-mono font-bold ${favouritesOnly ? 'bg-rose-400/80 text-rose-50' : 'bg-slate-700 text-slate-300'}`}>{favouriteIds.size}</span>
+            )}
+          </button>
+
           <div className="flex items-center bg-bg-panel border border-border-main rounded-sm">
             <select
               value={sortBy}
@@ -313,6 +366,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               <option value="latest" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Updated</option>
               <option value="score" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Score</option>
               <option value="stars" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Stars</option>
+              <option value="forks" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Forks</option>
               <option value="name" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Name</option>
               <option value="language" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Language</option>
               <option value="license" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>License</option>
@@ -666,6 +720,13 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         </div>
                       </div>
                       <div className="col-span-1 flex justify-end items-center pr-2 gap-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavourite(repo.id); }}
+                          title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
+                          className={`p-1.5 rounded transition-all ${favouriteIds.has(repo.id) ? 'text-rose-400 hover:bg-rose-500/10' : 'text-slate-500 hover:text-rose-300 hover:bg-slate-800'}`}
+                        >
+                          <Heart className={`w-5 h-5 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
+                        </button>
                         <a
                           href={repo.url}
                           target="_blank"
@@ -697,6 +758,17 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                   onClick={() => onViewRepo(repo)}
                   className={`glass-card rounded-lg overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
                 >
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavourite(repo.id); }}
+                    title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
+                    className={`absolute top-2 right-2 z-10 p-1.5 rounded-full backdrop-blur-sm transition-all ${
+                      favouriteIds.has(repo.id)
+                        ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
+                        : 'bg-black/40 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-300'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
+                  </button>
                   <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
                     {/* Classification badge — always reserves height so cards don't jump. */}
                     {cls.kind === 'saas-ready' ? (

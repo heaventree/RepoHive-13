@@ -387,6 +387,14 @@ async function initSchema() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS favourites (
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      repo_id TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (tenant_id, user_id, repo_id)
+    );
   `);
 }
 
@@ -957,6 +965,38 @@ export function createApiApp(): express.Express {
     const repo = await get("SELECT * FROM repos WHERE tenant_id = ? AND id = ?", [tenantId, id]);
     const snapshots = await all("SELECT * FROM snapshots WHERE tenant_id = ? AND repo_id = ? ORDER BY timestamp DESC LIMIT 10", [tenantId, id]);
     res.json({ ...repo, snapshots });
+  });
+
+  // ── Favourites ────────────────────────────────────────────────────────────
+  // Per-user starred set inside a tenant. Returned as a flat array of repo ids
+  // so the client can keep them in a Set and check membership in O(1).
+  app.get("/api/favourites", async (req, res) => {
+    const { tenantId, userId } = getTenant(req);
+    const rows = await all<{ repo_id: string }>(
+      "SELECT repo_id FROM favourites WHERE tenant_id = ? AND user_id = ?",
+      [tenantId, userId],
+    );
+    res.json({ repoIds: rows.map((r) => r.repo_id) });
+  });
+
+  app.put("/api/favourites/:owner/:name", async (req, res) => {
+    const { tenantId, userId } = getTenant(req);
+    const id = `${req.params.owner}/${req.params.name}`;
+    await run(
+      "INSERT OR IGNORE INTO favourites (tenant_id, user_id, repo_id) VALUES (?, ?, ?)",
+      [tenantId, userId, id],
+    );
+    res.json({ favourite: true });
+  });
+
+  app.delete("/api/favourites/:owner/:name", async (req, res) => {
+    const { tenantId, userId } = getTenant(req);
+    const id = `${req.params.owner}/${req.params.name}`;
+    await run(
+      "DELETE FROM favourites WHERE tenant_id = ? AND user_id = ? AND repo_id = ?",
+      [tenantId, userId, id],
+    );
+    res.json({ favourite: false });
   });
 
   app.get("/api/projects", async (req, res) => {
