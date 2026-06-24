@@ -1,0 +1,1 @@
+- [Mockup graduation gotchas](mockup-graduation.md) — DESIGN-subagent mockups can ship invalid React props (e.g. `dangerouslySetInlineStyle`) that silently drop fonts/CSS; verify on graduation.
