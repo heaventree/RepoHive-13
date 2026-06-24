@@ -8,6 +8,10 @@ import { AppKillersPage } from './pages/AppKillersPage';
 import { HowItWorksPage } from './pages/HowItWorksPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { ProjectsPage } from './pages/ProjectsPage';
+import { IntegrationToolPage } from './pages/IntegrationToolPage';
+import { BlogIndexPage } from './pages/BlogIndexPage';
+import { BlogPostPage } from './pages/BlogPostPage';
+import { PublicProjectPage } from './pages/PublicProjectPage';
 import { PrivacyPage } from './pages/legal/Privacy';
 import { TermsPage } from './pages/legal/Terms';
 import { AcceptableUsePage } from './pages/legal/AcceptableUse';
@@ -34,7 +38,11 @@ export function Router() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/app-killers" element={<AppKillersPage />} />
         <Route path="/integrations" element={<IntegrationsPage />} />
+        <Route path="/integrations/:slug" element={<IntegrationToolPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/blog" element={<BlogIndexPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/p/:slug" element={<PublicProjectPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/acceptable-use" element={<AcceptableUsePage />} />

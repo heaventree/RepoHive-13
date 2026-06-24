@@ -4,25 +4,8 @@ import { Check, X, Zap } from 'lucide-react';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 
-/* ── Stitch palette ── */
-const PRIMARY        = '#adc6ff';
-const PRIMARY_CTR    = '#4d8eff';
-const ON_PRIMARY_CTR = '#00285d';
-const TERTIARY       = '#4edea3';
-const GLASS_BG       = 'rgba(15,23,42,0.82)';
-const GLASS_BORDER   = 'rgba(255,255,255,0.06)';
-const SURFACE_HIGH   = '#222a3d';
-
-function Orbs() {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full"
-        style={{ background: 'rgba(79,70,229,0.12)', filter: 'blur(120px)' }} />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full"
-        style={{ background: 'rgba(124,58,237,0.10)', filter: 'blur(150px)' }} />
-    </div>
-  );
-}
+const ACCENT = '#0000FF';
+const HAIRLINE = '#E5E5E5';
 
 const PLANS = [
   {
@@ -117,49 +100,51 @@ export function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
-      <Orbs />
+    <div
+      className="min-h-screen bg-[#FAFAFA] text-black"
+      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+    >
       <MarketingNav />
 
-      <div className="relative z-10 pt-40 pb-24 px-6">
+      <div className="pt-40 pb-24 px-6">
         <div className="max-w-6xl mx-auto">
 
           {/* ── Header ── */}
           <div className="text-center mb-16">
             <div className="inline-block mb-6">
               <span
-                className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full"
-                style={{ color: PRIMARY, border: `1px solid rgba(173,198,255,0.20)`, background: 'rgba(173,198,255,0.05)' }}
+                className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full border"
+                style={{ color: ACCENT, borderColor: HAIRLINE, background: '#fff' }}
               >
                 Simple, honest pricing
               </span>
             </div>
             <h1
-              className="font-mono font-black tracking-tight leading-tight mb-6"
+              className="font-bold tracking-tighter leading-tight mb-6"
               style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
             >
               Your repo library.
               <br />
-              <span style={{ color: PRIMARY }}>Your price point.</span>
+              <span style={{ color: ACCENT }}>Your price point.</span>
             </h1>
-            <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+            <p className="text-gray-500 text-base max-w-xl mx-auto leading-relaxed">
               Free forever for individuals getting started. Solo for serious devs. Studio for teams who need a shared intelligence layer.
             </p>
 
             {/* Billing toggle */}
             <div className="flex justify-center mt-8">
               <div
-                className="flex items-center p-1.5 rounded-full gap-1"
-                style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
+                className="flex items-center p-1.5 rounded-full gap-1 bg-white border"
+                style={{ borderColor: HAIRLINE }}
               >
                 {(['monthly', 'annual'] as const).map((b) => (
                   <button
                     key={b}
                     onClick={() => setBilling(b)}
-                    className="px-6 py-2 rounded-full font-mono text-xs font-bold tracking-widest uppercase transition-all"
+                    className="px-6 py-2 rounded-full font-mono text-xs font-bold tracking-widest uppercase transition-colors"
                     style={billing === b
-                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR }
-                      : { color: '#8c909f' }
+                      ? { background: '#000', color: '#fff' }
+                      : { color: '#6b7280' }
                     }
                   >
                     {b === 'annual' ? 'Annual (−20%)' : 'Monthly'}
@@ -170,7 +155,7 @@ export function PricingPage() {
           </div>
 
           {/* ── Pricing cards ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {PLANS.map((plan) => {
               const price = billing === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
               const isFeatured = !!plan.featured;
@@ -178,25 +163,17 @@ export function PricingPage() {
               return (
                 <div
                   key={plan.tier}
-                  className={`relative flex flex-col rounded-xl p-10 transition-all duration-300 ${
-                    isFeatured ? 'scale-105 z-10' : 'hover:bg-white/[0.02]'
+                  className={`relative flex flex-col rounded-md p-10 bg-white ${
+                    isFeatured
+                      ? 'border-2 border-[#0000FF] shadow-[8px_8px_0px_0px_rgba(0,0,255,0.1)]'
+                      : 'border border-black'
                   }`}
-                  style={{
-                    background: GLASS_BG,
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: isFeatured
-                      ? `2px solid rgba(173,198,255,0.30)`
-                      : `1px solid rgba(255,255,255,0.05)`,
-                    boxShadow: isFeatured ? '0 0 24px rgba(77,142,255,0.25)' : 'none',
-                  }}
                 >
                   {isFeatured && (
                     <div
-                      className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full whitespace-nowrap"
-                      style={{ background: PRIMARY_CTR }}
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full whitespace-nowrap bg-[#0000FF]"
                     >
-                      <span className="font-mono text-[10px] font-black tracking-widest uppercase" style={{ color: ON_PRIMARY_CTR }}>
+                      <span className="font-mono text-[10px] font-black tracking-widest uppercase text-white">
                         Most Popular
                       </span>
                     </div>
@@ -206,26 +183,26 @@ export function PricingPage() {
                   <div className="mb-8">
                     <h3
                       className="font-mono text-xs tracking-widest uppercase mb-2"
-                      style={{ color: isFeatured ? PRIMARY : '#8c909f' }}
+                      style={{ color: isFeatured ? ACCENT : '#6b7280' }}
                     >
                       {plan.tier}
                     </h3>
-                    <h4 className="font-mono text-3xl font-bold tracking-tight text-white">{plan.name}</h4>
-                    <p className="text-xs leading-relaxed mt-2" style={{ color: '#8c909f' }}>{plan.desc}</p>
+                    <h4 className="text-3xl font-bold tracking-tight text-black">{plan.name}</h4>
+                    <p className="text-xs leading-relaxed mt-2 text-gray-500">{plan.desc}</p>
                   </div>
 
                   {/* Price */}
                   <div className="mb-8">
-                    <span className="font-mono font-black tracking-tighter text-white" style={{ fontSize: '3.5rem', lineHeight: 1 }}>
+                    <span className="font-bold tracking-tighter text-black" style={{ fontSize: '3.5rem', lineHeight: 1 }}>
                       {price === 0 ? 'Free' : `$${price}`}
                     </span>
                     {price > 0 && (
-                      <span className="font-mono text-xs uppercase tracking-widest ml-2" style={{ color: '#8c909f' }}>
+                      <span className="font-mono text-xs uppercase tracking-widest ml-2 text-gray-500">
                         / month {billing === 'annual' ? '· billed annually' : ''}
                       </span>
                     )}
                     {plan.note && (
-                      <p className="text-[10px] font-mono mt-2 leading-relaxed" style={{ color: '#424754' }}>
+                      <p className="text-[10px] font-mono mt-2 leading-relaxed text-gray-400">
                         {plan.note}
                       </p>
                     )}
@@ -236,11 +213,11 @@ export function PricingPage() {
                     {plan.features.map((f) => (
                       <li key={f.label} className="flex items-start gap-3 text-sm">
                         {f.included ? (
-                          <Check className="w-[18px] h-[18px] flex-none mt-0.5" style={{ color: TERTIARY }} />
+                          <Check className="w-[18px] h-[18px] flex-none mt-0.5" style={{ color: ACCENT }} />
                         ) : (
-                          <X className="w-[18px] h-[18px] flex-none mt-0.5 text-slate-700" />
+                          <X className="w-[18px] h-[18px] flex-none mt-0.5 text-gray-300" />
                         )}
-                        <span style={{ color: f.included ? (isFeatured ? '#dae2fd' : '#c2c6d6') : '#475569' }}>
+                        <span className={f.included ? 'text-black' : 'text-gray-400'}>
                           {f.label}
                         </span>
                       </li>
@@ -250,11 +227,11 @@ export function PricingPage() {
                   {/* CTA */}
                   <Link
                     to="/sign-up"
-                    className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={plan.ctaStyle === 'primary'
-                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
-                      : { background: SURFACE_HIGH, color: PRIMARY }
-                    }
+                    className={`w-full text-center py-4 rounded font-mono text-sm font-bold tracking-widest uppercase transition-colors ${
+                      plan.ctaStyle === 'primary'
+                        ? 'bg-black text-white hover:bg-[#0000FF]'
+                        : 'bg-white text-black border border-black hover:bg-gray-50'
+                    }`}
                   >
                     {plan.cta}
                   </Link>
@@ -265,15 +242,15 @@ export function PricingPage() {
 
           {/* ── Value callout ── */}
           <div
-            className="mt-12 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: 'rgba(77,142,255,0.05)', border: '1px solid rgba(77,142,255,0.15)' }}
+            className="mt-12 rounded-md p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white border"
+            style={{ borderColor: HAIRLINE }}
           >
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(77,142,255,0.10)' }}>
-              <Zap className="w-5 h-5" style={{ color: PRIMARY_CTR }} />
+            <div className="w-10 h-10 rounded border border-black flex items-center justify-center flex-none">
+              <Zap className="w-5 h-5 text-black" />
             </div>
             <div>
-              <p className="text-sm font-mono font-bold" style={{ color: PRIMARY }}>No analysis limits, no hidden throttles</p>
-              <p className="text-xs leading-relaxed mt-1" style={{ color: '#c2c6d6' }}>
+              <p className="text-sm font-bold text-black">No analysis limits, no hidden throttles</p>
+              <p className="text-xs leading-relaxed mt-1 text-gray-600">
                 Every repo you add gets full AI analysis, weekly staleness monitoring, and vector search indexing — included in your plan, no add-ons required. What you see is what you get.
               </p>
             </div>
@@ -281,25 +258,25 @@ export function PricingPage() {
 
           {/* ── FAQ ── */}
           <div className="mt-24">
-            <h2 className="font-mono font-black text-white text-3xl text-center mb-12 tracking-tight">
+            <h2 className="font-bold text-black text-3xl text-center mb-12 tracking-tight">
               Common questions
             </h2>
             <div className="max-w-3xl mx-auto space-y-3">
               {FAQS.map((faq, i) => (
                 <div
                   key={i}
-                  className="rounded-xl overflow-hidden transition-all"
-                  style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
+                  className="rounded-md overflow-hidden bg-white border"
+                  style={{ borderColor: HAIRLINE }}
                 >
                   <button
                     className="w-full text-left px-6 py-5 flex items-center justify-between gap-4"
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   >
-                    <span className="font-mono font-bold text-white text-sm">{faq.q}</span>
+                    <span className="font-bold text-black text-sm">{faq.q}</span>
                     <span
                       className="text-xl flex-none transition-transform duration-200"
                       style={{
-                        color: PRIMARY,
+                        color: ACCENT,
                         transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
                       }}
                     >
@@ -307,7 +284,7 @@ export function PricingPage() {
                     </span>
                   </button>
                   {openFaq === i && (
-                    <div className="px-6 pb-5 text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>
+                    <div className="px-6 pb-5 text-sm leading-relaxed text-gray-600">
                       {faq.a}
                     </div>
                   )}
@@ -318,24 +295,23 @@ export function PricingPage() {
 
           {/* ── System status ── */}
           <div
-            className="mt-16 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-            style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
+            className="mt-16 rounded-md p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white border"
+            style={{ borderColor: HAIRLINE }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none"
-                style={{ background: 'rgba(78,222,163,0.10)', border: `1px solid rgba(78,222,163,0.20)` }}>
-                <Zap className="w-5 h-5" style={{ color: TERTIARY }} />
+              <div className="w-10 h-10 rounded border border-black flex items-center justify-center flex-none">
+                <Zap className="w-5 h-5 text-black" />
               </div>
               <div>
-                <div className="text-sm font-mono font-bold text-white">Infrastructure Operational</div>
-                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
+                <div className="text-sm font-bold text-black">Infrastructure Operational</div>
+                <div className="text-xs text-gray-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
               </div>
             </div>
             <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider whitespace-nowrap"
-              style={{ background: 'rgba(78,222,163,0.10)', border: '1px solid rgba(78,222,163,0.20)', color: TERTIARY }}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider whitespace-nowrap border"
+              style={{ borderColor: HAIRLINE, color: ACCENT }}
             >
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: TERTIARY }} />
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: ACCENT }} />
               All Systems Live
             </div>
           </div>

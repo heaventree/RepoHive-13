@@ -5,10 +5,10 @@ export function PrivacyPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Privacy <span style={{ color: '#adc6ff' }}>Policy</span></>}
+      title={<>Privacy <span style={{ color: '#0000FF' }}>Policy</span></>}
       subtitle="How we handle your data, your repos, and your trust."
     >
-      <div className="prose-blog max-w-3xl mx-auto text-slate-400">
+      <div className="prose-blog max-w-3xl mx-auto text-gray-600">
         <h2>What we collect</h2>
         <p>We store your GitHub repo URLs and AI analysis data in your tenant's Turso database. We do not store your GitHub credentials or private repo contents.</p>
         <h2>Authentication</h2>

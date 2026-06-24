@@ -3,11 +3,14 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Search, Sparkles, Activity, Boxes, Zap, BookOpen } from 'lucide-react';
 
+const ACCENT = '#0000FF';
+const HAIRLINE = '#E5E5E5';
+
 export function HowItWorksPage() {
   return (
     <MarketingPage
       kicker="How it works"
-      title={<>From a folder of GitHub URLs to <span style={{ color: '#adc6ff' }}>a queryable repo brain.</span></>}
+      title={<>From a folder of GitHub URLs to <span style={{ color: ACCENT }}>a queryable repo brain.</span></>}
       subtitle="RepoHive turns the open-source repos you care about into an AI-indexed, searchable library so you can find the right one in seconds — not the wrong one after an afternoon of tabs."
       seo={{
         title: 'How It Works',
@@ -61,12 +64,14 @@ export function HowItWorksPage() {
 
       {/* The big idea */}
       <div
-        className="rounded-lg p-10 mb-20 text-center"
-        style={{ background: 'rgba(77,142,255,0.06)', border: '1px solid rgba(77,142,255,0.18)' }}
+        className="rounded-md p-10 mb-20 text-center bg-[#FAFAFA] border"
+        style={{ borderColor: HAIRLINE }}
       >
-        <Zap className="w-8 h-8 mx-auto mb-4" style={{ color: '#4d8eff' }} />
-        <h2 className="font-mono font-black text-white text-2xl mb-4">The problem RepoHive fixes</h2>
-        <p className="text-slate-300 leading-relaxed max-w-3xl mx-auto text-sm">
+        <div className="w-10 h-10 mx-auto mb-4 border border-black flex items-center justify-center rounded">
+          <Zap className="w-5 h-5" />
+        </div>
+        <h2 className="font-bold tracking-tight text-black text-2xl mb-4">The problem RepoHive fixes</h2>
+        <p className="text-gray-600 leading-relaxed max-w-3xl mx-auto text-sm">
           Open source is the most valuable inventory in software, and almost nobody manages it. You bookmark
           repos, lose them in Slack, rediscover them six months later, and ship the wrong dependency anyway.
           RepoHive is the workbench you should have had: a private library where every repo is analysed,
@@ -75,7 +80,7 @@ export function HowItWorksPage() {
       </div>
 
       {/* What you get */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">What you can do with it</h2>
+      <h2 className="font-bold tracking-tight text-black text-2xl mb-8 text-center">What you can do with it</h2>
       <div className="grid md:grid-cols-3 gap-6 mb-16">
         <FeatureCard
           icon={Boxes}
@@ -98,12 +103,11 @@ export function HowItWorksPage() {
       <div className="text-center pt-8">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{ background: '#4d8eff', color: '#00285d', boxShadow: '0 0 24px rgba(77,142,255,0.4)' }}
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
         >
           Start free — 25 repos
         </Link>
-        <p className="text-xs text-slate-500 mt-3 font-mono">No credit card. Full AI analysis on every repo.</p>
+        <p className="text-xs text-gray-500 mt-3 font-mono">No credit card. Full AI analysis on every repo.</p>
       </div>
     </MarketingPage>
   );

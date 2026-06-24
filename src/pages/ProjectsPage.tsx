@@ -3,40 +3,43 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Rocket, Sparkles, Target, ListChecks, Users, FileText } from 'lucide-react';
 
+const ACCENT = '#0000FF';
+const HAIRLINE = '#E5E5E5';
+
 export function ProjectsPage() {
   return (
     <MarketingPage
       kicker="Project workspaces"
-      title={<>Brief a project. <span style={{ color: '#adc6ff' }}>Get the right repos.</span></>}
+      title={<>Brief a project. <span style={{ color: ACCENT }}>Get the right repos.</span></>}
       subtitle="Project workspaces turn your library into a recommender. Write a one-paragraph brief and RepoHive returns the best fits from what you (and your team) have curated — ranked, explained, and ready to pin."
     >
       {/* Hero card explaining the flow */}
       <div
-        className="rounded-lg p-8 mb-16"
-        style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
+        className="rounded-md p-8 mb-16 bg-white border"
+        style={{ borderColor: HAIRLINE }}
       >
-        <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-6 flex items-center gap-2">
-          <Target className="w-5 h-5 text-blue-400" /> The recommendation flow
+        <h2 className="font-bold text-black text-lg mb-6 flex items-center gap-2">
+          <Target className="w-5 h-5" style={{ color: ACCENT }} /> The recommendation flow
         </h2>
-        <div className="grid md:grid-cols-3 gap-6 text-sm text-slate-400">
+        <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">Write a brief</span>
+              <FileText className="w-4 h-4" style={{ color: ACCENT }} />
+              <span className="text-black font-bold">Write a brief</span>
             </div>
             <p>"A self-hosted CRM for a 12-person sales team, multi-tenant, Postgres backend, ideally TypeScript." A few sentences is enough.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">RepoHive matches</span>
+              <Sparkles className="w-4 h-4" style={{ color: ACCENT }} />
+              <span className="text-black font-bold">RepoHive matches</span>
             </div>
             <p>Briefs are expanded with synonyms and embedded, then compared against every repo in your library. Closest matches surface first.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <ListChecks className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">Review and pin</span>
+              <ListChecks className="w-4 h-4" style={{ color: ACCENT }} />
+              <span className="text-black font-bold">Review and pin</span>
             </div>
             <p>Each recommendation has a similarity score, rationale, and warnings (e.g. "high open-issue count"). Pin the keepers, add notes, archive the rest.</p>
           </div>
@@ -44,7 +47,7 @@ export function ProjectsPage() {
       </div>
 
       {/* What's special */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">Why this beats searching GitHub</h2>
+      <h2 className="font-bold tracking-tight text-black text-2xl mb-8 text-center">Why this beats searching GitHub</h2>
       <div className="grid md:grid-cols-2 gap-6 mb-16">
         <FeatureCard
           icon={Sparkles}
@@ -89,15 +92,15 @@ export function ProjectsPage() {
 
       {/* Example */}
       <div
-        className="rounded-lg p-8 mb-16"
-        style={{ background: 'rgba(77,142,255,0.06)', border: '1px solid rgba(77,142,255,0.18)' }}
+        className="rounded-md p-8 mb-16 bg-[#FAFAFA] border"
+        style={{ borderColor: HAIRLINE }}
       >
-        <p className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-3">A real-shaped example</p>
-        <p className="text-sm text-slate-300 leading-relaxed mb-4">
+        <p className="text-xs font-mono uppercase tracking-widest mb-3" style={{ color: ACCENT }}>A real-shaped example</p>
+        <p className="text-sm text-gray-600 leading-relaxed mb-4">
           <em>Brief:</em> "Headless CMS for a small marketing team. Must support image uploads,
           live preview, and integrate cleanly with Next.js. Self-hosted, MIT or Apache."
         </p>
-        <p className="text-sm text-slate-300 leading-relaxed">
+        <p className="text-sm text-gray-600 leading-relaxed">
           <em>What RepoHive returns from a 500-repo library:</em> the three CMSes that semantically match your
           brief (not just contain the word "CMS"), each with a 0–100 fit score, a one-sentence rationale,
           warnings if the issue count is high, and a pin button. Total time: about 8 seconds.
@@ -108,12 +111,11 @@ export function ProjectsPage() {
       <div className="text-center">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{ background: '#4d8eff', color: '#00285d', boxShadow: '0 0 24px rgba(77,142,255,0.4)' }}
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
         >
           Try project workspaces
         </Link>
-        <p className="text-xs text-slate-500 mt-3 font-mono">Included on every plan, including the free Explorer.</p>
+        <p className="text-xs text-gray-500 mt-3 font-mono">Included on every plan, including the free Explorer.</p>
       </div>
     </MarketingPage>
   );

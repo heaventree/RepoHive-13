@@ -5,10 +5,10 @@ export function AcceptableUsePage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Acceptable <span style={{ color: '#adc6ff' }}>Use</span></>}
+      title={<>Acceptable <span style={{ color: '#0000FF' }}>Use</span></>}
       subtitle="Keep the hive healthy."
     >
-      <div className="prose-blog max-w-3xl mx-auto text-slate-400">
+      <div className="prose-blog max-w-3xl mx-auto text-gray-600">
         <h2>No scraping</h2>
         <p>Do not use RepoHive to bulk-scrape GitHub or other users' libraries. The API rate limits are there for a reason.</p>
         <h2>No reverse engineering</h2>

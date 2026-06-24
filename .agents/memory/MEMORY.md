@@ -1,1 +1,2 @@
-- [Mockup graduation gotchas](mockup-graduation.md) — DESIGN-subagent mockups can ship invalid React props (e.g. `dangerouslySetInlineStyle`) that silently drop fonts/CSS; verify on graduation.
+- [Public read API gap](repohive-public-read-apis.md) — blog/integrations/public-project pages fetch public GET endpoints that don't exist (only admin ones do); pages degrade to empty/not-found.
+- [Marketing theme: Raw Minimal](repohive-raw-minimal-theme.md) — light reskin tokens + which components are self-contained vs shared shell.

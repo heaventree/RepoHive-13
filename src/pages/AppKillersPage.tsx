@@ -3,6 +3,9 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Flame, Shield, Server, Zap, CheckCircle2 } from 'lucide-react';
 
+const ACCENT = '#0000FF';
+const HAIRLINE = '#E5E5E5';
+
 const KILLER_EXAMPLES = [
   { name: 'Supabase',  replaces: 'Firebase', cat: 'Backend / Auth / DB' },
   { name: 'Plausible', replaces: 'Google Analytics', cat: 'Analytics' },
@@ -18,7 +21,7 @@ export function AppKillersPage() {
   return (
     <MarketingPage
       kicker="App Killers library"
-      title={<>Open source <span style={{ color: '#fbbf24' }}>that replaces your SaaS bill.</span></>}
+      title={<>Open source <span style={{ color: ACCENT }}>that replaces your SaaS bill.</span></>}
       subtitle="A hand-curated set of production-grade open-source projects that are credible self-hosted replacements for the paid software your stack runs on. Already analysed, scored, embedded — search them in your library on day one."
       seo={{
         title: 'App Killers — Open Source Replacements for Paid SaaS',
@@ -47,35 +50,35 @@ export function AppKillersPage() {
 
       {/* Sample list */}
       <div
-        className="rounded-lg p-8 mb-16"
-        style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
+        className="rounded-md p-8 mb-16 bg-white border"
+        style={{ borderColor: HAIRLINE }}
       >
         <div className="flex items-center gap-2 mb-6">
-          <Flame className="w-5 h-5 text-amber-400" />
-          <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest">A taste of the library</h2>
+          <Flame className="w-5 h-5" style={{ color: ACCENT }} />
+          <h2 className="font-bold text-black text-lg">A taste of the library</h2>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           {KILLER_EXAMPLES.map(k => (
             <div
               key={k.name}
-              className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm font-mono"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded text-sm font-mono bg-[#FAFAFA] border"
+              style={{ borderColor: HAIRLINE }}
             >
               <div className="min-w-0">
-                <div className="text-white font-bold truncate">{k.name}</div>
-                <div className="text-[11px] text-slate-500 truncate">{k.cat}</div>
+                <div className="text-black font-bold truncate">{k.name}</div>
+                <div className="text-[11px] text-gray-500 truncate">{k.cat}</div>
               </div>
-              <div className="text-[11px] text-amber-300/80 flex-none">
-                replaces <span className="text-amber-300">{k.replaces}</span>
+              <div className="text-[11px] text-gray-500 flex-none">
+                replaces <span className="font-bold" style={{ color: ACCENT }}>{k.replaces}</span>
               </div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-slate-500 mt-6 italic">A small slice of 500+ entries. The full catalogue is in the app.</p>
+        <p className="text-xs text-gray-500 mt-6 italic">A small slice of 500+ entries. The full catalogue is in the app.</p>
       </div>
 
       {/* What's in it for you */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">Why this matters</h2>
+      <h2 className="font-bold tracking-tight text-black text-2xl mb-8 text-center">Why this matters</h2>
       <div className="space-y-3 mb-16 max-w-3xl mx-auto">
         {[
           'Audit your SaaS spend — find the open-source replacement for every paid tool you use.',
@@ -83,8 +86,8 @@ export function AppKillersPage() {
           'Pitch and compare: every entry has an AI-generated summary, scoring, and a "replaces" pointer.',
           'Stay current: staleness monitoring flags App Killers that lose their maintainers before you commit.',
         ].map((line, i) => (
-          <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
-            <CheckCircle2 className="w-5 h-5 flex-none mt-0.5" style={{ color: '#4edea3' }} />
+          <div key={i} className="flex items-start gap-3 text-sm text-gray-600">
+            <CheckCircle2 className="w-5 h-5 flex-none mt-0.5" style={{ color: ACCENT }} />
             <span>{line}</span>
           </div>
         ))}
@@ -92,16 +95,15 @@ export function AppKillersPage() {
 
       {/* Plan note */}
       <div
-        className="rounded-lg p-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-        style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}
+        className="rounded-md p-8 mb-16 flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-[#FAFAFA] border"
+        style={{ borderColor: HAIRLINE }}
       >
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-none"
-          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}>
-          <Flame className="w-6 h-6 text-amber-400" />
+        <div className="w-12 h-12 rounded flex items-center justify-center flex-none border border-black">
+          <Flame className="w-6 h-6" />
         </div>
         <div>
-          <p className="text-sm font-mono font-bold text-amber-300 mb-1">Included with Solo and Studio</p>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-sm font-bold text-black mb-1">Included with Solo and Studio</p>
+          <p className="text-xs text-gray-600 leading-relaxed">
             The App Killers library is automatically copied into your account when you upgrade. The free Explorer
             plan lets you sample the rest of RepoHive; App Killers ship with paid plans because the curation work
             is what you&apos;re paying for.
@@ -113,8 +115,7 @@ export function AppKillersPage() {
       <div className="text-center">
         <Link
           to="/pricing"
-          className="inline-block px-8 py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-          style={{ background: '#4d8eff', color: '#00285d', boxShadow: '0 0 24px rgba(77,142,255,0.4)' }}
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
         >
           See plans
         </Link>

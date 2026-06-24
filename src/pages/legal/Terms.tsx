@@ -5,10 +5,10 @@ export function TermsPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Terms of <span style={{ color: '#adc6ff' }}>Service</span></>}
+      title={<>Terms of <span style={{ color: '#0000FF' }}>Service</span></>}
       subtitle="The rules of the hive."
     >
-      <div className="prose-blog max-w-3xl mx-auto text-slate-400">
+      <div className="prose-blog max-w-3xl mx-auto text-gray-600">
         <h2>Acceptable use</h2>
         <p>RepoHive is for discovering open-source repositories. Do not use it for automated scraping at scale without permission. Do not store or distribute other users' data.</p>
         <h2>Plans and limits</h2>

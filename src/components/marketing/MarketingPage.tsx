@@ -4,18 +4,7 @@ import { MarketingFooter } from './MarketingFooter';
 import { SEO } from '../../lib/seo';
 import type { SEOProps } from '../../lib/seo';
 
-const PRIMARY = '#adc6ff';
-
-function Orbs() {
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full"
-        style={{ background: 'rgba(79,70,229,0.12)', filter: 'blur(120px)' }} />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full"
-        style={{ background: 'rgba(124,58,237,0.10)', filter: 'blur(150px)' }} />
-    </div>
-  );
-}
+const HAIRLINE = '#E5E5E5';
 
 interface MarketingPageProps {
   kicker: string;
@@ -25,33 +14,35 @@ interface MarketingPageProps {
   seo?: SEOProps;
 }
 
-// Shared shell for all marketing/feature pages: dark background, orbs,
+// Shared shell for all marketing/feature pages: light Raw Minimal background,
 // MarketingNav at top, MarketingFooter at bottom, hero block, then content.
 export function MarketingPage({ kicker, title, subtitle, children, seo }: MarketingPageProps) {
   return (
-    <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+    <div
+      className="min-h-screen bg-[#FAFAFA] text-black selection:bg-[#0000FF] selection:text-white flex flex-col"
+      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+    >
       {seo && <SEO {...seo} />}
-      <Orbs />
       <MarketingNav />
 
-      <div className="relative z-10 pt-40 pb-24 px-6">
+      <div className="flex-1 pt-20 pb-24 px-6 bg-white border-b" style={{ borderColor: HAIRLINE }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-block mb-6">
               <span
-                className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full"
-                style={{ color: PRIMARY, border: '1px solid rgba(173,198,255,0.20)', background: 'rgba(173,198,255,0.05)' }}
+                className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full bg-gray-100 border"
+                style={{ borderColor: HAIRLINE }}
               >
                 {kicker}
               </span>
             </div>
             <h1
-              className="font-mono font-black tracking-tight leading-tight mb-6 text-white"
+              className="font-bold tracking-tighter leading-[1.05] mb-6"
               style={{ fontSize: 'clamp(2.25rem, 5vw, 4rem)' }}
             >
               {title}
             </h1>
-            <p className="text-slate-400 text-base max-w-2xl mx-auto leading-relaxed">
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed font-medium">
               {subtitle}
             </p>
           </div>
@@ -65,21 +56,20 @@ export function MarketingPage({ kicker, title, subtitle, children, seo }: Market
   );
 }
 
-// Standard glass-card section used across feature pages.
+// Standard card section used across feature pages — Raw Minimal style.
 export function FeatureCard({ title, body, icon: Icon }: { title: string; body: ReactNode; icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; }) {
   return (
     <div
-      className="rounded-md p-8 h-full"
-      style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
+      className="rounded-md p-8 h-full bg-white border"
+      style={{ borderColor: HAIRLINE }}
     >
       {Icon && (
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-          style={{ background: 'rgba(77,142,255,0.10)', border: '1px solid rgba(77,142,255,0.25)' }}>
-          <Icon className="w-5 h-5" style={{ color: '#4d8eff' }} />
+        <div className="w-10 h-10 rounded flex items-center justify-center mb-4 border border-black">
+          <Icon className="w-5 h-5" />
         </div>
       )}
-      <h3 className="font-mono font-bold text-white text-lg mb-3">{title}</h3>
-      <div className="text-sm text-slate-400 leading-relaxed space-y-3">{body}</div>
+      <h3 className="font-bold text-black text-lg mb-3">{title}</h3>
+      <div className="text-sm text-gray-600 leading-relaxed space-y-3">{body}</div>
     </div>
   );
 }

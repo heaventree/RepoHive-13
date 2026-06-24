@@ -5,10 +5,10 @@ export function ImprintPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Imprint / <span style={{ color: '#adc6ff' }}>Contact</span></>}
+      title={<>Imprint / <span style={{ color: '#0000FF' }}>Contact</span></>}
       subtitle="Who runs this thing."
     >
-      <div className="prose-blog max-w-3xl mx-auto text-slate-400">
+      <div className="prose-blog max-w-3xl mx-auto text-gray-600">
         <h2>RepoHive</h2>
         <p>RepoHive is a product of HeavenTree LLC.</p>
         <p>Email: hello@repohive.cloud</p>
