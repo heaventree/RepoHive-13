@@ -8,6 +8,7 @@ import { SignInPage } from './pages/SignInPage';
 import { HowItWorksPage } from './pages/HowItWorksPage';
 import { AppKillersPage } from './pages/AppKillersPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
+import { IntegrationToolPage } from './pages/IntegrationToolPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { PublicProjectPage } from './pages/PublicProjectPage';
 import { BlogIndexPage } from './pages/BlogIndexPage';
@@ -56,6 +57,7 @@ export function Router() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/app-killers" element={<AppKillersPage />} />
         <Route path="/integrations" element={<IntegrationsPage />} />
+        <Route path="/integrations/:slug" element={<IntegrationToolPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route
           path="/sign-in"

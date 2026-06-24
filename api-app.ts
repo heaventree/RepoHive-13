@@ -25,6 +25,165 @@ const DEV_USER = "dev-user";
 // copied into the subscriber's own library (see copyLibraryToTenant).
 const LIBRARY_TENANT = "__library__";
 
+// First-wave integration connectors: idea-to-app builders + agentic IDEs.
+// "custom" tools get bespoke setup copy (the big hitters); "generic" tools
+// share one templated instruction set since they all expose the same kind of
+// custom-HTTP-source / knowledge-connector slot. Anything beyond this list
+// shows up in the admin "To do" backlog as status: 'todo'.
+const GENERIC_STEPS = (tool: string) => [
+  `Generate an API key in RepoHive → API Access (Settings → API).`,
+  `Open ${tool} and find its custom HTTP source / knowledge connector / context provider setting.`,
+  `Paste in the endpoint URL, with your key appended: https://yourapp.com/api/external/repos?apiKey=YOUR_KEY`,
+  `Save. ${tool} can now query your curated RepoHive library when it reasons about what to build with.`,
+];
+
+const INTEGRATION_SEED: Array<{
+  slug: string; name: string; domain: string; category: string; tagline: string;
+  description?: string; setupType: 'generic' | 'custom'; setupSteps: string[];
+  status: 'live' | 'todo'; sortOrder: number;
+}> = [
+  // ── Big hitters: bespoke setup ──────────────────────────────────────────
+  { slug: 'cursor', name: 'Cursor', domain: 'cursor.com', category: 'Agentic IDE',
+    tagline: "Bring your curated repo brain into the AI IDE that's rewriting how you code.",
+    description: 'Cursor reasons over your codebase with full IDE context. Pointing it at your RepoHive library means every "build me an auth flow" prompt gets answered with a repo you already vetted, not a hallucinated package name.',
+    setupType: 'custom', status: 'live', sortOrder: 1, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'In Cursor, open Settings → Features → Docs (or Context) and choose "Add Custom Source".',
+      'Paste the endpoint: https://yourapp.com/api/external/repos?apiKey=YOUR_KEY',
+      'Name it "RepoHive Library" so it shows up in @-mentions and rule context.',
+      'Reference it in a Cursor Rule (.cursor/rules) so every agent session pulls from it automatically.',
+    ] },
+  { slug: 'claude-code', name: 'Claude Code', domain: 'claude.com', category: 'Terminal Agent',
+    tagline: "Give Claude a list of repos it's allowed to recommend — pre-vetted by you.",
+    description: "Claude Code connects to external context through MCP. Wiring in RepoHive means Claude's recommendations come from your hand-picked, scored library instead of guessing at what's popular on GitHub.",
+    setupType: 'custom', status: 'live', sortOrder: 2, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'Run: claude mcp add repohive --transport http https://yourapp.com/api/external/mcp --header "Authorization: Bearer YOUR_KEY"',
+      'Restart Claude Code — the "repohive" tool now appears in its available tools list.',
+      'Ask Claude to "search RepoHive for a self-hosted auth alternative" to confirm the connection.',
+    ] },
+  { slug: 'replit', name: 'Replit', domain: 'replit.com', category: 'Vibe Coding Builder',
+    tagline: 'Replit Agent can query your library to scaffold from components you already trust.',
+    setupType: 'custom', status: 'live', sortOrder: 3, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'In your Repl, open Tools → Secrets and add REPOHIVE_API_KEY with your key.',
+      'Add a Connector (Tools → Connectors → Custom HTTP) pointing at https://yourapp.com/api/external/repos.',
+      'Tell Replit Agent to check the RepoHive connector before scaffolding new features.',
+    ] },
+  { slug: 'lovable', name: 'Lovable', domain: 'lovable.dev', category: 'Vibe Coding Builder',
+    tagline: 'Lovable builds faster when it can read from a private library of proven primitives.',
+    setupType: 'custom', status: 'live', sortOrder: 4, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'In your Lovable project, open Knowledge → Integrations and add a Custom API source.',
+      'Set the URL to https://yourapp.com/api/external/repos?apiKey=YOUR_KEY and the method to GET.',
+      'Lovable will now surface matching repos when you describe a feature in chat.',
+    ] },
+  { slug: 'bolt-new', name: 'Bolt.new', domain: 'bolt.new', category: 'Vibe Coding Builder',
+    tagline: 'Wire RepoHive in as a knowledge source so generated apps reach for the right stack.',
+    setupType: 'custom', status: 'live', sortOrder: 5, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'Open your Bolt project settings and add an environment variable: REPOHIVE_API_KEY.',
+      'Use the StackBlitz "Connect" panel to register https://yourapp.com/api/external/repos as an external source.',
+      'Reference it in your prompt: "check the RepoHive source for a self-hostable option first".',
+    ] },
+  { slug: 'windsurf', name: 'Windsurf', domain: 'windsurf.com', category: 'Agentic IDE',
+    tagline: "Windsurf's Cascade agent can pull from your vetted repo library mid-flow.",
+    setupType: 'custom', status: 'live', sortOrder: 6, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'In Windsurf, open Settings → Cascade → MCP Servers and add a new HTTP server.',
+      'Set the endpoint to https://yourapp.com/api/external/repos?apiKey=YOUR_KEY.',
+      'Cascade can now call out to RepoHive whenever it needs a real open-source reference.',
+    ] },
+  { slug: 'v0', name: 'v0', domain: 'v0.dev', category: 'Vibe Coding Builder',
+    tagline: "Point Vercel's v0 at repos you've already scored, not the open web.",
+    setupType: 'custom', status: 'live', sortOrder: 7, setupSteps: [
+      'Generate an API key in RepoHive → API Access.',
+      'In your v0 project, open Project Settings → Integrations → Custom API.',
+      'Add https://yourapp.com/api/external/repos?apiKey=YOUR_KEY as a read-only data source.',
+      'Mention "@repohive" in a v0 prompt to pull suggestions from your library.',
+    ] },
+  // ── Generic bulk: same connector shape, templated copy ──────────────────
+  { slug: 'github-copilot', name: 'GitHub Copilot', domain: 'github.com', category: 'AI Pair Programmer',
+    tagline: 'Use RepoHive as the "ground truth" your prompts can reference by name.',
+    setupType: 'generic', status: 'live', sortOrder: 8, setupSteps: GENERIC_STEPS('GitHub Copilot (Copilot Chat custom instructions)') },
+  { slug: 'cline', name: 'Cline', domain: 'cline.bot', category: 'Agentic IDE',
+    tagline: 'Cline can read your RepoHive library before it writes a single file.',
+    setupType: 'generic', status: 'live', sortOrder: 9, setupSteps: GENERIC_STEPS('Cline') },
+  { slug: 'continue-dev', name: 'Continue.dev', domain: 'continue.dev', category: 'AI Pair Programmer',
+    tagline: 'Add RepoHive as a custom context provider in your Continue config.',
+    setupType: 'generic', status: 'live', sortOrder: 10, setupSteps: GENERIC_STEPS('Continue.dev') },
+  { slug: 'aider', name: 'Aider', domain: 'aider.chat', category: 'Terminal Agent',
+    tagline: 'Feed Aider a curated repo list instead of letting it guess from memory.',
+    setupType: 'generic', status: 'live', sortOrder: 11, setupSteps: GENERIC_STEPS('Aider') },
+  { slug: 'cody', name: 'Sourcegraph Cody', domain: 'sourcegraph.com', category: 'AI Pair Programmer',
+    tagline: 'Cody can cite your RepoHive picks alongside your own codebase context.',
+    setupType: 'generic', status: 'live', sortOrder: 12, setupSteps: GENERIC_STEPS('Sourcegraph Cody') },
+  { slug: 'tabnine', name: 'Tabnine', domain: 'tabnine.com', category: 'AI Pair Programmer',
+    tagline: 'Keep Tabnine\'s suggestions grounded in repos you\'ve already vetted.',
+    setupType: 'generic', status: 'live', sortOrder: 13, setupSteps: GENERIC_STEPS('Tabnine') },
+  { slug: 'codeium', name: 'Codeium', domain: 'codeium.com', category: 'AI Pair Programmer',
+    tagline: 'Wire Codeium into your private library of production-grade primitives.',
+    setupType: 'generic', status: 'live', sortOrder: 14, setupSteps: GENERIC_STEPS('Codeium') },
+  { slug: 'zed', name: 'Zed', domain: 'zed.dev', category: 'Agentic IDE',
+    tagline: "Zed's AI panel can query RepoHive as a custom context source.",
+    setupType: 'generic', status: 'live', sortOrder: 15, setupSteps: GENERIC_STEPS('Zed') },
+  { slug: 'devin', name: 'Devin', domain: 'devin.ai', category: 'Terminal Agent',
+    tagline: 'Give Devin a pre-approved list of repos to build from, not the open internet.',
+    setupType: 'generic', status: 'live', sortOrder: 16, setupSteps: GENERIC_STEPS('Devin') },
+  { slug: 'base44', name: 'Base44', domain: 'base44.com', category: 'Vibe Coding Builder',
+    tagline: 'Scaffold Base44 apps from a library you already trust.',
+    setupType: 'generic', status: 'live', sortOrder: 17, setupSteps: GENERIC_STEPS('Base44') },
+  { slug: 'rocket-new', name: 'Rocket.new', domain: 'rocket.new', category: 'Vibe Coding Builder',
+    tagline: 'Point Rocket.new at your curated repo list before it picks a stack.',
+    setupType: 'generic', status: 'live', sortOrder: 18, setupSteps: GENERIC_STEPS('Rocket.new') },
+  { slug: 'emergent', name: 'Emergent', domain: 'emergent.sh', category: 'Vibe Coding Builder',
+    tagline: 'Hand Emergent a library of vetted repos instead of an open prompt.',
+    setupType: 'generic', status: 'live', sortOrder: 19, setupSteps: GENERIC_STEPS('Emergent') },
+  { slug: 'create-xyz', name: 'Create.xyz', domain: 'create.xyz', category: 'Vibe Coding Builder',
+    tagline: 'Ground Create.xyz generations in your own curated component library.',
+    setupType: 'generic', status: 'live', sortOrder: 20, setupSteps: GENERIC_STEPS('Create.xyz') },
+  { slug: 'softgen', name: 'Softgen', domain: 'softgen.ai', category: 'Vibe Coding Builder',
+    tagline: "Connect Softgen so it's building with your vetted stack, not a guess.",
+    setupType: 'generic', status: 'live', sortOrder: 21, setupSteps: GENERIC_STEPS('Softgen') },
+  { slug: 'gpt-engineer', name: 'GPT Engineer', domain: 'gptengineer.app', category: 'Vibe Coding Builder',
+    tagline: 'Feed GPT Engineer a real source of truth before it writes your scaffold.',
+    setupType: 'generic', status: 'live', sortOrder: 22, setupSteps: GENERIC_STEPS('GPT Engineer') },
+  { slug: 'tempo-labs', name: 'Tempo Labs', domain: 'tempolabs.ai', category: 'Vibe Coding Builder',
+    tagline: 'Bring your RepoHive picks into Tempo\'s visual build flow.',
+    setupType: 'generic', status: 'live', sortOrder: 23, setupSteps: GENERIC_STEPS('Tempo Labs') },
+  { slug: 'mocha', name: 'Mocha', domain: 'getmocha.com', category: 'Vibe Coding Builder',
+    tagline: 'Give Mocha a curated repo list to build full-stack apps from.',
+    setupType: 'generic', status: 'live', sortOrder: 24, setupSteps: GENERIC_STEPS('Mocha') },
+  { slug: 'magic-patterns', name: 'Magic Patterns', domain: 'magicpatterns.com', category: 'Vibe Coding Builder',
+    tagline: 'Reach for proven UI patterns from your own library, not the open web.',
+    setupType: 'generic', status: 'live', sortOrder: 25, setupSteps: GENERIC_STEPS('Magic Patterns') },
+  // ── Backlog: future connectors, shown as "To do" in admin ───────────────
+  { slug: 'builder-io', name: 'Builder.io', domain: 'builder.io', category: 'Frontend Generator',
+    tagline: 'Visual builder with AI generation — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 26, setupSteps: [] },
+  { slug: 'locofy', name: 'Locofy', domain: 'locofy.ai', category: 'Frontend Generator',
+    tagline: 'Design-to-code tool — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 27, setupSteps: [] },
+  { slug: 'warp', name: 'Warp', domain: 'warp.dev', category: 'Terminal Agent',
+    tagline: 'Agentic terminal — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 28, setupSteps: [] },
+  { slug: 'amazon-q', name: 'Amazon Q Developer', domain: 'aws.amazon.com', category: 'AI Pair Programmer',
+    tagline: "AWS's coding agent — connector not yet built.",
+    setupType: 'generic', status: 'todo', sortOrder: 29, setupSteps: [] },
+  { slug: 'jetbrains-ai', name: 'JetBrains AI Assistant', domain: 'jetbrains.com', category: 'AI Pair Programmer',
+    tagline: 'IDE-native AI for the JetBrains suite — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 30, setupSteps: [] },
+  { slug: 'supermaven', name: 'Supermaven', domain: 'supermaven.com', category: 'AI Pair Programmer',
+    tagline: 'Fast inline completion — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 31, setupSteps: [] },
+  { slug: 'refact-ai', name: 'Refact.ai', domain: 'refact.ai', category: 'AI Pair Programmer',
+    tagline: 'Self-hosted AI coding assistant — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 32, setupSteps: [] },
+  { slug: 'openhands', name: 'OpenHands', domain: 'all-hands.dev', category: 'Terminal Agent',
+    tagline: 'Open-source autonomous coding agent — connector not yet built.',
+    setupType: 'generic', status: 'todo', sortOrder: 33, setupSteps: [] },
+];
+
 // Resolve the calling tenant. tenant_id is the Clerk org (Studio teams) when an
 // org is active, otherwise the user id (personal Free/Solo accounts).
 function getTenant(req: express.Request): { tenantId: string; userId: string } {
@@ -394,6 +553,26 @@ async function initSchema() {
       repo_id TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (tenant_id, user_id, repo_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS integrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      domain TEXT,
+      category TEXT NOT NULL,
+      tagline TEXT,
+      description TEXT,
+      logo_url TEXT,
+      setup_type TEXT DEFAULT 'generic',
+      setup_steps TEXT,
+      status TEXT DEFAULT 'todo',
+      seo_title TEXT,
+      seo_description TEXT,
+      body_md TEXT,
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
@@ -2283,6 +2462,127 @@ Return ONLY a single valid JSON object (no markdown wrapper, no explanation befo
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
+  });
+
+  // ─── Integrations (AI tool connectors) ──────────────────────────────────────
+  // Public — live connectors only, for the marketing grid + per-tool SEO pages.
+  app.get("/api/integrations", async (_req, res) => {
+    const rows = await all(
+      `SELECT slug, name, domain, category, tagline, logo_url AS logoUrl, setup_type AS setupType
+       FROM integrations WHERE status = 'live' ORDER BY sort_order ASC, name ASC`,
+    );
+    res.json(rows);
+  });
+
+  app.get("/api/integrations/:slug", async (req, res) => {
+    const row = await get(
+      `SELECT slug, name, domain, category, tagline, description, logo_url AS logoUrl,
+              setup_type AS setupType, setup_steps AS setupSteps,
+              seo_title AS seoTitle, seo_description AS seoDescription, body_md AS bodyMd
+       FROM integrations WHERE slug = ? AND status = 'live'`,
+      [req.params.slug],
+    );
+    if (!row) return res.status(404).json({ error: "Integration not found" });
+    res.json(row);
+  });
+
+  // Admin — full list (incl. todo placeholders), ordered for management.
+  app.get("/api/admin/integrations", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const rows = await all(
+      `SELECT id, slug, name, domain, category, tagline, logo_url AS logoUrl, setup_type AS setupType,
+              status, sort_order AS sortOrder, updated_at AS updatedAt
+       FROM integrations ORDER BY sort_order ASC, name ASC`,
+    );
+    res.json(rows);
+  });
+
+  app.get("/api/admin/integrations/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const row = await get("SELECT * FROM integrations WHERE id = ?", [req.params.id]);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(row);
+  });
+
+  app.post("/api/admin/integrations", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const {
+      id, slug, name, domain, category, tagline, description, logo_url, setup_type,
+      setup_steps, status, seo_title, seo_description, body_md, sort_order,
+    } = req.body ?? {};
+    if (!name) return res.status(400).json({ error: "name is required" });
+    const finalSlug = slug || slugify(name);
+    if (id) {
+      await run(
+        `UPDATE integrations SET slug=?, name=?, domain=?, category=?, tagline=?, description=?, logo_url=?,
+           setup_type=?, setup_steps=?, status=?, seo_title=?, seo_description=?, body_md=?, sort_order=?,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE id=?`,
+        [finalSlug, name, domain ?? null, category ?? 'Other', tagline ?? null, description ?? null, logo_url ?? null,
+         setup_type ?? 'generic', setup_steps ?? null, status ?? 'todo', seo_title ?? null, seo_description ?? null,
+         body_md ?? null, sort_order ?? 0, id],
+      );
+      res.json({ success: true, id });
+    } else {
+      const result = await run(
+        `INSERT INTO integrations (slug, name, domain, category, tagline, description, logo_url, setup_type,
+           setup_steps, status, seo_title, seo_description, body_md, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [finalSlug, name, domain ?? null, category ?? 'Other', tagline ?? null, description ?? null, logo_url ?? null,
+         setup_type ?? 'generic', setup_steps ?? null, status ?? 'todo', seo_title ?? null, seo_description ?? null,
+         body_md ?? null, sort_order ?? 0],
+      );
+      res.json({ success: true, id: Number(result.lastInsertRowid) });
+    }
+  });
+
+  app.delete("/api/admin/integrations/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    await run("DELETE FROM integrations WHERE id = ?", [req.params.id]);
+    res.json({ success: true });
+  });
+
+  // Fetches a real logo from Brandfetch for a given domain and stores the CDN URL.
+  app.post("/api/admin/integrations/:id/fetch-logo", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const apiKey = process.env.BRANDFETCH_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "BRANDFETCH_API_KEY not set" });
+    const row = await get<any>("SELECT domain FROM integrations WHERE id = ?", [req.params.id]);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    if (!row.domain) return res.status(400).json({ error: "Set a domain on this integration first" });
+    try {
+      const r = await fetch(`https://api.brandfetch.io/v2/brands/${encodeURIComponent(row.domain)}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (!r.ok) return res.status(502).json({ error: `Brandfetch ${r.status}` });
+      const data: any = await r.json();
+      const logo = (data.logos || []).find((l: any) => l.type === 'logo') || data.logos?.[0];
+      const logoUrl = logo?.formats?.find((f: any) => f.format === 'png')?.src || logo?.formats?.[0]?.src;
+      if (!logoUrl) return res.status(404).json({ error: "No logo found for this domain" });
+      await run("UPDATE integrations SET logo_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [logoUrl, req.params.id]);
+      res.json({ success: true, logoUrl });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // One-time bulk seed of the first 25 idea-to-app / agentic-IDE tools. Safe to
+  // call repeatedly — skips slugs that already exist.
+  app.post("/api/admin/integrations/seed", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    let inserted = 0;
+    for (const tool of INTEGRATION_SEED) {
+      const existing = await get("SELECT id FROM integrations WHERE slug = ?", [tool.slug]);
+      if (existing) continue;
+      await run(
+        `INSERT INTO integrations (slug, name, domain, category, tagline, description, setup_type, setup_steps, status, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [tool.slug, tool.name, tool.domain, tool.category, tool.tagline, tool.description ?? null,
+         tool.setupType, JSON.stringify(tool.setupSteps), tool.status, tool.sortOrder],
+      );
+      inserted++;
+    }
+    res.json({ success: true, inserted, skipped: INTEGRATION_SEED.length - inserted });
   });
 
   // ─── Harbor blog import ─────────────────────────────────────────────────────

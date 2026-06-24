@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Key, 
-  Globe, 
-  Copy, 
-  RefreshCw, 
+import {
+  Key,
+  Globe,
+  Copy,
+  RefreshCw,
   Terminal,
   Shield,
   Info,
   CheckCircle2,
   Lock,
   ExternalLink,
-  Activity
+  Activity,
+  Plug,
+  ChevronDown,
+  ListChecks
 } from 'lucide-react';
 
 interface ApiKey {
@@ -21,6 +24,19 @@ interface ApiKey {
   last_used_at: string | null;
 }
 
+interface IntegrationListItem {
+  slug: string;
+  name: string;
+  category: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  setupType: 'generic' | 'custom';
+}
+
+interface IntegrationDetail extends IntegrationListItem {
+  setupSteps: string | null;
+}
+
 export const ApiConfig: React.FC = () => {
   // The full key is only ever returned once, at creation. After that we can
   // only show the masked prefix from the list.
@@ -28,6 +44,8 @@ export const ApiConfig: React.FC = () => {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [integrations, setIntegrations] = useState<IntegrationListItem[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, IntegrationDetail | 'loading'>>({});
 
   const loadKeys = () => {
     fetch('/api/keys')
@@ -37,6 +55,30 @@ export const ApiConfig: React.FC = () => {
   };
 
   useEffect(loadKeys, []);
+
+  useEffect(() => {
+    fetch('/api/integrations')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setIntegrations(data); })
+      .catch(() => {});
+  }, []);
+
+  const keyForDisplay = externalApiKey || (keys.length > 0 ? `${keys[0].key_prefix}...` : 'YOUR_KEY');
+
+  const toggleIntegration = async (slug: string) => {
+    if (expanded[slug]) {
+      setExpanded(prev => { const next = { ...prev }; delete next[slug]; return next; });
+      return;
+    }
+    setExpanded(prev => ({ ...prev, [slug]: 'loading' }));
+    try {
+      const res = await fetch(`/api/integrations/${slug}`);
+      const data = await res.json();
+      if (res.ok) setExpanded(prev => ({ ...prev, [slug]: data }));
+    } catch {
+      setExpanded(prev => { const next = { ...prev }; delete next[slug]; return next; });
+    }
+  };
 
   const generateApiKey = async () => {
     setIsGenerating(true);
@@ -171,6 +213,61 @@ export const ApiConfig: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Connector directory — click a tool for exact setup steps */}
+        {integrations.length > 0 && (
+          <div className="glass-card rounded-lg p-8 shadow-xl">
+            <h3 className="text-lg font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-3 font-mono">
+              <Plug className="w-6 h-6 text-accent-blue" /> Connect Your Tools
+            </h3>
+            <p className="text-xs text-slate-500 font-mono mb-6">Click any tool below for step-by-step instructions, using the key above.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {integrations.map(tool => {
+                const state = expanded[tool.slug];
+                const isOpen = Boolean(state);
+                return (
+                  <div key={tool.slug} className="rounded-lg border border-border-main bg-bg-dark/50 overflow-hidden">
+                    <button
+                      onClick={() => toggleIntegration(tool.slug)}
+                      className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/[0.03] transition-all"
+                    >
+                      <div className="w-8 h-8 rounded bg-white/5 border border-border-main/40 flex items-center justify-center flex-none overflow-hidden">
+                        {tool.logoUrl ? <img src={tool.logoUrl} alt={tool.name} className="w-full h-full object-contain p-1" /> : <Plug className="w-3.5 h-3.5 text-slate-600" />}
+                      </div>
+                      <span className="flex-1 text-sm font-bold text-white truncate">{tool.name}</span>
+                      <ChevronDown className={`w-4 h-4 text-slate-500 flex-none transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="px-3 pb-3 border-t border-border-main/30">
+                        {state === 'loading' ? (
+                          <p className="text-[11px] text-slate-600 italic font-mono pt-3">Loading…</p>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-slate-500 font-mono pt-3 mb-2">
+                              <ListChecks className="w-3 h-3" /> Setup steps
+                            </div>
+                            <ol className="space-y-2">
+                              {(() => {
+                                let steps: string[] = [];
+                                try { steps = JSON.parse((state as IntegrationDetail).setupSteps || '[]'); } catch { steps = []; }
+                                return steps.map((s, i) => (
+                                  <li key={i} className="text-[11px] text-slate-400 font-mono leading-relaxed flex gap-2">
+                                    <span className="text-accent-blue flex-none">{i + 1}.</span>
+                                    <span>{s.replace('YOUR_KEY', keyForDisplay)}</span>
+                                  </li>
+                                ));
+                              })()}
+                            </ol>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Documentation Card */}
         <div className="glass-card rounded-lg p-8 shadow-xl">

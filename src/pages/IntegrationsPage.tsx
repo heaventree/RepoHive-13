@@ -1,18 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPage';
 import { Link } from 'react-router-dom';
-import { Key, Terminal, Code2, Bot, Workflow, Shield } from 'lucide-react';
+import { Key, Terminal, Bot, Workflow, Shield, Plug, ArrowRight } from 'lucide-react';
 
-const TOOLS = [
-  { name: 'Cursor',       blurb: 'Bring your curated repo brain into the AI IDE that&apos;s rewriting how you code.' },
-  { name: 'Claude Code',  blurb: 'Give Claude a list of repos it&apos;s allowed to recommend — pre-vetted by you.' },
-  { name: 'Replit',       blurb: 'Replit Agent can query your library to scaffold from components you already trust.' },
-  { name: 'Lovable',      blurb: 'Lovable builds faster when it can read from a private library of proven primitives.' },
-  { name: 'Bolt.new',     blurb: 'Wire RepoHive in as a knowledge source so generated apps reach for the right stack.' },
-  { name: 'GitHub Copilot', blurb: 'Use RepoHive as the "ground truth" your prompts can reference by name.' },
-];
+interface IntegrationListItem {
+  slug: string;
+  name: string;
+  domain: string | null;
+  category: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  setupType: 'generic' | 'custom';
+}
+
+function ToolCard({ tool }: { tool: IntegrationListItem }) {
+  return (
+    <Link
+      to={`/integrations/${tool.slug}`}
+      className="rounded-md p-6 flex flex-col gap-3 transition-all hover:border-white/20 group"
+      style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-none overflow-hidden">
+          {tool.logoUrl ? <img src={tool.logoUrl} alt={tool.name} className="w-full h-full object-contain p-1.5" /> : <Plug className="w-4 h-4 text-slate-500" />}
+        </div>
+        <h3 className="font-mono font-bold text-white text-base flex-1">{tool.name}</h3>
+        {tool.setupType === 'custom' && (
+          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded text-purple-300 bg-purple-500/10 border border-purple-500/30 flex-none">Guided</span>
+        )}
+      </div>
+      <p className="text-sm text-slate-400 leading-relaxed flex-1">{tool.tagline}</p>
+      <span className="text-xs font-mono text-accent-blue flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        See setup steps <ArrowRight className="w-3 h-3" />
+      </span>
+    </Link>
+  );
+}
 
 export function IntegrationsPage() {
+  const [tools, setTools] = useState<IntegrationListItem[]>([]);
+
+  useEffect(() => {
+    fetch('/api/integrations').then(r => r.json()).then(d => { if (Array.isArray(d)) setTools(d); }).catch(() => {});
+  }, []);
+
+  const categories = Array.from(new Set(tools.map(t => t.category)));
+
   return (
     <MarketingPage
       kicker="Integrations"
@@ -56,21 +89,18 @@ export function IntegrationsPage() {
       </div>
 
       {/* Tool cards */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">Works with the agents you already use</h2>
-      <div className="grid md:grid-cols-2 gap-6 mb-16">
-        {TOOLS.map(t => (
-          <div
-            key={t.name}
-            className="rounded-md p-6"
-            style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <h3 className="font-mono font-bold text-white text-lg mb-2 flex items-center gap-2">
-              <Code2 className="w-4 h-4 text-blue-400" /> {t.name}
-            </h3>
-            <p className="text-sm text-slate-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.blurb }} />
+      <h2 className="font-mono font-black text-white text-2xl mb-2 text-center">Works with the agents you already use</h2>
+      <p className="text-sm text-slate-500 text-center mb-10 max-w-xl mx-auto">
+        {tools.length > 0 ? `${tools.length} connectors and counting — click any tool for exact setup steps.` : 'Loading the connector directory…'}
+      </p>
+      {categories.map(cat => (
+        <div key={cat} className="mb-14">
+          <h3 className="font-mono font-bold text-blue-300 text-sm uppercase tracking-widest mb-5">{cat}</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tools.filter(t => t.category === cat).map(t => <React.Fragment key={t.slug}><ToolCard tool={t} /></React.Fragment>)}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
 
       {/* Endpoint example */}
       <div
