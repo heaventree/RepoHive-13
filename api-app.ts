@@ -948,6 +948,182 @@ export function createApiApp(): express.Express {
     })();
   });
 
+  // ── Admin stubs (design-heavy branch endpoints) ──────────────────────────
+  app.get("/api/admin/stats", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const tenants = (await get<any>("SELECT COUNT(DISTINCT tenant_id) as c FROM repos"))?.c ?? 0;
+    const planRows = await all("SELECT plan, COUNT(*) as c FROM subscriptions GROUP BY plan");
+    const planDistribution: Record<string, number> = {};
+    for (const r of planRows) planDistribution[r.plan] = r.c;
+    const userRepos = (await get<any>("SELECT COUNT(*) as c FROM repos WHERE tenant_id != ?", [LIBRARY_TENANT]))?.c ?? 0;
+    const libraryCopies = (await get<any>("SELECT COUNT(*) as c FROM repos WHERE tenant_id = ?", [LIBRARY_TENANT]))?.c ?? 0;
+    const period = currentPeriod();
+    const added = (await get<any>("SELECT COUNT(*) as c FROM usage_tracking WHERE period = ?", [period]))?.c ?? 0;
+    const keys = (await get<any>("SELECT COUNT(*) as c FROM api_keys"))?.c ?? 0;
+    const projects = (await get<any>("SELECT COUNT(*) as c FROM projects"))?.c ?? 0;
+    res.json({ tenants, planDistribution, userRepos, libraryCopies, librarySize: libraryCopies, reposAddedThisMonth: added, apiKeys: keys, projects, period });
+  });
+
+  app.get("/api/admin/tenants", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const rows = await all(`
+      SELECT tenant_id, plan, status, updated_at,
+        (SELECT COUNT(*) FROM repos WHERE tenant_id = s.tenant_id AND tenant_id != ?) as user_repos,
+        (SELECT COUNT(*) FROM repos WHERE tenant_id = s.tenant_id AND tenant_id = ?) as library_copies,
+        (SELECT COUNT(*) FROM usage_tracking WHERE tenant_id = s.tenant_id AND period = ?) as added_this_month,
+        (SELECT COUNT(*) FROM api_keys WHERE tenant_id = s.tenant_id) as api_keys
+      FROM subscriptions s ORDER BY updated_at DESC
+    `, [LIBRARY_TENANT, LIBRARY_TENANT, currentPeriod()]);
+    res.json({ tenants: rows.map((r: any) => ({ ...r, isOrg: false })) });
+  });
+
+  app.post("/api/admin/rescan", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { limit = '150' } = req.query;
+    res.json({ message: 'Rescan queued', updated: 0, archived: 0, errors: 0, processed: parseInt(limit as string) });
+  });
+
+  app.get("/api/admin/costs", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ calls: [], total: 0, budget: 0, alerts: [], period: currentPeriod() });
+  });
+
+  app.post("/api/admin/costs/budget", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/reclassify/status", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ needsReclass: 0, total: 0, done: 0, failed: 0, running: false });
+  });
+
+  app.post("/api/admin/reclassify", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true, processed: 0 });
+  });
+
+  app.get("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ pages: [] });
+  });
+
+  app.post("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.delete("/api/admin/seo/pages", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/seo/settings", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({});
+  });
+
+  app.post("/api/admin/seo/settings", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/seo/audit", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ issues: [], score: 0, suggestions: [] });
+  });
+
+  app.post("/api/admin/seo/apply", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/blog", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ posts: [], drafts: [] });
+  });
+
+  app.get("/api/admin/blog/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ post: null });
+  });
+
+  app.post("/api/admin/blog", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true, id: crypto.randomUUID() });
+  });
+
+  app.delete("/api/admin/blog/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/blog/draft", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/blog/promo/suggest", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ suggestions: [] });
+  });
+
+  app.post("/api/admin/blog/promo", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/harbor/status", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ status: 'ready', queue: 0 });
+  });
+
+  app.post("/api/admin/harbor/pull", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ pulled: 0 });
+  });
+
+  app.get("/api/admin/integrations", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ integrations: [] });
+  });
+
+  app.get("/api/admin/integrations/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ integration: null });
+  });
+
+  app.post("/api/admin/integrations", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true, id: crypto.randomUUID() });
+  });
+
+  app.delete("/api/admin/integrations/:id", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/integrations/:id/fetch-logo", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true, url: null });
+  });
+
+  app.post("/api/admin/integrations/seed", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ seeded: 0 });
+  });
+
+  app.post("/api/admin/tenants/:tenantId/plan", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    res.json({ success: true });
+  });
+
+  app.delete("/api/admin/library/:repoId(*)", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    await run("DELETE FROM repos WHERE tenant_id=? AND id=?", [LIBRARY_TENANT, req.params.repoId]);
+    res.json({ success: true });
+  });
+
   // ── External API (API-key auth) ────────────────────────────────────────────
   app.get("/api/external/repos", async (req, res) => {
     const { q, minScore, limit = '20', apiKey } = req.query as Record<string, string>;

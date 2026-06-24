@@ -7,8 +7,10 @@ import { ConfigPortal } from './components/ConfigPortal';
 import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
+import { SettingsHub } from './components/SettingsHub';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame, Crown } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/react';
 import { AUTH_ENABLED } from './auth';
 
@@ -39,14 +41,10 @@ export default function App() {
         return <Ingest onComplete={() => setActiveTab('library')} />;
       case 'projects':
         return <ProjectWorkspace setActiveTab={setActiveTab} setSelectedRepo={setSelectedRepo} />;
-      case 'monitoring':
-        return <Monitoring />;
-      case 'policies':
-        return <Policies />;
-      case 'config':
-        return <ConfigPortal onBack={() => setActiveTab('library')} />;
-      case 'api':
-        return <ApiConfig />;
+      case 'settings':
+        return <SettingsHub />;
+      case 'admin':
+        return <AdminDashboard />;
       case 'appkillers':
         return <Library
           onViewRepo={setSelectedRepo}
@@ -100,10 +98,7 @@ export default function App() {
           {[
             { id: 'library',    icon: LayoutGrid,  label: 'Library' },
             { id: 'projects',   icon: Rocket,       label: 'Projects' },
-            { id: 'monitoring', icon: Activity,     label: 'Monitoring' },
-            { id: 'policies',   icon: ShieldCheck,  label: 'Policies' },
-            { id: 'api',        icon: Globe,        label: 'API' },
-            { id: 'config',     icon: Settings,     label: 'System Config' },
+            { id: 'settings',   icon: Settings,     label: 'Settings' },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -133,6 +128,22 @@ export default function App() {
           >
             <Flame className="w-3.5 h-3.5" />
             App Killers
+          </button>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
+
+          {/* Admin */}
+          <button
+            onClick={() => handleTabChange('admin')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 ${
+              activeTab === 'admin'
+                ? 'bg-purple-500/15 text-purple-300 border border-purple-500/40'
+                : 'text-purple-500/60 border border-purple-500/20 hover:bg-purple-500/10 hover:text-purple-400 hover:border-purple-500/40'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5" />
+            Admin
           </button>
         </nav>
 

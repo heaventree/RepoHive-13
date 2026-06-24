@@ -41,7 +41,10 @@ export function MarketingNav() {
         <div className="hidden md:flex items-center gap-1">
           {[
             { to: '/', label: 'Home' },
+            { to: '/how-it-works', label: 'How It Works' },
+            { to: '/projects', label: 'Projects' },
             { to: '/pricing', label: 'Pricing' },
+            { to: '/integrations', label: 'Integrations' },
           ].map(({ to, label }) => (
             <Link
               key={to}

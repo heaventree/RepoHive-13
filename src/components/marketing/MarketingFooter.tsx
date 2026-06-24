@@ -50,9 +50,14 @@ export function MarketingFooter() {
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Legal</div>
-          {['Privacy Policy', 'Terms of Service', 'System Status', 'API Docs'].map(l => (
+          {[
+            { l: 'Privacy Policy', to: '/privacy' },
+            { l: 'Terms of Service', to: '/terms' },
+            { l: 'Acceptable Use', to: '/acceptable-use' },
+            { l: 'Imprint', to: '/imprint' },
+          ].map(({ l, to }) => (
             <div key={l}>
-              <a href="#" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</a>
+              <Link to={to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</Link>
             </div>
           ))}
         </div>
