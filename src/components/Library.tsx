@@ -218,8 +218,6 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         else if (sortBy === 'stars') comparison = a.stars - b.stars;
         else if (sortBy === 'forks') comparison = (a.forks || 0) - (b.forks || 0);
         else if (sortBy === 'name') comparison = a.id.localeCompare(b.id);
-        else if (sortBy === 'language') comparison = (a.language || '').localeCompare(b.language || '');
-        else if (sortBy === 'license') comparison = (a.license || '').localeCompare(b.license || '');
 
         return sortOrder === 'asc' ? comparison : -comparison;
       });
@@ -368,8 +366,6 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
               <option value="stars" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Stars</option>
               <option value="forks" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Forks</option>
               <option value="name" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Name</option>
-              <option value="language" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Language</option>
-              <option value="license" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>License</option>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -723,7 +719,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         <button
                           onClick={(e) => { e.stopPropagation(); toggleFavourite(repo.id); }}
                           title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
-                          className={`p-1.5 rounded transition-all ${favouriteIds.has(repo.id) ? 'text-rose-400 hover:bg-rose-500/10' : 'text-slate-500 hover:text-rose-300 hover:bg-slate-800'}`}
+                          className={`p-1.5 rounded transition-all ${favouriteIds.has(repo.id) ? 'text-rose-400 hover:bg-rose-500/10' : 'text-rose-300/70 hover:text-rose-300 hover:bg-rose-500/10'}`}
                         >
                           <Heart className={`w-5 h-5 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
                         </button>
@@ -763,8 +759,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                     title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
                     className={`absolute top-2 right-2 z-10 p-1.5 rounded-full backdrop-blur-sm transition-all ${
                       favouriteIds.has(repo.id)
-                        ? 'bg-rose-500/20 text-rose-400 hover:bg-rose-500/30'
-                        : 'bg-black/40 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-rose-300'
+                        ? 'bg-rose-500/25 text-rose-300 hover:bg-rose-500/40'
+                        : 'bg-black/50 text-rose-300/80 hover:bg-rose-500/20 hover:text-rose-300'
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
