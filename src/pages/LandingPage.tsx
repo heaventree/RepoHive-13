@@ -4,6 +4,7 @@ import {
   ArrowRight, Search, Activity, Box, Database,
   BookOpen, ShieldAlert, Check, Terminal,
 } from 'lucide-react';
+import { MarketingNav } from '../components/marketing/MarketingNav';
 
 const ACCENT = '#0000FF';
 const HAIRLINE = '#E5E5E5';
@@ -45,31 +46,7 @@ export function LandingPage() {
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       {/* ── Nav ── */}
-      <nav
-        className="flex items-center justify-between px-6 py-4 bg-white sticky top-0 z-50 border-b"
-        style={{ borderColor: HAIRLINE }}
-      >
-        <Link to="/" className="flex items-center gap-2">
-          <Terminal className="w-5 h-5" />
-          <span className="font-bold text-lg tracking-tight">RepoHive</span>
-        </Link>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
-          <a href="#how" className="hover:text-black transition-colors">How it works</a>
-          <a href="#features" className="hover:text-black transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-black transition-colors">Pricing</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/sign-in" className="text-sm font-medium hover:text-[#0000FF] transition-colors hidden md:block">
-            Log in
-          </Link>
-          <Link
-            to="/sign-up"
-            className="text-sm font-bold bg-black text-white px-4 py-2 rounded hover:bg-[#0000FF] transition-colors"
-          >
-            Start Free
-          </Link>
-        </div>
-      </nav>
+      <MarketingNav />
 
       {/* ── Hero ── */}
       <header
