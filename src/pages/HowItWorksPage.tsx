@@ -22,21 +22,21 @@ export function HowItWorksPage() {
       <div className="grid md:grid-cols-2 gap-6 mb-20">
         <FeatureCard
           icon={Boxes}
-          title="1 — Add repos to your library"
+          title="1 — Paste repos in bulk"
           body={
             <>
-              <p>Paste a GitHub URL, drop in a list, or bulk-import. We resolve canonical owner/name (no duplicates) and pull stars, forks, license, language, last-push date, and the README from the GitHub API.</p>
-              <p>Public repos only on Free; Solo and Studio also analyse private repos you have access to.</p>
+              <p>Drop a single GitHub URL or paste a list of a thousand. We resolve canonical owner/name (no duplicates) and pull stars, forks, license, language, last-push date, and the README from the GitHub API.</p>
+              <p>Public repos on Free; Solo and Studio also analyse private repos you have access to.</p>
             </>
           }
         />
         <FeatureCard
           icon={Sparkles}
-          title="2 — AI analysis runs automatically"
+          title="2 — AI analyses, scores & classifies"
           body={
             <>
-              <p>Every repo gets categorised (Frontend, Backend, AI/ML, DevOps, Database, Tooling, Mobile, Security, General), tagged, summarised in plain English, and assigned a quality score. We also flag App Killers — open-source replacements for known paid SaaS products.</p>
-              <p>Cost stays predictable: we re-analyse on real change signals, not on a schedule.</p>
+              <p>Every repo gets a plain-English synopsis, a category, and a health score built from stars, forks and commit activity — so active and stale repos are obvious at a glance. The license is captured too.</p>
+              <p>Then it&apos;s labeled: <strong>App Killer</strong> when the AI can match it to a specific paid product it replaces, or <strong>White-label SaaS Ready</strong> when it&apos;s strong but maps to no single competitor.</p>
             </>
           }
         />
@@ -89,8 +89,8 @@ export function HowItWorksPage() {
         />
         <FeatureCard
           icon={BookOpen}
-          title="App Killers library"
-          body={<p>A hand-curated set of production-grade open-source alternatives to expensive SaaS, included on every paid plan.</p>}
+          title="App Killer classification"
+          body={<p>Every repo is auto-labeled — App Killer (replaces a specific paid tool) or white-label SaaS-ready — so you instantly see what each one is worth.</p>}
         />
         <FeatureCard
           icon={Zap}
@@ -105,7 +105,7 @@ export function HowItWorksPage() {
           to="/sign-up"
           className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#FF5C00] transition-colors"
         >
-          Start free — 25 repos
+          Start free — 100 repos
         </Link>
         <p className="text-xs text-gray-500 mt-3 font-mono">No credit card. Full AI analysis on every repo.</p>
       </div>

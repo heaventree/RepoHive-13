@@ -1,43 +1,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, Search, Activity, Box, Database,
-  BookOpen, ShieldAlert, Check, Terminal,
+  ArrowRight, Search, Activity, Box, Flame,
+  ShieldAlert, Check, Terminal,
 } from 'lucide-react';
 import { MarketingNav } from '../components/marketing/MarketingNav';
+import { IngestPipeline } from '../components/marketing/IngestPipeline';
 
 const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
-const DEMO_ROWS = [
-  { repo: 'supabase/auth-ui',    cat: 'Authentication',    health: 'Excellent', score: 98, color: ACCENT },
-  { repo: 'clerk/javascript',    cat: 'Authentication',    health: 'Excellent', score: 95, color: ACCENT },
-  { repo: 'drizzle-orm/drizzle', cat: 'Database ORM',      health: 'Good',      score: 88, color: 'black' },
-  { repo: 'shadcn-ui/ui',        cat: 'Component Library', health: 'Excellent', score: 99, color: ACCENT },
-];
-
 const PROBLEMS = [
   { icon: <Box className="w-5 h-5" />,        dark: false, title: 'The Black Hole',  desc: "You've saved hundreds of great repos across browser bookmarks and GitHub stars. You never find them when you need them." },
   { icon: <ShieldAlert className="w-5 h-5" />, dark: true,  title: 'Silent Decay',    desc: "Archived, abandoned, license-changed. You don't know until you've already built your foundation on a dead project." },
-  { icon: <Search className="w-5 h-5" />,      dark: false, title: 'Keyword Hell',    desc: "Searching by repo name doesn't work when you're looking for a solution. You need to search by intent, not exact match." },
+  { icon: <Search className="w-5 h-5" />,      dark: false, title: 'Keyword Hell',    desc: "Searching by repo name doesn't work when you're looking for a solution. You need to search by what it does, not exact match." },
 ];
 
 const STEPS = [
-  { n: '01', title: 'Add repos',       desc: 'Paste any GitHub URL. Single repo, org, or a bulk list of 1000. Ingested in minutes.', accent: false },
-  { n: '02', title: 'AI Analysis',     desc: 'DeepSeek reads every repo: tech stack, SaaS readiness, maintenance health. Updated weekly.', accent: false },
-  { n: '03', title: 'Search & Build',  desc: 'Ask in plain English. Get staleness alerts. Pull your library into your IDE via API.', accent: true },
+  { n: '01', title: 'Paste in bulk',     desc: 'Drop one GitHub URL or paste a thousand. RepoHive queues every repo and pulls stars, forks, license, language and last-push from the GitHub API.', accent: false },
+  { n: '02', title: 'Analyze & score',   desc: 'The AI writes a plain-English synopsis and scores each repo on stars, forks and commit activity — so you instantly see what is active and what has gone stale.', accent: false },
+  { n: '03', title: 'Classify & search', desc: 'Every repo gets auto-labeled — App Killer or white-label SaaS-ready — then made searchable by what it does. Ask in plain English, get the right repo.', accent: true },
 ];
 
 const FEATURES = [
-  { title: 'Semantic Search',     desc: 'Plain-English search across YOUR curated library. Vector embeddings, <40ms response time.', icon: <Search className="w-5 h-5" /> },
-  { title: 'Staleness Alerts',    desc: 'Know the minute a dependency is archived, abandoned, license-changed, or has a security flag.', icon: <Activity className="w-5 h-5" /> },
-  { title: 'App Killers Library', desc: '370+ pre-loaded OSS alternatives to expensive SaaS tools, ready to deploy.', icon: <Database className="w-5 h-5" /> },
-  { title: 'Team Workspaces',     desc: 'Shared repo library + AI-curated project recommendations for the whole studio.', icon: <Box className="w-5 h-5" /> },
+  { title: 'Semantic search',          desc: 'Plain-English search across YOUR library. Vector embeddings, sub-40ms response. Find a repo by what it does, not what it is called.', icon: <Search className="w-5 h-5" /> },
+  { title: 'Health & staleness scores', desc: 'Every repo scored on stars, forks and update cadence. Know the minute something is archived, abandoned or license-changed.', icon: <Activity className="w-5 h-5" /> },
+  { title: 'App Killer classification', desc: 'The AI flags repos that can replace a paid tool you are paying for — tagged with the product they kill, like "replaces Calendly".', icon: <Flame className="w-5 h-5" /> },
+  { title: 'Projects & team workspaces', desc: 'Brief a project, get ranked repo recommendations from your library. Share the shortlist with up to 25 teammates.', icon: <Box className="w-5 h-5" /> },
 ];
 
 const INTEGRATIONS = ['Replit', 'Bolt', 'Lovable', 'Base44', 'Claude Code', 'Cursor'];
 
-const MARQUEE = ['374+ repos analysed', '3,072 vector dimensions', '<40ms search latency', '6 IDE integrations'];
+const MARQUEE = ['1,200+ repos analyzed', 'App Killer vs SaaS-ready', '3,072 vector dimensions', '<40ms search latency', '6 IDE integrations'];
 
 export function LandingPage() {
   return (
@@ -58,13 +52,16 @@ export function LandingPage() {
           style={{ borderColor: HAIRLINE }}
         >
           <span className="w-2 h-2 bg-[#FF5C00] rounded-full animate-pulse" />
-          Now indexing 374+ Repos
+          1,200+ repos analyzed
         </div>
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[1.05] max-w-5xl mb-6">
-          All your repos.<br />Under your control.
+          All your repos.<br />
+          <span style={{ color: ACCENT }}>Scored, classified, searchable.</span>
         </h1>
         <p className="text-lg md:text-xl text-gray-500 max-w-2xl mb-10 font-medium">
-          Paste any GitHub URL. Get AI-analyzed cards with scores, tags, and plain-English semantic search across your whole library.
+          Paste hundreds of GitHub URLs at once. RepoHive analyzes every one, writes a synopsis, scores it on
+          stars, forks and activity, then labels it — App Killer or white-label SaaS-ready — in a library you
+          can search in plain English.
         </p>
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <Link
@@ -77,7 +74,7 @@ export function LandingPage() {
             href="#demo"
             className="flex items-center gap-2 text-base font-bold bg-white text-black border border-black px-6 py-3.5 rounded hover:bg-gray-50 transition-colors"
           >
-            View Demo
+            See it run
           </a>
         </div>
       </header>
@@ -96,64 +93,19 @@ export function LandingPage() {
         </div>
       </div>
 
-      {/* ── Product mockup ── */}
+      {/* ── Live ingestion pipeline ── */}
       <section
         id="demo"
-        className="p-6 md:p-12 bg-white flex justify-center border-b scroll-mt-20"
+        className="p-6 md:p-12 bg-white flex flex-col items-center border-b scroll-mt-20"
         style={{ borderColor: HAIRLINE }}
       >
-        <div className="w-full max-w-5xl border border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-md overflow-hidden bg-white">
-          <div className="flex items-center px-4 py-3 bg-gray-50 border-b" style={{ borderColor: HAIRLINE }}>
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full border border-black" />
-              <div className="w-3 h-3 rounded-full border border-black" />
-              <div className="w-3 h-3 rounded-full border border-black" />
-            </div>
-            <div className="mx-auto text-xs font-mono text-gray-400">repohive / library</div>
-          </div>
-          <div className="p-4 md:p-6 grid gap-4">
-            <div
-              className="flex items-center gap-3 p-3 rounded focus-within:border-black transition-colors bg-white border"
-              style={{ borderColor: HAIRLINE }}
-            >
-              <Search className="w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                aria-label="Search repositories by intent"
-                placeholder="Search by intent, e.g. 'auth for react'..."
-                className="w-full text-sm outline-none font-medium placeholder-gray-400 bg-transparent"
-              />
-            </div>
-
-            <div className="flex flex-col border border-gray-200 rounded divide-y divide-gray-200 overflow-x-auto">
-              <div className="flex items-center justify-between p-4 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider min-w-[600px]">
-                <div className="w-1/3">Repository</div>
-                <div className="w-1/4">Category</div>
-                <div className="w-1/4">Health</div>
-                <div className="w-[100px] text-right">Score</div>
-              </div>
-              {DEMO_ROWS.map((item) => (
-                <div
-                  key={item.repo}
-                  className="flex items-center justify-between p-4 text-sm font-medium hover:bg-gray-50 min-w-[600px] transition-colors"
-                >
-                  <div className="w-1/3 flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-gray-400" />
-                    {item.repo}
-                  </div>
-                  <div className="w-1/4 text-gray-500">{item.cat}</div>
-                  <div className="w-1/4 flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    {item.health}
-                  </div>
-                  <div className="w-[100px] text-right font-mono font-bold" style={{ color: item.color }}>
-                    {item.score}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="text-center mb-10 max-w-2xl">
+          <p className="text-xs font-mono uppercase tracking-widest mb-3" style={{ color: ACCENT }}>Watch a repo go through the engine</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+            Ingest → analyze → score → classify.
+          </h2>
         </div>
+        <IngestPipeline />
       </section>
 
       {/* ── Problem ── */}
@@ -257,7 +209,7 @@ export function LandingPage() {
               <div className="text-4xl font-bold mb-8">$0<span className="text-lg text-gray-400 font-medium">/mo</span></div>
               <ul className="space-y-3 mb-8 flex-1">
                 <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-gray-400" /> 100 repos</li>
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-gray-400" /> Basic AI analysis</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-gray-400" /> Full AI analysis & scoring</li>
               </ul>
               <Link
                 to="/sign-up"
@@ -274,11 +226,11 @@ export function LandingPage() {
               </div>
               <h3 className="text-xl font-bold mb-1">Solo</h3>
               <p className="text-gray-500 text-sm mb-6">For the serious builder.</p>
-              <div className="text-4xl font-bold mb-8">$12<span className="text-lg text-gray-400 font-medium">/mo</span></div>
+              <div className="text-4xl font-bold mb-8">$19<span className="text-lg text-gray-400 font-medium">/mo</span></div>
               <ul className="space-y-3 mb-8 flex-1">
                 <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> 500 repos</li>
                 <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> 1 API key for IDEs</li>
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> App Killers library</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> Seed App Killer library</li>
                 <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> Priority search latency</li>
               </ul>
               <Link

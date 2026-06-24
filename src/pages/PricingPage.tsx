@@ -18,11 +18,11 @@ const PLANS = [
     desc: 'For devs who want to try RepoHive before committing.',
     note: null,
     features: [
-      { label: '25 repos in your library',                     included: true },
+      { label: '100 repos in your library',                    included: true },
       { label: 'AI analysis on all your repos',                included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public repos only',                            included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: false },
+      { label: 'Seed App Killer library to start',             included: false },
       { label: 'Staleness monitoring & alerts',                included: false },
       { label: 'API key for IDE integration',                  included: false },
       { label: 'Project workspaces',                           included: false },
@@ -37,13 +37,13 @@ const PLANS = [
     ctaStyle: 'primary' as const,
     featured: true,
     desc: 'For individual devs and designers with serious repo habits.',
-    note: 'Includes ~$1–2/month in AI costs per 1,000 repos analysed.',
+    note: 'Includes ~$1–2/month in AI costs per 500 repos analysed.',
     features: [
-      { label: '1,000 repos in your library',                  included: true },
+      { label: '500 repos in your library',                    included: true },
       { label: 'AI analysis + weekly re-analysis',             included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Seed App Killer library to start',             included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '1 API key for IDE integration',                included: true },
       { label: 'Project workspaces',                           included: true },
@@ -59,11 +59,11 @@ const PLANS = [
     desc: 'For dev teams sharing a curated repo intelligence layer.',
     note: 'Up to 25 seats. Shared library pool, each member can add repos.',
     features: [
-      { label: '10,000 repos shared library',                  included: true },
+      { label: '5,000 repos shared library',                   included: true },
       { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: 'Seed App Killer library to start',             included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '25 API keys (one per seat)',                   included: true },
       { label: 'Project workspaces + team collaboration',      included: true },
@@ -75,11 +75,11 @@ const PLANS = [
 const FAQS = [
   {
     q: 'Is there really no credit card for the free plan?',
-    a: 'Correct — Explorer is free indefinitely. 25 repos, full AI analysis, no time limit.',
+    a: 'Correct — Explorer is free indefinitely. 100 repos, full AI analysis, no time limit.',
   },
   {
     q: 'What counts as a "repo" in my library?',
-    a: 'Any GitHub repository you add via URL. Pre-loaded App Killers repos don\'t count against your limit.',
+    a: 'Any GitHub repository you add via URL. Your plan limit is simply the total number of repos in your library.',
   },
   {
     q: 'What does "weekly re-analysis" mean?',
@@ -304,7 +304,7 @@ export function PricingPage() {
               </div>
               <div>
                 <div className="text-sm font-bold text-black">Infrastructure Operational</div>
-                <div className="text-xs text-gray-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
+                <div className="text-xs text-gray-500 mt-0.5">All nodes nominal. 1,200 repos indexed. API latency avg 40ms.</div>
               </div>
             </div>
             <div
