@@ -4,7 +4,7 @@ import { Check, X, Zap } from 'lucide-react';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 const PLANS = [
@@ -165,13 +165,13 @@ export function PricingPage() {
                   key={plan.tier}
                   className={`relative flex flex-col rounded-md p-10 bg-white ${
                     isFeatured
-                      ? 'border-2 border-[#0000FF] shadow-[8px_8px_0px_0px_rgba(0,0,255,0.1)]'
+                      ? 'border-2 border-[#FF5C00] shadow-[8px_8px_0px_0px_rgba(255,92,0,0.1)]'
                       : 'border border-black'
                   }`}
                 >
                   {isFeatured && (
                     <div
-                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full whitespace-nowrap bg-[#0000FF]"
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full whitespace-nowrap bg-[#FF5C00]"
                     >
                       <span className="font-mono text-[10px] font-black tracking-widest uppercase text-white">
                         Most Popular
@@ -229,7 +229,7 @@ export function PricingPage() {
                     to="/sign-up"
                     className={`w-full text-center py-4 rounded font-mono text-sm font-bold tracking-widest uppercase transition-colors ${
                       plan.ctaStyle === 'primary'
-                        ? 'bg-black text-white hover:bg-[#0000FF]'
+                        ? 'bg-black text-white hover:bg-[#FF5C00]'
                         : 'bg-white text-black border border-black hover:bg-gray-50'
                     }`}
                   >

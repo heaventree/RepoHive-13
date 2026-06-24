@@ -5,7 +5,7 @@ export function PrivacyPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Privacy <span style={{ color: '#0000FF' }}>Policy</span></>}
+      title={<>Privacy <span style={{ color: '#FF5C00' }}>Policy</span></>}
       subtitle="How we handle your data, your repos, and your trust."
     >
       <div className="prose-blog max-w-3xl mx-auto text-gray-600">

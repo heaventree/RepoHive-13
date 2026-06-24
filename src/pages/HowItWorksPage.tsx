@@ -3,7 +3,7 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Search, Sparkles, Activity, Boxes, Zap, BookOpen } from 'lucide-react';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 export function HowItWorksPage() {
@@ -103,7 +103,7 @@ export function HowItWorksPage() {
       <div className="text-center pt-8">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#FF5C00] transition-colors"
         >
           Start free — 25 repos
         </Link>

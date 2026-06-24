@@ -4,7 +4,7 @@ import { Eye, EyeOff, Github, Terminal, ArrowRight } from 'lucide-react';
 
 interface Props { mode?: 'signin' | 'signup' }
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 export function SignInPage({ mode = 'signin' }: Props) {
@@ -14,7 +14,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
 
   return (
     <div
-      className="min-h-screen flex bg-[#FAFAFA] text-black selection:bg-[#0000FF] selection:text-white"
+      className="min-h-screen flex bg-[#FAFAFA] text-black selection:bg-[#FF5C00] selection:text-white"
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       {/* ── LEFT PANEL: Brand ── */}
@@ -44,7 +44,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
             className="flex items-center gap-2 px-3 py-1 rounded-full border"
             style={{ borderColor: HAIRLINE }}
           >
-            <span className="w-2 h-2 rounded-full bg-[#0000FF] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[#FF5C00] animate-pulse" />
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">
               All systems operational
             </span>
@@ -122,7 +122,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
                   Password
                 </label>
                 {!isSignup && (
-                  <a href="#" className="text-[10px] font-mono font-bold uppercase tracking-widest transition-colors hover:text-[#0000FF]" style={{ color: ACCENT }}>
+                  <a href="#" className="text-[10px] font-mono font-bold uppercase tracking-widest transition-colors hover:text-[#FF5C00]" style={{ color: ACCENT }}>
                     Forgot?
                   </a>
                 )}
@@ -146,7 +146,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
 
             {!isSignup && (
               <div className="flex items-center gap-3 py-2">
-                <input id="remember" type="checkbox" className="w-4 h-4 rounded accent-[#0000FF]" />
+                <input id="remember" type="checkbox" className="w-4 h-4 rounded accent-[#FF5C00]" />
                 <label htmlFor="remember" className="text-xs text-gray-500 cursor-pointer">
                   Keep me signed in
                 </label>
@@ -155,7 +155,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded font-bold text-sm bg-black text-white hover:bg-[#0000FF] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded font-bold text-sm bg-black text-white hover:bg-[#FF5C00] transition-colors flex items-center justify-center gap-2"
             >
               {isSignup ? 'Create account' : 'Sign in'} <ArrowRight className="w-4 h-4" />
             </button>

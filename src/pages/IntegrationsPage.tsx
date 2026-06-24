@@ -3,7 +3,7 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Key, Terminal, Bot, Workflow, Shield, Plug, ArrowRight } from 'lucide-react';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 interface IntegrationListItem {
@@ -29,11 +29,11 @@ function ToolCard({ tool }: { tool: IntegrationListItem }) {
         </div>
         <h3 className="font-bold text-black text-base flex-1 tracking-tight">{tool.name}</h3>
         {tool.setupType === 'custom' && (
-          <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded text-[#0000FF] bg-gray-100 border flex-none" style={{ borderColor: HAIRLINE }}>Guided</span>
+          <span className="font-mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded text-[#FF5C00] bg-gray-100 border flex-none" style={{ borderColor: HAIRLINE }}>Guided</span>
         )}
       </div>
       <p className="text-sm text-gray-600 leading-relaxed flex-1">{tool.tagline}</p>
-      <span className="text-xs font-mono text-[#0000FF] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="text-xs font-mono text-[#FF5C00] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         See setup steps <ArrowRight className="w-3 h-3" />
       </span>
     </Link>
@@ -66,21 +66,21 @@ export function IntegrationsPage() {
         <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Key className="w-4 h-4 text-[#0000FF]" />
+              <Key className="w-4 h-4 text-[#FF5C00]" />
               <span className="text-black font-bold">1. Generate a key</span>
             </div>
-            <p>In RepoHive → API → Generate. You get an <code className="font-mono text-[#0000FF]">rh_…</code> key. Shown once; copy it.</p>
+            <p>In RepoHive → API → Generate. You get an <code className="font-mono text-[#FF5C00]">rh_…</code> key. Shown once; copy it.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Terminal className="w-4 h-4 text-[#0000FF]" />
+              <Terminal className="w-4 h-4 text-[#FF5C00]" />
               <span className="text-black font-bold">2. Paste it into your tool</span>
             </div>
             <p>Every agent has a "custom HTTP source" or "knowledge connector" slot. Drop the key + endpoint URL in.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Bot className="w-4 h-4 text-[#0000FF]" />
+              <Bot className="w-4 h-4 text-[#FF5C00]" />
               <span className="text-black font-bold">3. Ask in plain English</span>
             </div>
             <p>"Use a self-hostable Slack alternative." The agent queries your library and builds with what&apos;s there.</p>
@@ -95,7 +95,7 @@ export function IntegrationsPage() {
       </p>
       {categories.map(cat => (
         <div key={cat} className="mb-14">
-          <h3 className="font-mono font-bold text-[#0000FF] text-sm uppercase tracking-widest mb-5">{cat}</h3>
+          <h3 className="font-mono font-bold text-[#FF5C00] text-sm uppercase tracking-widest mb-5">{cat}</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tools.filter(t => t.category === cat).map(t => <React.Fragment key={t.slug}><ToolCard tool={t} /></React.Fragment>)}
           </div>
@@ -105,7 +105,7 @@ export function IntegrationsPage() {
       {/* Endpoint example */}
       <div className="rounded-md p-8 mb-16 bg-white border" style={{ borderColor: HAIRLINE }}>
         <h2 className="font-mono font-bold text-black text-lg uppercase tracking-widest mb-3 flex items-center gap-2">
-          <Workflow className="w-5 h-5 text-[#0000FF]" /> What the API returns
+          <Workflow className="w-5 h-5 text-[#FF5C00]" /> What the API returns
         </h2>
         <p className="text-sm text-gray-600 mb-4">
           A simple JSON list with everything an agent needs to reason about a repo — owner/name, URL, AI summary, category, tags, score, and stars.
@@ -155,7 +155,7 @@ export function IntegrationsPage() {
       <div className="text-center mt-16">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded font-mono text-sm font-bold tracking-widest uppercase bg-black text-white transition-colors hover:bg-[#0000FF] active:scale-[0.98]"
+          className="inline-block px-8 py-4 rounded font-mono text-sm font-bold tracking-widest uppercase bg-black text-white transition-colors hover:bg-[#FF5C00] active:scale-[0.98]"
         >
           Get your API key
         </Link>

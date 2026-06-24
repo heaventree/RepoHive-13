@@ -112,11 +112,11 @@
 .prose-blog ul { list-style: disc; }
 .prose-blog ol { list-style: decimal; }
 .prose-blog li { margin-bottom: 0.5rem; }
-.prose-blog a { color: #0000FF; text-decoration: underline; text-underline-offset: 2px; }
+.prose-blog a { color: #FF5C00; text-decoration: underline; text-underline-offset: 2px; }
 .prose-blog a:hover { color: #0000cc; }
-.prose-blog code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.875em; background: #F5F5F5; border: 1px solid #E5E5E5; padding: 0.125rem 0.375rem; border-radius: 5px; color: #0000FF; }
+.prose-blog code { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.875em; background: #F5F5F5; border: 1px solid #E5E5E5; padding: 0.125rem 0.375rem; border-radius: 5px; color: #FF5C00; }
 .prose-blog pre { background: #FAFAFA; border: 1px solid #E5E5E5; border-radius: 5px; padding: 1rem; overflow-x: auto; margin: 1.5rem 0; }
 .prose-blog pre code { background: transparent; border: none; padding: 0; color: #000; font-size: 0.85em; }
-.prose-blog blockquote { border-left: 3px solid #0000FF; padding-left: 1rem; margin: 1.5rem 0; color: #6b7280; font-style: italic; }
+.prose-blog blockquote { border-left: 3px solid #FF5C00; padding-left: 1rem; margin: 1.5rem 0; color: #6b7280; font-style: italic; }
 .prose-blog strong { color: #000; font-weight: 700; }
 .prose-blog hr { border: none; border-top: 1px solid #E5E5E5; margin: 2.5rem 0; }

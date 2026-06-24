@@ -39,7 +39,7 @@ export const BlogIndexPage: React.FC = () => {
           <Link to="/" className="inline-flex items-center gap-1 text-xs font-mono text-gray-500 hover:text-black mb-6">
             <ArrowLeft className="w-3 h-3" /> Home
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#0000FF] mb-3">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#FF5C00] mb-3">
             <BookOpen className="w-4 h-4" /> Blog
           </div>
           <h1 className="text-4xl font-bold tracking-tight mb-3">Notes on open source</h1>
@@ -48,7 +48,7 @@ export const BlogIndexPage: React.FC = () => {
           </p>
 
           {loading ? (
-            <div className="flex justify-center py-12"><Loader className="w-6 h-6 text-[#0000FF] animate-spin" /></div>
+            <div className="flex justify-center py-12"><Loader className="w-6 h-6 text-[#FF5C00] animate-spin" /></div>
           ) : posts.length === 0 ? (
             <p className="text-sm text-gray-500 font-mono italic">No posts yet — check back soon.</p>
           ) : (
@@ -57,7 +57,7 @@ export const BlogIndexPage: React.FC = () => {
                 <Link
                   key={p.slug}
                   to={`/blog/${p.slug}`}
-                  className="block rounded-md p-6 bg-white border transition-colors group hover:border-[#0000FF]"
+                  className="block rounded-md p-6 bg-white border transition-colors group hover:border-[#FF5C00]"
                   style={{ borderColor: '#E5E5E5' }}
                 >
                   <div className="flex items-center gap-3 text-[11px] font-mono text-gray-500 mb-2">
@@ -65,9 +65,9 @@ export const BlogIndexPage: React.FC = () => {
                     {p.author && <span>· {p.author}</span>}
                     {p.tags && <span>· {p.tags.split(',').slice(0, 3).map(t => t.trim()).join(' · ')}</span>}
                   </div>
-                  <h2 className="text-xl font-bold text-black group-hover:text-[#0000FF] transition-colors mb-2">{p.title}</h2>
+                  <h2 className="text-xl font-bold text-black group-hover:text-[#FF5C00] transition-colors mb-2">{p.title}</h2>
                   {p.excerpt && <p className="text-sm text-gray-600 leading-relaxed">{p.excerpt}</p>}
-                  <div className="mt-3 inline-flex items-center gap-1 text-xs font-mono text-[#0000FF]">
+                  <div className="mt-3 inline-flex items-center gap-1 text-xs font-mono text-[#FF5C00]">
                     Read post <ArrowRight className="w-3 h-3" />
                   </div>
                 </Link>

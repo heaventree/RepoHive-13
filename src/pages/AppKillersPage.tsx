@@ -3,7 +3,7 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Flame, Shield, Server, Zap, CheckCircle2 } from 'lucide-react';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 const KILLER_EXAMPLES = [
@@ -115,7 +115,7 @@ export function AppKillersPage() {
       <div className="text-center">
         <Link
           to="/pricing"
-          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#FF5C00] transition-colors"
         >
           See plans
         </Link>

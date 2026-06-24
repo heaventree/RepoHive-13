@@ -5,7 +5,7 @@ export function TermsPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Terms of <span style={{ color: '#0000FF' }}>Service</span></>}
+      title={<>Terms of <span style={{ color: '#FF5C00' }}>Service</span></>}
       subtitle="The rules of the hive."
     >
       <div className="prose-blog max-w-3xl mx-auto text-gray-600">

@@ -19,7 +19,7 @@ interface MarketingPageProps {
 export function MarketingPage({ kicker, title, subtitle, children, seo }: MarketingPageProps) {
   return (
     <div
-      className="min-h-screen bg-[#FAFAFA] text-black selection:bg-[#0000FF] selection:text-white flex flex-col"
+      className="min-h-screen bg-[#FAFAFA] text-black selection:bg-[#FF5C00] selection:text-white flex flex-col"
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       {seo && <SEO {...seo} />}

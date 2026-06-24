@@ -5,7 +5,7 @@ export function ImprintPage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Imprint / <span style={{ color: '#0000FF' }}>Contact</span></>}
+      title={<>Imprint / <span style={{ color: '#FF5C00' }}>Contact</span></>}
       subtitle="Who runs this thing."
     >
       <div className="prose-blog max-w-3xl mx-auto text-gray-600">

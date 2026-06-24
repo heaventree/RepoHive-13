@@ -3,7 +3,7 @@ import { MarketingPage, FeatureCard } from '../components/marketing/MarketingPag
 import { Link } from 'react-router-dom';
 import { Rocket, Sparkles, Target, ListChecks, Users, FileText } from 'lucide-react';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 export function ProjectsPage() {
@@ -111,7 +111,7 @@ export function ProjectsPage() {
       <div className="text-center">
         <Link
           to="/sign-up"
-          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#0000FF] transition-colors"
+          className="inline-block px-8 py-4 rounded font-bold bg-black text-white hover:bg-[#FF5C00] transition-colors"
         >
           Try project workspaces
         </Link>

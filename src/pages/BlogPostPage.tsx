@@ -40,7 +40,7 @@ export const BlogPostPage: React.FC = () => {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
-      <Loader className="w-6 h-6 text-[#0000FF] animate-spin" />
+      <Loader className="w-6 h-6 text-[#FF5C00] animate-spin" />
     </div>
   );
 
@@ -48,7 +48,7 @@ export const BlogPostPage: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 bg-[#FAFAFA]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
       <AlertCircle className="w-10 h-10 text-gray-400 mb-3" />
       <h1 className="text-xl font-bold text-black mb-2">Post not found</h1>
-      <Link to="/blog" className="px-4 py-2 rounded bg-black text-white font-mono text-sm mt-4 hover:bg-[#0000FF] transition-colors">← Back to Blog</Link>
+      <Link to="/blog" className="px-4 py-2 rounded bg-black text-white font-mono text-sm mt-4 hover:bg-[#FF5C00] transition-colors">← Back to Blog</Link>
     </div>
   );
 
@@ -85,7 +85,7 @@ export const BlogPostPage: React.FC = () => {
           <Link to="/blog" className="inline-flex items-center gap-1 text-xs font-mono text-gray-500 hover:text-black mb-6">
             <ArrowLeft className="w-3 h-3" /> All posts
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#0000FF] mb-3">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#FF5C00] mb-3">
             <BookOpen className="w-4 h-4" /> Blog
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4 leading-tight">{post.title}</h1>
@@ -102,7 +102,7 @@ export const BlogPostPage: React.FC = () => {
           {post.tags && (
             <div className="mt-12 flex flex-wrap gap-2">
               {post.tags.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-                <span key={t} className="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider bg-white text-[#0000FF] border" style={{ borderColor: '#E5E5E5' }}>{t}</span>
+                <span key={t} className="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider bg-white text-[#FF5C00] border" style={{ borderColor: '#E5E5E5' }}>{t}</span>
               ))}
             </div>
           )}

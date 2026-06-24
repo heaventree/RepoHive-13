@@ -20,7 +20,7 @@ export function MarketingFooter() {
             OSS intelligence for engineering teams that care about what they ship.
           </p>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider text-gray-500 border" style={{ borderColor: HAIRLINE }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0000FF] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00] animate-pulse" />
             All systems operational
           </div>
         </div>

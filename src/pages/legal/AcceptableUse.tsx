@@ -5,7 +5,7 @@ export function AcceptableUsePage() {
   return (
     <MarketingPage
       kicker="Legal"
-      title={<>Acceptable <span style={{ color: '#0000FF' }}>Use</span></>}
+      title={<>Acceptable <span style={{ color: '#FF5C00' }}>Use</span></>}
       subtitle="Keep the hive healthy."
     >
       <div className="prose-blog max-w-3xl mx-auto text-gray-600">

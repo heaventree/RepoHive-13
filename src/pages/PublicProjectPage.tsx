@@ -4,7 +4,7 @@ import { Rocket, ExternalLink, Star, Calendar, Loader, AlertCircle, ArrowRight, 
 import { classifyRepo } from '../lib/classification';
 import { SEO } from '../lib/seo';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 interface PublicRec {
@@ -28,7 +28,7 @@ interface PublicProject {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 70) return 'text-[#0000FF]';
+  if (score >= 70) return 'text-[#FF5C00]';
   if (score >= 40) return 'text-black';
   return 'text-gray-400';
 }
@@ -51,7 +51,7 @@ export const PublicProjectPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-        <Loader className="w-6 h-6 text-[#0000FF] animate-spin" />
+        <Loader className="w-6 h-6 text-[#FF5C00] animate-spin" />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export const PublicProjectPage: React.FC = () => {
         <AlertCircle className="w-10 h-10 text-gray-400 mb-3" />
         <h1 className="text-xl font-bold text-black mb-2">Project not found</h1>
         <p className="text-sm text-gray-500 mb-6">{error || 'The project may have been unpublished.'}</p>
-        <Link to="/" className="px-4 py-2 rounded bg-black text-white text-sm font-bold hover:bg-[#0000FF] transition-colors">← Back to RepoHive</Link>
+        <Link to="/" className="px-4 py-2 rounded bg-black text-white text-sm font-bold hover:bg-[#FF5C00] transition-colors">← Back to RepoHive</Link>
       </div>
     );
   }
@@ -70,7 +70,7 @@ export const PublicProjectPage: React.FC = () => {
   const aiOf = (json: string | null) => { try { return json ? JSON.parse(json) : {}; } catch { return {}; } };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-black selection:bg-[#0000FF] selection:text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="min-h-screen bg-[#FAFAFA] text-black selection:bg-[#FF5C00] selection:text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
       <SEO
         title={data.project.name}
         description={data.project.description || `A curated list of ${data.recommendations.length} open-source repos for ${data.project.name}.`}
@@ -89,7 +89,7 @@ export const PublicProjectPage: React.FC = () => {
             <Terminal className="w-5 h-5" />
             RepoHive
           </Link>
-          <Link to="/sign-up" className="text-xs font-medium text-gray-500 hover:text-[#0000FF] transition-colors flex items-center gap-1">
+          <Link to="/sign-up" className="text-xs font-medium text-gray-500 hover:text-[#FF5C00] transition-colors flex items-center gap-1">
             Build your own list <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
@@ -98,7 +98,7 @@ export const PublicProjectPage: React.FC = () => {
       <main className="max-w-5xl mx-auto px-6 py-12">
         {/* Project header */}
         <div className="mb-10">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#0000FF] mb-3">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#FF5C00] mb-3">
             <Rocket className="w-4 h-4" /> Shared Project
           </div>
           <h1 className="text-4xl font-bold tracking-tighter text-black mb-3">{data.project.name}</h1>
@@ -128,16 +128,16 @@ export const PublicProjectPage: React.FC = () => {
                   href={rec.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block bg-white rounded-md p-5 border hover:border-[#0000FF] transition-all group"
+                  className="block bg-white rounded-md p-5 border hover:border-[#FF5C00] transition-all group"
                   style={{ borderColor: HAIRLINE }}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold text-black group-hover:text-[#0000FF] transition-colors truncate">
+                        <h3 className="text-lg font-bold text-black group-hover:text-[#FF5C00] transition-colors truncate">
                           {rec.repo_id}
                         </h3>
-                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#0000FF] flex-none" />
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#FF5C00] flex-none" />
                       </div>
                       {rec.description && <p className="text-sm text-gray-600 line-clamp-2">{rec.description}</p>}
                     </div>
@@ -153,8 +153,8 @@ export const PublicProjectPage: React.FC = () => {
                     {rec.language && <span>{rec.language}</span>}
                     {rec.license && <span className="px-1.5 py-0.5 rounded border text-gray-600" style={{ borderColor: HAIRLINE }}>{rec.license}</span>}
                     <span className="flex items-center gap-0.5 text-gray-600"><Star className="w-3 h-3" />{rec.stars?.toLocaleString()}</span>
-                    {cls.kind === 'app-killer' && <span className="flex items-center gap-1 text-[#0000FF]"><Flame className="w-3 h-3" />Replaces {cls.comparableApp}</span>}
-                    {cls.kind === 'saas-ready' && <span className="flex items-center gap-1 text-[#0000FF]"><Server className="w-3 h-3" />SaaS Ready</span>}
+                    {cls.kind === 'app-killer' && <span className="flex items-center gap-1 text-[#FF5C00]"><Flame className="w-3 h-3" />Replaces {cls.comparableApp}</span>}
+                    {cls.kind === 'saas-ready' && <span className="flex items-center gap-1 text-[#FF5C00]"><Server className="w-3 h-3" />SaaS Ready</span>}
                   </div>
                 </a>
               );
@@ -166,7 +166,7 @@ export const PublicProjectPage: React.FC = () => {
         <div className="mt-12 p-8 rounded-md text-center bg-black text-white">
           <h3 className="text-xl font-bold mb-2">Build your own curated list</h3>
           <p className="text-sm text-gray-300 mb-4">RepoHive helps you find the right open-source repos for any project. Free tier includes 50 repos.</p>
-          <Link to="/sign-up" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded bg-white text-black font-bold text-sm hover:bg-[#0000FF] hover:text-white transition-colors">
+          <Link to="/sign-up" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded bg-white text-black font-bold text-sm hover:bg-[#FF5C00] hover:text-white transition-colors">
             Get started free <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

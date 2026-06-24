@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 const DEMO_ROWS = [
@@ -42,7 +42,7 @@ const MARQUEE = ['374+ repos analysed', '3,072 vector dimensions', '<40ms search
 export function LandingPage() {
   return (
     <div
-      className="bg-[#FAFAFA] text-black min-h-screen selection:bg-[#0000FF] selection:text-white flex flex-col"
+      className="bg-[#FAFAFA] text-black min-h-screen selection:bg-[#FF5C00] selection:text-white flex flex-col"
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       {/* ── Nav ── */}
@@ -57,7 +57,7 @@ export function LandingPage() {
           className="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold uppercase tracking-widest bg-gray-100 rounded-full mb-8 border"
           style={{ borderColor: HAIRLINE }}
         >
-          <span className="w-2 h-2 bg-[#0000FF] rounded-full animate-pulse" />
+          <span className="w-2 h-2 bg-[#FF5C00] rounded-full animate-pulse" />
           Now indexing 374+ Repos
         </div>
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[1.05] max-w-5xl mb-6">
@@ -69,7 +69,7 @@ export function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <Link
             to="/sign-up"
-            className="flex items-center gap-2 text-base font-bold bg-black text-white px-6 py-3.5 rounded hover:bg-[#0000FF] transition-colors"
+            className="flex items-center gap-2 text-base font-bold bg-black text-white px-6 py-3.5 rounded hover:bg-[#FF5C00] transition-colors"
           >
             Add your repos <ArrowRight className="w-4 h-4" />
           </Link>
@@ -199,7 +199,7 @@ export function LandingPage() {
                   i < STEPS.length - 1 ? 'border-b md:border-b-0 md:border-r border-black' : ''
                 }`}
               >
-                <div className={`text-4xl font-mono font-bold mb-6 ${s.accent ? 'text-[#0000FF]' : 'text-gray-300'}`}>
+                <div className={`text-4xl font-mono font-bold mb-6 ${s.accent ? 'text-[#FF5C00]' : 'text-gray-300'}`}>
                   {s.n}
                 </div>
                 <h3 className="text-2xl font-bold mb-3">{s.title}</h3>
@@ -268,22 +268,22 @@ export function LandingPage() {
             </div>
 
             {/* Solo */}
-            <div className="border-2 border-[#0000FF] bg-white p-8 flex flex-col relative shadow-[8px_8px_0px_0px_rgba(0,0,255,0.1)]">
-              <div className="absolute top-0 right-0 bg-[#0000FF] text-white text-xs font-bold px-3 py-1 uppercase tracking-wider">
+            <div className="border-2 border-[#FF5C00] bg-white p-8 flex flex-col relative shadow-[8px_8px_0px_0px_rgba(255,92,0,0.1)]">
+              <div className="absolute top-0 right-0 bg-[#FF5C00] text-white text-xs font-bold px-3 py-1 uppercase tracking-wider">
                 Most Popular
               </div>
               <h3 className="text-xl font-bold mb-1">Solo</h3>
               <p className="text-gray-500 text-sm mb-6">For the serious builder.</p>
               <div className="text-4xl font-bold mb-8">$12<span className="text-lg text-gray-400 font-medium">/mo</span></div>
               <ul className="space-y-3 mb-8 flex-1">
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#0000FF]" /> 500 repos</li>
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#0000FF]" /> 1 API key for IDEs</li>
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#0000FF]" /> App Killers library</li>
-                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#0000FF]" /> Priority search latency</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> 500 repos</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> 1 API key for IDEs</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> App Killers library</li>
+                <li className="flex items-center gap-2 text-sm font-medium"><Check className="w-4 h-4 text-[#FF5C00]" /> Priority search latency</li>
               </ul>
               <Link
                 to="/pricing"
-                className="w-full py-3 bg-[#0000FF] text-white font-bold rounded hover:bg-blue-700 transition-colors text-center"
+                className="w-full py-3 bg-[#FF5C00] text-white font-bold rounded hover:bg-[#CC4A00] transition-colors text-center"
               >
                 Upgrade to Solo
               </Link>
@@ -318,7 +318,7 @@ export function LandingPage() {
         </p>
         <Link
           to="/sign-up"
-          className="text-lg font-bold bg-white text-black px-8 py-4 rounded hover:bg-[#0000FF] hover:text-white transition-colors mb-24"
+          className="text-lg font-bold bg-white text-black px-8 py-4 rounded hover:bg-[#FF5C00] hover:text-white transition-colors mb-24"
         >
           Start your library
         </Link>

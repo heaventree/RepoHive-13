@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Terminal, Flame } from 'lucide-react';
 
-const ACCENT = '#0000FF';
+const ACCENT = '#FF5C00';
 const HAIRLINE = '#E5E5E5';
 
 const LINKS = [
@@ -39,8 +39,8 @@ export function MarketingNav() {
         ))}
         <Link
           to="/app-killers"
-          className={`flex items-center gap-1.5 transition-colors hover:text-[#0000FF] ${
-            location.pathname === '/app-killers' ? 'text-[#0000FF]' : ''
+          className={`flex items-center gap-1.5 transition-colors hover:text-[#FF5C00] ${
+            location.pathname === '/app-killers' ? 'text-[#FF5C00]' : ''
           }`}
         >
           <Flame className="w-3.5 h-3.5" /> App Killers
@@ -50,13 +50,13 @@ export function MarketingNav() {
       <div className="flex items-center gap-4">
         <Link
           to="/sign-in"
-          className="text-sm font-medium hover:text-[#0000FF] transition-colors hidden md:block"
+          className="text-sm font-medium hover:text-[#FF5C00] transition-colors hidden md:block"
         >
           Log in
         </Link>
         <Link
           to="/sign-up"
-          className="text-sm font-bold bg-black text-white px-4 py-2 rounded hover:bg-[#0000FF] transition-colors"
+          className="text-sm font-bold bg-black text-white px-4 py-2 rounded hover:bg-[#FF5C00] transition-colors"
           style={{ ['--accent' as string]: ACCENT }}
         >
           Start Free
