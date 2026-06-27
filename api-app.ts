@@ -782,6 +782,60 @@ function ensureInit(): Promise<void> {
   return initPromise;
 }
 
+const escapeHtml = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// Server-side meta-tag injection for crawlers/link-unfurlers that don't run
+// JS (or run it too slowly to matter). Rewrites the static dist/index.html
+// shell with the per-path title/description/OG/Twitter tags already stored
+// in seo_pages — the same data the client-side <SEO> component reads, just
+// applied before the HTML leaves the server instead of after hydration.
+export async function injectSeoMeta(html: string, reqPath: string): Promise<string> {
+  try {
+    await ensureInit();
+    const cleanPath = (reqPath.split("?")[0] || "/").replace(/\/$/, "") || "/";
+    const SITE_URL = (process.env.APP_URL || "https://repohive.app").replace(/\/$/, "");
+
+    const [row, settingsRows] = await Promise.all([
+      get<any>("SELECT * FROM seo_pages WHERE path = ?", [cleanPath]),
+      all<{ key: string; value: string }>("SELECT key, value FROM seo_settings"),
+    ]);
+    const settings: Record<string, string> = {};
+    for (const r of settingsRows) settings[r.key] = r.value;
+
+    const title = row?.title ? `${row.title} | RepoHive` : "RepoHive";
+    const description = row?.description
+      || "RepoHive analyses, scores, and recommends open-source repos for your next build.";
+    const ogImage = row?.og_image || settings.DEFAULT_OG_IMAGE || null;
+    const noindex = !!row?.noindex;
+    const keywords = row?.keywords;
+    const pageUrl = `${SITE_URL}${cleanPath === "/" ? "" : cleanPath}`;
+
+    const tags = [
+      `<meta name="description" content="${escapeHtml(description)}">`,
+      keywords ? `<meta name="keywords" content="${escapeHtml(keywords)}">` : "",
+      `<meta name="robots" content="${noindex ? "noindex, nofollow" : "index, follow"}">`,
+      `<link rel="canonical" href="${escapeHtml(pageUrl)}">`,
+      `<meta property="og:type" content="website">`,
+      `<meta property="og:site_name" content="RepoHive">`,
+      `<meta property="og:title" content="${escapeHtml(title)}">`,
+      `<meta property="og:description" content="${escapeHtml(description)}">`,
+      `<meta property="og:url" content="${escapeHtml(pageUrl)}">`,
+      ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : "",
+      `<meta name="twitter:card" content="summary_large_image">`,
+      `<meta name="twitter:title" content="${escapeHtml(title)}">`,
+      `<meta name="twitter:description" content="${escapeHtml(description)}">`,
+      ogImage ? `<meta name="twitter:image" content="${escapeHtml(ogImage)}">` : "",
+    ].filter(Boolean).join("\n    ");
+
+    return html
+      .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
+      .replace("</head>", `    ${tags}\n  </head>`);
+  } catch {
+    return html;
+  }
+}
+
 export function createApiApp(): express.Express {
   const app = express();
   // Keep the raw request bytes alongside the parsed JSON — Stripe webhook

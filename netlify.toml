@@ -2,8 +2,9 @@
 # - Vite builds the static frontend into dist/.
 # - The Express API runs as a single Netlify Function (netlify/functions/api.ts),
 #   wrapped with serverless-http.
-# - /api/* is rewritten to that function. Everything else falls back to
-#   index.html so client-side routes (React Router) work on direct hits.
+# - /api/* is rewritten to that function. Everything else falls back to the
+#   same function too, which injects per-page SEO meta tags into index.html
+#   server-side before client-side routes (React Router) take over.
 
 [build]
   command = "npm run build"
@@ -50,9 +51,13 @@
   status = 200
   force = true
 
-# SPA fallback — any unmatched path serves the built index.html so
-# React Router can take it from there.
+# SPA fallback — any unmatched path goes through the Express function so it
+# can inject per-page SEO meta tags into index.html server-side (see
+# netlify/functions/api.ts) before React Router takes over client-side.
+# Real static files (JS/CSS/images, including dist/__seo-base.html, the raw
+# copy the function fetches and injects into) are still served directly by
+# Netlify's CDN and never reach this rule.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/api"
   status = 200

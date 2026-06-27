@@ -4,9 +4,10 @@
 
 import express from "express";
 import path from "path";
+import { readFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
-import { createApiApp } from "./api-app";
+import { createApiApp, injectSeoMeta } from "./api-app";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -62,9 +63,14 @@ export function removeStyle(id) {
         }
       },
     }));
-    app.get("*", (_req, res) => {
+    app.get("*", async (req, res) => {
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      res.sendFile(path.join(__dirname, "dist", "index.html"));
+      try {
+        const raw = await readFile(path.join(__dirname, "dist", "index.html"), "utf-8");
+        res.set("Content-Type", "text/html").send(await injectSeoMeta(raw, req.path));
+      } catch {
+        res.sendFile(path.join(__dirname, "dist", "index.html"));
+      }
     });
   }
 
