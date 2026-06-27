@@ -257,7 +257,7 @@ function Orbs() {
 const PAIN_POINTS = [
   { icon: <BookmarkX className="w-6 h-6" />, title: 'Stop losing repos in your bookmarks',    desc: "You've saved hundreds of great repos across browser bookmarks, GitHub stars, Notion pages, and random text files. You never find them when you need them.", color: '#ff6b6b' },
   { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived, abandoned, license-changed, security issue. RepoHive monitors your list and alerts you before you build on a foundation that crumbles.",     color: AMBER },
-  { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your own curated list first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
+  { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your imported repo library first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
 ];
 
 /* ── Features ── */
@@ -273,26 +273,26 @@ const FEATURES = [
 const IDE_INTEGRATIONS = ['Replit', 'Bolt', 'Lovable', 'Base44', 'Claude Code', 'Cursor'];
 
 const STATS = [
-  { value: '500+',    label: 'Repos analysed' },
+  { value: '25 free', label: 'Repos to import' },
   { value: '3,072',   label: 'Vector dimensions' },
   { value: '<40ms',   label: 'Search latency' },
   { value: '6 tools', label: 'IDE integrations' },
 ];
 
 const WEB_SCHEMA = buildWebSiteSchema('RepoHive', 'https://repohive.app', {
-  description: 'Discover the best open-source repos for any project. AI-powered scoring, comparison, and curation.',
+  description: 'Import, analyze, monitor, and search the GitHub repos you already use.',
 });
 
 export function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
       <SEO
-        title="Find the Best Open-Source Repos for Any Project"
-        description="RepoHive uses AI to score, compare, and curate open-source repositories. Discover App Killers, import GitHub stars, and build shareable project lists."
+        title="RepoHive | AI Repo Analysis, Monitoring & Search for Your GitHub Stack"
+        description="Import GitHub repos you use, save, or star. RepoHive analyzes, scores, monitors, and makes them searchable inside your dev workflow."
         openGraph={{
           type: 'website',
-          title: 'RepoHive — AI-Powered Open-Source Discovery',
-          description: 'Score, compare, and curate the best open-source repos for any project.',
+          title: 'RepoHive — AI Repo Intelligence for Your GitHub Stack',
+          description: 'Analyze, monitor, and search the repos you already use — inside your dev workflow.',
           url: 'https://repohive.app/',
           siteName: 'RepoHive',
         }}
@@ -368,7 +368,7 @@ export function LandingPage() {
               </div>
 
               <p className="mt-5 text-[11px] font-mono" style={{ color: '#424754' }}>
-                Free forever · No credit card · 500+ repos already analysed
+                Free forever · No credit card · Bring your own repos
               </p>
             </div>
 
@@ -504,7 +504,7 @@ export function LandingPage() {
                 <span style={{ color: 'rgba(192,132,252,0.60)' }}>inside every tool you use.</span>
               </h2>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                One API key. Connect RepoHive to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your own curated list.
+                One API key. Connect RepoHive to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your imported repo library.
               </p>
               <div className="space-y-3 pt-2">
                 {[
@@ -542,7 +542,7 @@ export function LandingPage() {
                 <div style={{ color: '#424754' }}># Example API call</div>
                 <div><span style={{ color: '#c084fc' }}>GET</span> <span style={{ color: PRIMARY }}>api.repohive.cloud/v1/search</span></div>
                 <div style={{ color: '#8c909f' }}>  ?q=auth+library+nextjs&amp;scope=my_repos</div>
-                <div style={{ color: TERTIARY }}># Returns your curated list first</div>
+                <div style={{ color: TERTIARY }}># Returns results from your imported library</div>
               </div>
             </div>
           </div>
