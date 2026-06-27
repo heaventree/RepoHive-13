@@ -7,12 +7,18 @@ import { ConfigPortal } from './components/ConfigPortal';
 import { ApiConfig } from './components/ApiConfig';
 import { Monitoring } from './components/Monitoring';
 import { Policies } from './components/Policies';
+import { SettingsHub } from './components/SettingsHub';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame, Crown } from 'lucide-react';
+import { UserButton, useUser } from '@clerk/react';
+import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
+  const { user } = useUser();
+  const displayName = user?.firstName || user?.username || user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] || '';
 
   const handleTabChange = (tab: string) => {
     setSelectedRepo(null);
@@ -35,14 +41,10 @@ export default function App() {
         return <Ingest onComplete={() => setActiveTab('library')} />;
       case 'projects':
         return <ProjectWorkspace setActiveTab={setActiveTab} setSelectedRepo={setSelectedRepo} />;
-      case 'monitoring':
-        return <Monitoring />;
-      case 'policies':
-        return <Policies />;
-      case 'config':
-        return <ConfigPortal onBack={() => setActiveTab('library')} />;
-      case 'api':
-        return <ApiConfig />;
+      case 'settings':
+        return <SettingsHub />;
+      case 'admin':
+        return <AdminDashboard />;
       case 'appkillers':
         return <Library
           onViewRepo={setSelectedRepo}
@@ -79,15 +81,15 @@ export default function App() {
               className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
               style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
             >
-              RS
+              RH
             </div>
-            <span className="font-bold text-sm tracking-tight text-white">RepoScout</span>
+            <span className="font-bold text-sm tracking-tight text-white">RepoHive</span>
           </div>
           <span
             className="text-[10px] font-mono text-slate-600 px-1.5 py-0.5 rounded border"
             style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}
           >
-            v2.1.0
+            v3.0.0
           </span>
         </div>
 
@@ -96,10 +98,7 @@ export default function App() {
           {[
             { id: 'library',    icon: LayoutGrid,  label: 'Library' },
             { id: 'projects',   icon: Rocket,       label: 'Projects' },
-            { id: 'monitoring', icon: Activity,     label: 'Monitoring' },
-            { id: 'policies',   icon: ShieldCheck,  label: 'Policies' },
-            { id: 'api',        icon: Globe,        label: 'API' },
-            { id: 'config',     icon: Settings,     label: 'System Config' },
+            { id: 'settings',   icon: Settings,     label: 'Settings' },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -129,6 +128,22 @@ export default function App() {
           >
             <Flame className="w-3.5 h-3.5" />
             App Killers
+          </button>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
+
+          {/* Admin */}
+          <button
+            onClick={() => handleTabChange('admin')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 ${
+              activeTab === 'admin'
+                ? 'bg-purple-500/15 text-purple-300 border border-purple-500/40'
+                : 'text-purple-500/60 border border-purple-500/20 hover:bg-purple-500/10 hover:text-purple-400 hover:border-purple-500/40'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5" />
+            Admin
           </button>
         </nav>
 
@@ -162,13 +177,24 @@ export default function App() {
 
           <div className="w-px h-4 bg-white/8 mx-1" />
 
-          {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
-          >
-            AD
-          </div>
+          {/* User identity */}
+          {AUTH_ENABLED ? (
+            <div className="flex items-center gap-2">
+              {displayName && (
+                <span className="text-xs font-mono text-slate-400 hidden sm:block max-w-[120px] truncate">
+                  {displayName}
+                </span>
+              )}
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
+            >
+              RH
+            </div>
+          )}
         </div>
       </header>
 
