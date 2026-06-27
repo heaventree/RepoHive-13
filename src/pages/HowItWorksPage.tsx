@@ -7,11 +7,11 @@ export function HowItWorksPage() {
   return (
     <MarketingPage
       kicker="How it works"
-      title={<>From a folder of GitHub URLs to <span style={{ color: '#adc6ff' }}>a queryable repo brain.</span></>}
-      subtitle="RepoHive turns the open-source repos you care about into an AI-indexed, searchable library so you can find the right one in seconds — not the wrong one after an afternoon of tabs."
+      title={<>Turn scattered repos into <span style={{ color: '#adc6ff' }}>searchable build intelligence.</span></>}
+      subtitle="Import the repos you save, star, fork, or already depend on. RepoHive analyzes them, scores them for real-world reuse, monitors them over time, and makes them searchable in plain English inside your workflow."
       seo={{
-        title: 'How It Works',
-        description: 'RepoHive ingests GitHub repos, scores them with AI, builds vector embeddings, and lets you search in plain English. Here\'s exactly how.',
+        title: 'How RepoHive Works | Import, Score, Search & Monitor Repos',
+        description: 'Import the GitHub repos you already use, get them scored for maintenance health, license, and build-readiness, then search and monitor them in plain English.',
         openGraph: { type: 'website', url: 'https://repohive.app/how-it-works', siteName: 'RepoHive' },
       }}
     >
@@ -32,7 +32,7 @@ export function HowItWorksPage() {
           title="2 — AI analysis runs automatically"
           body={
             <>
-              <p>Every repo gets categorised (Frontend, Backend, AI/ML, DevOps, Database, Tooling, Mobile, Security, General), tagged, summarised in plain English, and assigned a quality score. We also flag App Killers — open-source replacements for known paid SaaS products.</p>
+              <p>Every repo gets categorised (Frontend, Backend, AI/ML, DevOps, Database, Tooling, Mobile, Security, General), tagged, summarised in plain English, and scored across maintenance health, license, recency, and build-readiness — so you can judge fit fast.</p>
               <p>Cost stays predictable: we re-analyse on real change signals, not on a schedule.</p>
             </>
           }
@@ -67,10 +67,10 @@ export function HowItWorksPage() {
         <Zap className="w-8 h-8 mx-auto mb-4" style={{ color: '#4d8eff' }} />
         <h2 className="font-mono font-black text-white text-2xl mb-4">The problem RepoHive fixes</h2>
         <p className="text-slate-300 leading-relaxed max-w-3xl mx-auto text-sm">
-          Open source is the most valuable inventory in software, and almost nobody manages it. You bookmark
-          repos, lose them in Slack, rediscover them six months later, and ship the wrong dependency anyway.
-          RepoHive is the workbench you should have had: a private library where every repo is analysed,
-          scored, monitored, and findable by what it <em>does</em>, not by what it&apos;s called.
+          Open source isn&apos;t the problem. Repo chaos is. You already have more useful repos than you can
+          remember — buried in GitHub stars, old tabs, Slack messages, and past builds. RepoHive gives you one
+          place to import them, analyse and score them, monitor them over time, and retrieve them by what they
+          actually help you build, not by what they&apos;re called.
         </p>
       </div>
 
@@ -83,14 +83,14 @@ export function HowItWorksPage() {
           body={<p>Group repos by project, add notes, save shortlists. RepoHive recommends the best fits from your library based on your project brief.</p>}
         />
         <FeatureCard
-          icon={BookOpen}
-          title="App Killers library"
-          body={<p>A hand-curated set of production-grade open-source alternatives to expensive SaaS, included on every paid plan.</p>}
-        />
-        <FeatureCard
           icon={Zap}
           title="IDE & agent integration"
-          body={<p>Generate API keys and let Cursor, Replit, Lovable, Bolt, or Claude Code query your library as a source of truth while they build.</p>}
+          body={<p>Generate API keys and let Cursor, Replit, Lovable, Bolt, or Claude Code query the repos you've imported as a source of truth while they build.</p>}
+        />
+        <FeatureCard
+          icon={BookOpen}
+          title="App Killers library"
+          body={<p>Need a starting point too? Paid plans also include App Killers — a hand-curated library of open-source alternatives to expensive SaaS tools.</p>}
         />
       </div>
 
