@@ -89,8 +89,8 @@ export function HowItWorksPage() {
         />
         <FeatureCard
           icon={BookOpen}
-          title="App Killers library"
-          body={<p>Need a starting point too? Paid plans also include App Killers — 500+ preloaded, production-grade open-source alternatives to expensive SaaS tools, ready to search from day one.</p>}
+          title="Preloaded library"
+          body={<p>Need a starting point too? Paid plans also include a 500+ repo preloaded library — high-scoring, production-grade open source, including 100+ App Killers (named replacements for specific paid tools) — ready to search from day one.</p>}
         />
       </div>
 

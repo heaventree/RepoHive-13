@@ -40,7 +40,7 @@ const PLANS = [
       { label: 'AI analysis on all your repos',                included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public repos only',                            included: true },
-      { label: '500+ preloaded App Killers',                   included: false },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: false },
       { label: 'Staleness monitoring & alerts',                included: false },
       { label: 'API key for IDE integration',                  included: false },
       { label: 'Project workspaces',                           included: false },
@@ -61,7 +61,7 @@ const PLANS = [
       { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: '500+ hottest App Killers — SaaS-ready, preloaded',  included: true },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '1 API key for IDE integration',                included: true },
       { label: 'Project workspaces',                           included: true },
@@ -81,7 +81,7 @@ const PLANS = [
       { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: '500+ hottest App Killers — SaaS-ready, preloaded',  included: true },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '25 API keys (one per seat)',                   included: true },
       { label: 'Project workspaces + team collaboration',      included: true },
@@ -97,7 +97,7 @@ const FAQS = [
   },
   {
     q: 'What counts as a "repo" in my library?',
-    a: 'Any GitHub repository you add via URL. Pre-loaded App Killers repos don\'t count against your limit.',
+    a: 'Any GitHub repository you add via URL. Repos from the preloaded library don\'t count against your limit.',
   },
   {
     q: 'Can I upgrade or downgrade at any time?',
@@ -305,9 +305,9 @@ export function PricingPage() {
             </div>
             <div>
               <p className="text-xs font-mono uppercase tracking-widest mb-2" style={{ color: TERTIARY }}>Included on Solo & Studio</p>
-              <p className="text-lg font-mono font-bold text-white mb-2">500+ App Killers, preloaded into your account</p>
+              <p className="text-lg font-mono font-bold text-white mb-2">500+ repo preloaded library, including 100+ App Killers</p>
               <p className="text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>
-                The hottest self-hostable, SaaS-ready open-source alternatives to expensive tools — already imported, already analysed, already scored. No setup, no waiting on AI analysis. Search them alongside your own library from day one.
+                High-scoring, production-grade open source — already imported, already analysed, already scored — with 100+ named replacements for specific paid tools inside it. No setup, no waiting on AI analysis. Search it alongside your own library from day one.
               </p>
             </div>
           </div>

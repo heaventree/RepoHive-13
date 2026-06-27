@@ -21,7 +21,7 @@ const FAQ_GROUPS: FaqGroup[] = [
     category: 'Getting started',
     items: [
       { q: 'What is RepoHive, in one sentence?', a: "RepoHive is a place to bring the GitHub repos you've found — bookmarks, stars, side-project deps — and turn them into a searchable, AI-analysed library you can use to build faster." },
-      { q: 'Do I bring my own repos, or does RepoHive come with repos already loaded?', a: "Both, but they're separate things. Your library starts empty — you import the repos you care about. Solo and Studio plans additionally get App Killers, a separate 500+ repo bonus library, preloaded into the account as a head start. They never mix with or replace your own library." },
+      { q: 'Do I bring my own repos, or does RepoHive come with repos already loaded?', a: "Both. Your library starts empty — you import the repos you care about. Solo and Studio plans additionally get a 500+ repo preloaded library copied into the account as a head start, including 100+ App Killers (named replacements for specific paid tools). It sits alongside your own library and doesn't count against your repo cap." },
       { q: 'Which version-control platforms does RepoHive support?', a: "GitHub only, for now. That covers the vast majority of public and private open-source work, and it's where we're focused. Other platforms aren't ruled out, but there's no committed timeline." },
     ],
   },
@@ -65,7 +65,7 @@ const FAQ_GROUPS: FaqGroup[] = [
     category: 'Search, projects & recommendations',
     items: [
       { q: 'How do project workspaces work?', a: "Create a project, write a short brief describing what you're building, and RepoHive ranks the best-matching repos from your own library — with a fit score and a plain-English rationale for each." },
-      { q: 'Will App Killers show up in my project recommendations?', a: "Not automatically. Recommendations are scoped to the repos in your own library. If you want an App Killers repo considered, search or browse it into your library first." },
+      { q: 'Will App Killers show up in my project recommendations?', a: "Yes, once you're on a paid plan. The preloaded library is copied into your own account on Solo and Studio, so recommendations — which are scoped to your library — automatically include it alongside your own repos." },
       { q: 'Are project recommendations saved?', a: 'Yes. The brief, ranked repos, pinned shortlist, and notes all stay attached to the project so you can return to it anytime.' },
     ],
   },

@@ -17,12 +17,12 @@ const KILLER_EXAMPLES = [
 export function AppKillersPage() {
   return (
     <MarketingPage
-      kicker="App Killers library"
-      title={<>Start every build with <span style={{ color: '#fbbf24' }}>500+ proven OSS options.</span></>}
-      subtitle="App Killers is a preloaded library of SaaS-replacement-ready repos — already analyzed, scored, and searchable inside RepoHive from day one. Already loaded into your account on paid plans, ready to use in search, projects, and AI-assisted builds."
+      kicker="Preloaded library"
+      title={<>Start every build with <span style={{ color: '#fbbf24' }}>500+ high-scoring repos</span> — including 100+ App Killers.</>}
+      subtitle="Solo and Studio preload a 500+ repo library — strong stars, forks, and community activity, all already analyzed and scored. RepoHive's analysis automatically flags which ones are strong enough to replace an entire paid product: 100+ App Killers, each named to the specific SaaS tool it can take over from. Searchable inside RepoHive from day one, in search, projects, and AI-assisted builds."
       seo={{
         title: 'App Killers — Open Source Replacements for Paid SaaS',
-        description: 'A preloaded library of 500+ production-grade open-source repos that can replace paid SaaS tools — already analyzed, scored, and searchable inside RepoHive.',
+        description: 'A preloaded library of 500+ high-scoring open-source repos, including 100+ named replacements for paid SaaS tools — already analyzed, scored, and searchable inside RepoHive.',
         openGraph: { type: 'website', url: 'https://repohive.app/app-killers', siteName: 'RepoHive' },
       }}
     >
@@ -31,22 +31,22 @@ export function AppKillersPage() {
         <FeatureCard
           icon={Shield}
           title="Production-grade only"
-          body={<p>App Killers isn&apos;t a dump of side projects. Each repo is selected for real-world viability: active maintenance, meaningful community traction, clear licensing, and a believable path to production use.</p>}
+          body={<p>The preloaded library isn&apos;t a dump of side projects. Every repo is selected for real-world viability: active maintenance, meaningful community traction, clear licensing, and a believable path to production use.</p>}
         />
         <FeatureCard
           icon={Server}
-          title="Mapped to the tools you already pay for"
-          body={<p>Each App Killer is linked to the paid product it can replace (Coolify → Heroku, Supabase → Firebase, Plausible → GA) — so you go from &quot;we pay for X&quot; to &quot;here are the strongest open-source options&quot; in one step.</p>}
+          title="Automatically flagged, not hand-picked"
+          body={<p>RepoHive&apos;s analysis flags the repos in the library that are strong enough to replace an entire paid product, then links each one to the tool it can replace (Coolify → Heroku, Supabase → Firebase, Plausible → GA). That&apos;s 100+ App Killers so far — so you go from &quot;we pay for X&quot; to &quot;here are the strongest open-source options&quot; in one step. The rest of the library is high-scoring OSS without a single named competitor yet.</p>}
         />
         <FeatureCard
           icon={Zap}
           title="Doesn&apos;t count against your repo cap"
-          body={<p>App Killers live alongside your own repos — searchable, comparable, projectable — but they don&apos;t eat into your plan&apos;s repo limit. They&apos;re a head start, not a charge.</p>}
+          body={<p>The whole preloaded library lives alongside your own repos — searchable, comparable, projectable — but none of it eats into your plan&apos;s repo limit. It&apos;s a head start, not a charge.</p>}
         />
       </div>
 
       {/* How it fits the workflow — the missing link */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">How App Killers fits your workflow</h2>
+      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">How the preloaded library fits your workflow</h2>
       <div className="grid md:grid-cols-3 gap-6 mb-16">
         <FeatureCard
           icon={Search}
@@ -56,12 +56,12 @@ export function AppKillersPage() {
         <FeatureCard
           icon={Target}
           title="Use it in project workspaces"
-          body={<p>Create a project brief and let RepoHive surface relevant App Killers alongside your own imported repos — ranked and ready to pin.</p>}
+          body={<p>Create a project brief and let RepoHive surface relevant repos from the preloaded library alongside your own imported repos — ranked and ready to pin.</p>}
         />
         <FeatureCard
           icon={Bot}
           title="Connect it to your AI builder"
-          body={<p>Use integrations so tools like Lovable, Cursor, or Claude Code can search App Killers while helping you plan or generate a build.</p>}
+          body={<p>Use integrations so tools like Lovable, Cursor, or Claude Code can search the preloaded library while helping you plan or generate a build.</p>}
         />
       </div>
 
@@ -95,13 +95,13 @@ export function AppKillersPage() {
       </div>
 
       {/* What's in it for you */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">Why App Killers is more than a repo list</h2>
+      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">Why the preloaded library is more than a repo list</h2>
       <div className="space-y-3 mb-16 max-w-3xl mx-auto">
         {[
-          'Skip the discovery rabbit hole — start with a preloaded library of serious SaaS alternatives instead of searching GitHub from scratch.',
-          'Build with stronger options on day one — every entry is already categorized, scored, and mapped to the commercial product it can replace.',
-          'Use it inside the rest of RepoHive — search App Killers directly, pull them into project workspaces, and let your AI coding tools query them through integrations.',
-          'Explore without polluting your repo cap — App Killers lives alongside your own library but doesn\'t consume your repo limit.',
+          'Skip the discovery rabbit hole — start with a preloaded library of serious open-source options instead of searching GitHub from scratch.',
+          'Build with stronger options on day one — every entry is already analyzed and scored, and 100+ are mapped to the commercial product they can replace.',
+          'Use it inside the rest of RepoHive — search the library directly, pull entries into project workspaces, and let your AI coding tools query it through integrations.',
+          'Explore without polluting your repo cap — the preloaded library lives alongside your own repos but doesn\'t consume your repo limit.',
         ].map((line, i) => (
           <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
             <CheckCircle2 className="w-5 h-5 flex-none mt-0.5" style={{ color: '#4edea3' }} />
@@ -111,13 +111,13 @@ export function AppKillersPage() {
       </div>
 
       {/* In practice */}
-      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">What you can do with App Killers in practice</h2>
+      <h2 className="font-mono font-black text-white text-2xl mb-8 text-center">What you can do with the preloaded library in practice</h2>
       <div className="space-y-3 mb-16 max-w-3xl mx-auto">
         {[
-          'Replace a paid tool in a new product stack faster.',
+          'Replace a paid tool in a new product stack faster, using one of the 100+ named App Killers.',
           'Find self-hosted options before committing to SaaS spend.',
-          'Give your AI builder a stronger set of OSS starting points.',
-          'Use App Killers as fallback options when your own repo library is thin.',
+          'Give your AI builder a stronger set of high-scoring OSS starting points.',
+          'Use the preloaded library as fallback options when your own repo library is thin.',
           'Compare alternatives in projects without opening 30 GitHub tabs.',
         ].map((line, i) => (
           <div key={i} className="flex items-start gap-3 text-sm text-slate-300">
@@ -139,9 +139,9 @@ export function AppKillersPage() {
         <div>
           <p className="text-sm font-mono font-bold text-amber-300 mb-1">Included in paid plans as a built-in head start</p>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Upgrade to Solo or Studio and get 500+ preloaded App Killers copied into your account — searchable,
-            scored, and ready to use in search, projects, and AI integrations from day one. App Killers isn't
-            available on the free Explorer plan.
+            Upgrade to Solo or Studio and get the 500+ repo preloaded library — including 100+ App Killers —
+            copied into your account, searchable, scored, and ready to use in search, projects, and AI
+            integrations from day one. The preloaded library isn't available on the free Explorer plan.
           </p>
         </div>
       </div>

@@ -188,7 +188,7 @@ export const BillingSettings: React.FC = () => {
             <div>
               <h4 className="text-base font-bold text-white mb-1">Want more repos, App Killers, and an API key?</h4>
               <p className="text-sm text-slate-400 leading-relaxed font-mono">
-                Upgrade to Solo or Studio for a bigger library, the 500+ preloaded App Killers,
+                Upgrade to Solo or Studio for a bigger library, the 500+ repo preloaded library (100+ App Killers),
                 staleness monitoring, and IDE integrations. <a href="/pricing" className="text-accent-blue hover:underline">See plans →</a>
               </p>
             </div>
