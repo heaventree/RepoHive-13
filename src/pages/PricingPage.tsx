@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, X, Zap } from 'lucide-react';
+import { Check, X, Zap, Flame } from 'lucide-react';
+import { SEO } from '../lib/seo';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 
@@ -32,14 +33,14 @@ const PLANS = [
     annualPrice: 0,
     cta: 'Start Free',
     ctaStyle: 'ghost' as const,
-    desc: 'For devs who want to try RepoScout before committing.',
+    desc: 'Try the full workflow — import, analyse, and search — before committing.',
     note: null,
     features: [
       { label: '25 repos in your library',                     included: true },
       { label: 'AI analysis on all your repos',                included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public repos only',                            included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: false },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: false },
       { label: 'Staleness monitoring & alerts',                included: false },
       { label: 'API key for IDE integration',                  included: false },
       { label: 'Project workspaces',                           included: false },
@@ -53,14 +54,14 @@ const PLANS = [
     cta: 'Go Solo',
     ctaStyle: 'primary' as const,
     featured: true,
-    desc: 'For individual devs and designers with serious repo habits.',
+    desc: 'Your personal repo intelligence layer — analysis, search, and monitoring, always on.',
     note: 'Includes ~$1–2/month in AI costs per 1,000 repos analysed.',
     features: [
       { label: '1,000 repos in your library',                  included: true },
-      { label: 'AI analysis + weekly re-analysis',             included: true },
+      { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '1 API key for IDE integration',                included: true },
       { label: 'Project workspaces',                           included: true },
@@ -73,14 +74,14 @@ const PLANS = [
     annualPrice: 39,
     cta: 'Go Studio',
     ctaStyle: 'ghost' as const,
-    desc: 'For dev teams sharing a curated repo intelligence layer.',
+    desc: 'For dev teams sharing one searchable repo intelligence layer.',
     note: 'Up to 25 seats. Shared library pool, each member can add repos.',
     features: [
       { label: '10,000 repos shared library',                  included: true },
       { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
-      { label: 'Pre-loaded App Killers library (370+ repos)',  included: true },
+      { label: '500+ repo preloaded library (100+ App Killers)', included: true },
       { label: 'Staleness monitoring & alerts',                included: true },
       { label: '25 API keys (one per seat)',                   included: true },
       { label: 'Project workspaces + team collaboration',      included: true },
@@ -96,15 +97,7 @@ const FAQS = [
   },
   {
     q: 'What counts as a "repo" in my library?',
-    a: 'Any GitHub repository you add via URL. Pre-loaded App Killers repos don\'t count against your limit.',
-  },
-  {
-    q: 'What does "weekly re-analysis" mean?',
-    a: 'RepoScout checks your repos every week for staleness signals: archive status, last commit date, star velocity, license changes, open CVEs.',
-  },
-  {
-    q: 'Which IDEs does the API support?',
-    a: 'Any tool that supports custom HTTP calls — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Full API docs ship with your key.',
+    a: 'Any GitHub repository you add via URL. Repos from the preloaded library don\'t count against your limit.',
   },
   {
     q: 'Can I upgrade or downgrade at any time?',
@@ -115,9 +108,37 @@ const FAQS = [
 export function PricingPage() {
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState<string | null>(null);
+
+  // Paid plans go through Stripe Checkout. 401 means not signed in yet —
+  // send them to sign-up first; they can subscribe from inside the app.
+  const startCheckout = async (tier: string) => {
+    const plan = tier.toLowerCase();
+    setCheckoutBusy(tier);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, interval: billing }),
+      });
+      if (res.status === 401) { window.location.href = '/sign-up'; return; }
+      const data = await res.json();
+      if (res.ok && data.url) { window.location.href = data.url; return; }
+      alert(data.error || 'Unable to start checkout — please try again.');
+    } catch {
+      alert('Unable to start checkout — please try again.');
+    } finally {
+      setCheckoutBusy(null);
+    }
+  };
 
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+      <SEO
+        title="Pricing"
+        description="Start free with 25 repos, or upgrade to Solo (1,000 repos) and Studio (10,000, shared by your team) for full AI analysis, search, and monitoring on the repos you import."
+        openGraph={{ type: 'website', url: 'https://repohive.app/pricing', siteName: 'RepoHive' }}
+      />
       <Orbs />
       <MarketingNav />
 
@@ -131,19 +152,19 @@ export function PricingPage() {
                 className="font-mono text-[10px] tracking-[0.2em] uppercase px-3 py-1 rounded-full"
                 style={{ color: PRIMARY, border: `1px solid rgba(173,198,255,0.20)`, background: 'rgba(173,198,255,0.05)' }}
               >
-                Simple, honest pricing
+                Pricing for your repo intelligence layer
               </span>
             </div>
             <h1
               className="font-mono font-black tracking-tight leading-tight mb-6"
               style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
             >
-              Your repo library.
+              Bring your repos.
               <br />
-              <span style={{ color: PRIMARY }}>Your price point.</span>
+              <span style={{ color: PRIMARY }}>RepoHive does the rest.</span>
             </h1>
             <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
-              Free forever for individuals getting started. Solo for serious devs. Studio for teams who need a shared intelligence layer.
+              Explorer is the free way to try the workflow. Solo is a personal repo intelligence layer for serious devs. Studio gives a whole team one shared, searchable library.
             </p>
 
             {/* Billing toggle */}
@@ -178,7 +199,7 @@ export function PricingPage() {
               return (
                 <div
                   key={plan.tier}
-                  className={`relative flex flex-col rounded-xl p-10 transition-all duration-300 ${
+                  className={`relative flex flex-col rounded-md p-10 transition-all duration-300 ${
                     isFeatured ? 'scale-105 z-10' : 'hover:bg-white/[0.02]'
                   }`}
                   style={{
@@ -247,48 +268,65 @@ export function PricingPage() {
                     ))}
                   </ul>
 
-                  {/* CTA */}
-                  <Link
-                    to="/sign-up"
-                    className="w-full text-center py-4 rounded-xl font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={plan.ctaStyle === 'primary'
-                      ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
-                      : { background: SURFACE_HIGH, color: PRIMARY }
-                    }
-                  >
-                    {plan.cta}
-                  </Link>
+                  {/* CTA — free goes to sign-up, paid plans go to Stripe Checkout */}
+                  {plan.tier === 'FREE' ? (
+                    <Link
+                      to="/sign-up"
+                      className="w-full text-center py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
+                      style={{ background: SURFACE_HIGH, color: PRIMARY }}
+                    >
+                      {plan.cta}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => startCheckout(plan.tier)}
+                      disabled={checkoutBusy !== null}
+                      className="w-full text-center py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                      style={plan.ctaStyle === 'primary'
+                        ? { background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 15px rgba(77,142,255,0.40)' }
+                        : { background: SURFACE_HIGH, color: PRIMARY }
+                      }
+                    >
+                      {checkoutBusy === plan.tier ? 'Redirecting…' : plan.cta}
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* ── Value callout ── */}
+          {/* ── App Killers callout ── */}
           <div
-            className="mt-12 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: 'rgba(77,142,255,0.05)', border: '1px solid rgba(77,142,255,0.15)' }}
+            className="mt-12 rounded-md p-8 flex flex-col sm:flex-row items-start gap-6"
+            style={{ background: 'rgba(78,222,163,0.05)', border: '1px solid rgba(78,222,163,0.18)' }}
           >
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(77,142,255,0.10)' }}>
-              <Zap className="w-5 h-5" style={{ color: PRIMARY_CTR }} />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-none" style={{ background: 'rgba(78,222,163,0.12)' }}>
+              <Flame className="w-6 h-6" style={{ color: TERTIARY }} />
             </div>
             <div>
-              <p className="text-sm font-mono font-bold" style={{ color: PRIMARY }}>No analysis limits, no hidden throttles</p>
-              <p className="text-xs leading-relaxed mt-1" style={{ color: '#c2c6d6' }}>
-                Every repo you add gets full AI analysis, weekly staleness monitoring, and vector search indexing — included in your plan, no add-ons required. What you see is what you get.
+              <p className="text-xs font-mono uppercase tracking-widest mb-2" style={{ color: TERTIARY }}>Included on Solo & Studio</p>
+              <p className="text-lg font-mono font-bold text-white mb-2">500+ repo preloaded library, including 100+ App Killers</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>
+                High-scoring, production-grade open source — already imported, already analysed, already scored — with 100+ named replacements for specific paid tools inside it. No setup, no waiting on AI analysis. Search it alongside your own library from day one.
               </p>
             </div>
           </div>
 
           {/* ── FAQ ── */}
           <div className="mt-24">
-            <h2 className="font-mono font-black text-white text-3xl text-center mb-12 tracking-tight">
+            <h2 className="font-mono font-black text-white text-3xl text-center mb-4 tracking-tight">
               Common questions
             </h2>
+            <p className="text-center text-sm text-slate-500 mb-12">
+              <Link to="/faq" className="hover:text-white transition-colors" style={{ color: PRIMARY }}>
+                See the full FAQ →
+              </Link>
+            </p>
             <div className="max-w-3xl mx-auto space-y-3">
               {FAQS.map((faq, i) => (
                 <div
                   key={i}
-                  className="rounded-xl overflow-hidden transition-all"
+                  className="rounded-md overflow-hidden transition-all"
                   style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
                 >
                   <button
@@ -318,7 +356,7 @@ export function PricingPage() {
 
           {/* ── System status ── */}
           <div
-            className="mt-16 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            className="mt-16 rounded-md p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
             style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
           >
             <div className="flex items-center gap-3">
@@ -328,7 +366,7 @@ export function PricingPage() {
               </div>
               <div>
                 <div className="text-sm font-mono font-bold text-white">Infrastructure Operational</div>
-                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 374 repos indexed. API latency avg 40ms.</div>
+                <div className="text-xs text-slate-500 mt-0.5">All nodes nominal. 583 repos indexed. API latency avg 40ms.</div>
               </div>
             </div>
             <div

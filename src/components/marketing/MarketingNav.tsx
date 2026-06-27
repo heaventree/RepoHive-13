@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Flame } from 'lucide-react';
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { AUTH_ENABLED } from '../../auth';
+const logoWordmark = '/repohive-logo-white-yellow.png';
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -27,21 +30,17 @@ export function MarketingNav() {
         }}
       >
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
-          >
-            RS
-          </div>
-          <span className="font-bold text-sm tracking-tight text-white font-mono">RepoScout</span>
+        <Link to="/" className="flex items-center">
+          <img src={logoWordmark} alt="RepoHive" className="h-7 w-auto" />
         </Link>
 
         {/* Links */}
         <div className="hidden md:flex items-center gap-1">
           {[
-            { to: '/', label: 'Home' },
-            { to: '/pricing', label: 'Pricing' },
+            { to: '/how-it-works', label: 'How it works' },
+            { to: '/projects',     label: 'Projects' },
+            { to: '/integrations', label: 'Integrations' },
+            { to: '/pricing',      label: 'Pricing' },
           ].map(({ to, label }) => (
             <Link
               key={to}
@@ -57,8 +56,12 @@ export function MarketingNav() {
           ))}
           <div className="w-px h-4 bg-white/10 mx-1" />
           <Link
-            to="/app"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono text-amber-500/70 border border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40 transition-all duration-150"
+            to="/app-killers"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all duration-150 border ${
+              location.pathname === '/app-killers'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                : 'text-amber-500/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40'
+            }`}
           >
             <Flame className="w-3.5 h-3.5" /> App Killers
           </Link>
@@ -66,19 +69,51 @@ export function MarketingNav() {
 
         {/* CTA */}
         <div className="flex items-center gap-2">
-          <Link
-            to="/sign-in"
-            className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/sign-up"
-            className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
-          >
-            Start Free
-          </Link>
+          {AUTH_ENABLED ? (
+            <>
+              <Show when="signed-out">
+                <SignInButton mode="modal" forceRedirectUrl="/app">
+                  <button className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal" forceRedirectUrl="/app">
+                  <button
+                    className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+                  >
+                    Start Free
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Link
+                  to="/app"
+                  className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+                >
+                  Open App
+                </Link>
+                <UserButton afterSignOutUrl="/" />
+              </Show>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/sign-in"
+                className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/sign-up"
+                className="px-4 py-1.5 rounded-full text-xs font-bold font-mono uppercase tracking-wider text-white transition-all hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 0 16px rgba(59,130,246,0.35)' }}
+              >
+                Start Free
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

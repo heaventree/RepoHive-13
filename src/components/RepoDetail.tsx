@@ -14,9 +14,12 @@ import {
   Database, 
   Github,
   ChevronDown,
-  Flame
+  Flame,
+  Server,
+  Play
 } from 'lucide-react';
 import { Repo, Snapshot } from '../types';
+import { classifyRepo } from '../lib/classification';
 
 interface RepoDetailProps {
   repo: Repo;
@@ -34,6 +37,8 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
       return null;
     }
   }, [repo.ai_analysis]);
+
+  const cls = useMemo(() => classifyRepo(aiData), [aiData]);
 
   const formatRepoName = (id: string) => {
     const parts = id.split('/');
@@ -113,16 +118,16 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
                   href={repo.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all text-xs font-bold rounded-xl flex items-center gap-2 active:scale-95"
+                  className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all text-xs font-bold rounded-md flex items-center gap-2 active:scale-95"
                 >
                   <Github className="w-4 h-4" />
                   <span>Github</span>
                 </a>
-                <button className="px-4 py-2 bg-accent-blue/5 border border-accent-blue/20 hover:bg-accent-blue/10 text-accent-blue text-xs font-bold rounded-xl flex items-center gap-2 transition-all active:scale-95">
+                <button className="px-4 py-2 bg-accent-blue/5 border border-accent-blue/20 hover:bg-accent-blue/10 text-accent-blue text-xs font-bold rounded-md flex items-center gap-2 transition-all active:scale-95">
                   <RefreshCw className="w-4 h-4" />
                   Rescan
                 </button>
-                <button className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition-all active:scale-95">
+                <button className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 text-xs font-bold rounded-md flex items-center gap-2 transition-all active:scale-95">
                   <Bookmark className="w-4 h-4 text-slate-400" />
                   Watch
                 </button>
@@ -134,7 +139,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
 
       <main className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
-          <section className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-5 shadow-sm relative overflow-hidden">
+          <section className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-5 shadow-sm relative overflow-hidden">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -161,7 +166,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
           </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="glass-card rounded-2xl p-5 shadow-xl">
+            <div className="glass-card rounded-lg p-5 shadow-xl">
               <h4 className="text-sm font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
                 Best For Use Cases
@@ -175,7 +180,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
                 ))}
               </ul>
             </div>
-            <div className="glass-card rounded-2xl p-5 shadow-xl">
+            <div className="glass-card rounded-lg p-5 shadow-xl">
               <h4 className="text-sm font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
                 <Zap className="w-5 h-5" />
                 Integration Notes
@@ -207,7 +212,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
           </div>
 
           {repo.readme && (
-            <section className="glass-card rounded-2xl p-6 shadow-xl">
+            <section className="glass-card rounded-lg p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Database className="w-5 h-5 text-accent-blue" />
@@ -242,7 +247,7 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <section className="glass-card rounded-2xl shadow-xl">
+          <section className="glass-card rounded-lg shadow-xl">
             <div className="p-4 border-b border-white/8 flex justify-between items-center">
               <h3 className="font-semibold text-sm text-white flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-accent-blue" />
@@ -250,16 +255,40 @@ export const RepoDetail: React.FC<RepoDetailProps> = ({ repo, onBack }) => {
               </h3>
             </div>
             <div className="p-5 space-y-8">
-              {aiData?.enterpriseTier && (
+              {cls.kind === 'app-killer' && (
                 <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-amber-500/25"
                   style={{ background: 'rgba(245,158,11,0.06)' }}>
                   <Flame className="w-8 h-8 text-amber-400 flex-shrink-0" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-0.5">App Killer</p>
                     <p className="text-xs text-slate-300 truncate">
-                      Replaces <span className="text-amber-300 font-semibold">{aiData.comparableApp || 'commercial SaaS'}</span>
+                      Replaces <span className="text-amber-300 font-semibold">{cls.comparableApp}</span>
                     </p>
                   </div>
+                  {cls.demoUrl && (
+                    <a href={cls.demoUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all text-[11px] font-bold font-mono uppercase">
+                      <Play className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                  )}
+                </div>
+              )}
+              {cls.kind === 'saas-ready' && (
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-cyan-500/30"
+                  style={{ background: 'rgba(6,182,212,0.06)' }}>
+                  <Server className="w-8 h-8 text-cyan-300 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest mb-0.5">SaaS Ready</p>
+                    <p className="text-xs text-slate-300 truncate">
+                      Self-hostable, production-ready application you can run as a service.
+                    </p>
+                  </div>
+                  {cls.demoUrl && (
+                    <a href={cls.demoUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition-all text-[11px] font-bold font-mono uppercase">
+                      <Play className="w-3.5 h-3.5" /> Live Demo
+                    </a>
+                  )}
                 </div>
               )}
 

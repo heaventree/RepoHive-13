@@ -1,18 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Library } from './components/Library';
 import { Ingest } from './components/Ingest';
 import { RepoDetail } from './components/RepoDetail';
 import { ProjectWorkspace } from './components/ProjectWorkspace';
-import { ConfigPortal } from './components/ConfigPortal';
-import { ApiConfig } from './components/ApiConfig';
-import { Monitoring } from './components/Monitoring';
-import { Policies } from './components/Policies';
+import { SettingsHub } from './components/SettingsHub';
+import { AdminDashboard } from './components/AdminDashboard';
 import { Repo } from './types';
-import { Bell, HelpCircle, Rocket, LayoutGrid, Activity, ShieldCheck, Settings, Globe, Flame } from 'lucide-react';
+import { Bell, HelpCircle, Rocket, LayoutGrid, Settings, Flame, Crown, Server } from 'lucide-react';
+import { UserButton } from '@clerk/react';
+import { AUTH_ENABLED } from './auth';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('library');
   const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
+  // Admin tab is shown only when the backend confirms this user is in
+  // ADMIN_USER_IDS (the API enforces it regardless — this is just visibility).
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/status')
+      .then(r => r.json())
+      .then(d => setIsAdmin(Boolean(d?.admin)))
+      .catch(() => {});
+  }, []);
 
   const handleTabChange = (tab: string) => {
     setSelectedRepo(null);
@@ -35,14 +46,17 @@ export default function App() {
         return <Ingest onComplete={() => setActiveTab('library')} />;
       case 'projects':
         return <ProjectWorkspace setActiveTab={setActiveTab} setSelectedRepo={setSelectedRepo} />;
+      case 'settings':
+        return <SettingsHub onExit={() => setActiveTab('library')} />;
+      // Legacy direct routes — now nested under Settings.
       case 'monitoring':
-        return <Monitoring />;
+        return <SettingsHub initialSection="monitoring" onExit={() => setActiveTab('library')} />;
       case 'policies':
-        return <Policies />;
-      case 'config':
-        return <ConfigPortal onBack={() => setActiveTab('library')} />;
+        return <SettingsHub initialSection="policies" onExit={() => setActiveTab('library')} />;
       case 'api':
-        return <ApiConfig />;
+        return <SettingsHub initialSection="api" onExit={() => setActiveTab('library')} />;
+      case 'config':
+        return <SettingsHub initialSection="config" onExit={() => setActiveTab('library')} />;
       case 'appkillers':
         return <Library
           onViewRepo={setSelectedRepo}
@@ -50,6 +64,15 @@ export default function App() {
           onGoToWorkspace={() => setActiveTab('projects')}
           appKillersMode
         />;
+      case 'saasready':
+        return <Library
+          onViewRepo={setSelectedRepo}
+          onBulkIngest={() => setActiveTab('ingest')}
+          onGoToWorkspace={() => setActiveTab('projects')}
+          saasReadyMode
+        />;
+      case 'admin':
+        return isAdmin ? <AdminDashboard /> : null;
       default:
         return <Library 
           onViewRepo={setSelectedRepo} 
@@ -74,15 +97,9 @@ export default function App() {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 flex-none">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }}
-            >
-              RS
-            </div>
-            <span className="font-bold text-sm tracking-tight text-white">RepoScout</span>
-          </div>
+          <Link to="/" className="flex items-center">
+            <img src="/repohive-logo-white-yellow.png" alt="RepoHive" className="h-7 w-auto" />
+          </Link>
           <span
             className="text-[10px] font-mono text-slate-600 px-1.5 py-0.5 rounded border"
             style={{ borderColor: 'rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)' }}
@@ -94,12 +111,9 @@ export default function App() {
         {/* Nav */}
         <nav className="flex items-center gap-0.5 flex-1 justify-center mx-4">
           {[
-            { id: 'library',    icon: LayoutGrid,  label: 'Library' },
-            { id: 'projects',   icon: Rocket,       label: 'Projects' },
-            { id: 'monitoring', icon: Activity,     label: 'Monitoring' },
-            { id: 'policies',   icon: ShieldCheck,  label: 'Policies' },
-            { id: 'api',        icon: Globe,        label: 'API' },
-            { id: 'config',     icon: Settings,     label: 'System Config' },
+            { id: 'library',  icon: LayoutGrid, label: 'Library' },
+            { id: 'projects', icon: Rocket,     label: 'Projects' },
+            { id: 'settings', icon: Settings,   label: 'Settings' },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -130,6 +144,34 @@ export default function App() {
             <Flame className="w-3.5 h-3.5" />
             App Killers
           </button>
+
+          {/* SaaS Ready */}
+          <button
+            onClick={() => handleTabChange('saasready')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 border ${
+              activeTab === 'saasready'
+                ? 'bg-cyan-500/15 text-cyan-200 border-cyan-500/40 shadow-[0_0_16px_rgba(6,182,212,0.2)]'
+                : 'text-cyan-400/60 border-cyan-500/20 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/40'
+            }`}
+          >
+            <Server className="w-3.5 h-3.5" />
+            SaaS Ready
+          </button>
+
+          {/* Admin — only rendered when the backend confirms admin access */}
+          {isAdmin && (
+            <button
+              onClick={() => handleTabChange('admin')}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-150 border ${
+                activeTab === 'admin'
+                  ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_16px_rgba(168,85,247,0.2)]'
+                  : 'text-purple-500/60 border-purple-500/20 hover:bg-purple-500/10 hover:text-purple-300 hover:border-purple-500/40'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              Admin
+            </button>
+          )}
         </nav>
 
         {/* Right actions */}
@@ -163,12 +205,16 @@ export default function App() {
           <div className="w-px h-4 bg-white/8 mx-1" />
 
           {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
-          >
-            AD
-          </div>
+          {AUTH_ENABLED ? (
+            <UserButton afterSignOutUrl="/" />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black font-mono text-white cursor-pointer hover:scale-105 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', boxShadow: '0 0 10px rgba(99,102,241,0.35)' }}
+            >
+              AD
+            </div>
+          )}
         </div>
       </header>
 

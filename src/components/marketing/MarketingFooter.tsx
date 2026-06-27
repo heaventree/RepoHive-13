@@ -9,14 +9,8 @@ export function MarketingFooter() {
     >
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 md:grid-cols-4 gap-10">
         <div className="col-span-2 md:col-span-1 space-y-4">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 flex items-center justify-center font-black text-sm rounded-md font-mono text-white"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
-            >
-              RS
-            </div>
-            <span className="font-bold text-sm text-white font-mono">RepoScout</span>
+          <div className="flex items-center">
+            <img src="/repohive-logo-white-yellow.png" alt="RepoHive" className="h-7 w-auto" />
           </div>
           <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">
             OSS intelligence for engineering teams that care about what they ship.
@@ -32,27 +26,44 @@ export function MarketingFooter() {
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Product</div>
-          {['Library', 'Projects', 'App Killers', 'Monitoring', 'API'].map(l => (
-            <div key={l}>
-              <Link to="/app" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</Link>
+          {[
+            { label: 'How it works', to: '/how-it-works' },
+            { label: 'Projects',     to: '/projects' },
+            { label: 'App Killers',  to: '/app-killers' },
+            { label: 'Integrations', to: '/integrations' },
+            { label: 'Open app',     to: '/app' },
+          ].map(l => (
+            <div key={l.label}>
+              <Link to={l.to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l.label}</Link>
             </div>
           ))}
         </div>
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Company</div>
-          {['Pricing', 'Changelog', 'Roadmap', 'Blog'].map(l => (
-            <div key={l}>
-              <Link to="/pricing" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</Link>
+          {[
+            { label: 'Pricing', to: '/pricing' },
+            { label: 'FAQ',     to: '/faq' },
+            { label: 'Blog',    to: '/blog' },
+            { label: 'Sign in', to: '/sign-in' },
+            { label: 'Sign up', to: '/sign-up' },
+          ].map(l => (
+            <div key={l.label}>
+              <Link to={l.to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l.label}</Link>
             </div>
           ))}
         </div>
 
         <div className="space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Legal</div>
-          {['Privacy Policy', 'Terms of Service', 'System Status', 'API Docs'].map(l => (
-            <div key={l}>
-              <a href="#" className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l}</a>
+          {[
+            { label: 'Privacy Policy',   to: '/legal/privacy' },
+            { label: 'Terms of Service', to: '/legal/terms' },
+            { label: 'Acceptable Use',   to: '/legal/acceptable-use' },
+            { label: 'Imprint',          to: '/legal/imprint' },
+          ].map(l => (
+            <div key={l.label}>
+              <Link to={l.to} className="text-xs text-slate-500 hover:text-slate-200 transition-colors">{l.label}</Link>
             </div>
           ))}
         </div>
@@ -62,7 +73,7 @@ export function MarketingFooter() {
         className="border-t px-6 py-4 flex items-center justify-between max-w-7xl mx-auto"
         style={{ borderColor: 'rgba(255,255,255,0.04)' }}
       >
-        <span className="text-[10px] font-mono text-slate-700">© 2025 RepoScout. All rights reserved.</span>
+        <span className="text-[10px] font-mono text-slate-700">© 2025 RepoHive. All rights reserved.</span>
         <span className="text-[10px] font-mono text-slate-700">Built for engineers, by engineers.</span>
       </div>
     </footer>

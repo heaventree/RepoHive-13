@@ -20,7 +20,9 @@ import {
   GitFork,
   Zap,
   Database,
-  Cpu
+  Cpu,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { Repo, Project } from '../types';
 
@@ -44,6 +46,31 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
   const [error, setError] = useState<string | null>(null);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
   const [embedStatus, setEmbedStatus] = useState<{ embedded: number; total: number; running: boolean } | null>(null);
+  // Shareable project link state
+  const [shareInfo, setShareInfo] = useState<{ isPublic: boolean; slug: string | null } | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  // Sync share state whenever the active project changes.
+  useEffect(() => {
+    if (!activeProject) { setShareInfo(null); return; }
+    const ap = activeProject as any;
+    setShareInfo({ isPublic: !!ap.is_public, slug: ap.public_slug ?? null });
+  }, [activeProject]);
+
+  const toggleShare = async () => {
+    if (!activeProject) return;
+    try {
+      const res = await fetch(`/api/projects/${activeProject.id}/share`, { method: 'POST' });
+      const d = await res.json();
+      if (res.ok) {
+        setShareInfo({ isPublic: d.isPublic, slug: d.slug });
+        if (d.isPublic && d.slug) {
+          const url = `${window.location.origin}/p/${d.slug}`;
+          try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
+        }
+      }
+    } catch {}
+  };
 
   const fetchProjects = () => {
     fetch('/api/projects').then(res => res.json()).then(data => {
@@ -184,7 +211,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   type="text"
                   value={newProject.name}
                   onChange={e => setNewProject({ ...newProject, name: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors"
+                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors"
                   placeholder="e.g. Book Publishing Suite"
                   autoFocus
                 />
@@ -194,7 +221,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 <textarea
                   value={newProject.description}
                   onChange={e => setNewProject({ ...newProject, description: e.target.value })}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors resize-none h-24 custom-scrollbar"
+                  className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors resize-none h-24 custom-scrollbar"
                   placeholder="Describe what this project needs..."
                 />
               </div>
@@ -224,13 +251,13 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               <button
                 onClick={handleCreateProject}
                 disabled={!newProject.name.trim()}
-                className="flex-1 bg-accent-blue hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+                className="flex-1 bg-accent-blue hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-semibold py-2.5 rounded-md transition-colors"
               >
                 Create Project
               </button>
               <button
                 onClick={() => setIsCreating(false)}
-                className="px-4 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:border-white/20 transition-colors text-sm"
+                className="px-4 py-2.5 rounded-md border border-white/10 text-slate-400 hover:text-white hover:border-white/20 transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -271,7 +298,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                   <button
                     key={p.id}
                     onClick={() => { setActiveProject(p); setHasAnalyzed(false); loadSavedRecommendations(p.id); }}
-                    className={`w-full text-left rounded-xl p-3 transition-all border ${
+                    className={`w-full text-left rounded-md p-3 transition-all border ${
                       activeProject?.id === p.id
                         ? 'bg-accent-blue/10 border-accent-blue/30'
                         : 'bg-white/3 border-transparent hover:bg-white/5 hover:border-white/10'
@@ -311,14 +338,14 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                     value={brief}
                     onChange={e => setBrief(e.target.value)}
                     rows={4}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors resize-none custom-scrollbar"
+                    className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-300 placeholder-slate-600 focus:border-accent-blue focus:outline-none transition-colors resize-none custom-scrollbar"
                     placeholder="Describe what you're building..."
                   />
                 </div>
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !brief.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-accent-blue hover:bg-blue-600 disabled:opacity-40 text-white font-semibold text-sm py-2.5 rounded-xl transition-all shadow-lg shadow-blue-500/10"
+                  className="w-full flex items-center justify-center gap-2 bg-accent-blue hover:bg-blue-600 disabled:opacity-40 text-white font-semibold text-sm py-2.5 rounded-md transition-all shadow-lg shadow-blue-500/10"
                 >
                   {isAnalyzing
                     ? <><Sparkles className="w-4 h-4 animate-spin" /> Analyzing...</>
@@ -331,18 +358,18 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             {/* Stats */}
             <div className="border-t border-white/8 p-4 flex-shrink-0 space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                <div className="rounded-md bg-white/5 border border-white/8 p-3 text-center">
                   <div className="text-xl font-bold text-white">{repos.length}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5">Repos Indexed</div>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/8 p-3 text-center">
+                <div className="rounded-md bg-white/5 border border-white/8 p-3 text-center">
                   <div className="text-xl font-bold text-emerald-400">{recommendations.length > 0 ? recommendations.length : '—'}</div>
                   <div className="text-[10px] text-slate-500 mt-0.5">Saved Matches</div>
                 </div>
               </div>
 
               {/* Vector index status — auto-updates as repos are ingested */}
-              <div className="rounded-xl border p-3 space-y-2" style={{ background: 'rgba(59,130,246,0.04)', borderColor: 'rgba(59,130,246,0.15)' }}>
+              <div className="rounded-md border p-3 space-y-2" style={{ background: 'rgba(59,130,246,0.04)', borderColor: 'rgba(59,130,246,0.15)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Database className="w-3.5 h-3.5 text-accent-blue" />
@@ -394,7 +421,35 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
+            {activeProject && (
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  onClick={toggleShare}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                    shareInfo?.isPublic
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-bg-panel border-border-main text-slate-300 hover:text-white hover:border-accent-blue'
+                  }`}
+                  title={shareInfo?.isPublic ? 'Click to unshare' : 'Make this project public'}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  {shareInfo?.isPublic ? 'Public' : 'Share'}
+                </button>
+                {shareInfo?.isPublic && shareInfo.slug && (
+                  <button
+                    onClick={async () => {
+                      const url = `${window.location.origin}/p/${shareInfo.slug}`;
+                      try { await navigator.clipboard.writeText(url); setShareCopied(true); setTimeout(() => setShareCopied(false), 2500); } catch {}
+                    }}
+                    className="text-[10px] font-mono text-slate-500 hover:text-accent-blue flex items-center gap-1"
+                  >
+                    <Copy className="w-2.5 h-2.5" />
+                    {shareCopied ? 'Copied!' : `/p/${shareInfo.slug}`}
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="flex bg-white/5 border border-white/10 rounded-md p-1 gap-1">
               <button
                 onClick={() => setRecViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-all ${recViewMode === 'grid' ? 'bg-accent-blue text-white' : 'text-slate-500 hover:text-white'}`}
@@ -409,12 +464,12 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               </button>
             </div>
             {recommendations.length > 0 && recommendations[0]._mode === 'vector' ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-blue/10 border border-accent-blue/20">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-accent-blue/10 border border-accent-blue/20">
                 <Cpu className="w-3.5 h-3.5 text-accent-blue" />
                 <span className="text-xs font-semibold text-accent-blue">Vector Search</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/10">
                 <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
                 <span className="text-xs font-semibold text-slate-400">Keyword Search</span>
               </div>
@@ -424,7 +479,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
+          <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/5 p-4 flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-red-400">Analysis Failed</p>
@@ -437,7 +492,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
         {isAnalyzing && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass-card rounded-2xl overflow-hidden animate-pulse">
+              <div key={i} className="glass-card rounded-lg overflow-hidden animate-pulse">
                 <div className="p-5 space-y-3">
                   <div className="h-4 bg-white/5 rounded-lg w-2/3" />
                   <div className="h-3 bg-white/5 rounded-lg w-full" />
@@ -454,7 +509,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             {hasAnalyzed && activeProject ? (
               /* Analysis ran but nothing passed the relevance floor */
               <>
-                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6 border border-amber-500/20 bg-amber-500/5">
+                <div className="w-20 h-20 rounded-lg flex items-center justify-center mb-6 border border-amber-500/20 bg-amber-500/5">
                   <AlertTriangle className="w-9 h-9 text-amber-500/60" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No relevant repos found</p>
@@ -464,7 +519,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
                 </p>
                 <button
                   onClick={() => setActiveTab('ingest')}
-                  className="mt-5 flex items-center gap-2 bg-accent-blue/10 hover:bg-accent-blue/20 border border-accent-blue/30 text-accent-blue font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors"
+                  className="mt-5 flex items-center gap-2 bg-accent-blue/10 hover:bg-accent-blue/20 border border-accent-blue/30 text-accent-blue font-semibold px-5 py-2.5 rounded-md text-sm transition-colors"
                 >
                   <Plus className="w-4 h-4" /> Ingest more repos
                 </button>
@@ -472,7 +527,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             ) : activeProject ? (
               /* Project selected, not yet analyzed */
               <>
-                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                <div className="w-20 h-20 rounded-lg glass-card flex items-center justify-center mb-6 border border-white/10">
                   <Rocket className="w-9 h-9 text-slate-600" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No saved matches yet</p>
@@ -483,14 +538,14 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
             ) : (
               /* No project selected */
               <>
-                <div className="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-6 border border-white/10">
+                <div className="w-20 h-20 rounded-lg glass-card flex items-center justify-center mb-6 border border-white/10">
                   <Rocket className="w-9 h-9 text-slate-600" />
                 </div>
                 <p className="text-white font-semibold text-lg mb-2">No project selected</p>
                 <p className="text-slate-500 text-sm max-w-xs">Select a project on the left or create a new one to get started.</p>
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="mt-6 bg-accent-blue hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-lg shadow-blue-500/10"
+                  className="mt-6 bg-accent-blue hover:bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-md text-sm transition-colors shadow-lg shadow-blue-500/10"
                 >
                   + New Project
                 </button>
@@ -506,7 +561,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               const repo = repos.find(r => r.id === rec.repoId);
               if (!repo) return null;
               return (
-                <article key={idx} className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all relative">
+                <article key={idx} className="glass-card rounded-lg overflow-hidden group hover:border-white/20 transition-all relative">
                   {/* Remove button */}
                   <button
                     onClick={() => handleRemoveRecommendation(rec.repoId)}
@@ -581,7 +636,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ setActiveTab
               const repo = repos.find(r => r.id === rec.repoId);
               if (!repo) return null;
               return (
-                <div key={idx} className="glass-card rounded-2xl flex items-center overflow-hidden hover:border-white/20 transition-all group">
+                <div key={idx} className="glass-card rounded-lg flex items-center overflow-hidden hover:border-white/20 transition-all group">
                   {/* Fit score */}
                   <div className="w-16 h-16 bg-emerald-500/10 border-r border-white/8 flex flex-col items-center justify-center flex-shrink-0">
                     <span className="text-[8px] text-emerald-400 font-bold uppercase leading-none mb-0.5">FIT</span>

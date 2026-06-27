@@ -1,0 +1,33 @@
+# Render deployment blueprint for RepoHive.
+# The single Express server serves both the API and the built SPA.
+# Secret values are set in the Render dashboard (sync: false), not committed.
+services:
+  - type: web
+    name: repohive
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Database (Turso / libSQL)
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      # Auth (Clerk). VITE_CLERK_PUBLISHABLE_KEY is inlined at build time.
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      # AI providers
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # GitHub (raises API rate limits)
+      - key: GITHUB_TOKEN
+        sync: false

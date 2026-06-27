@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../lib/seo';
+import { buildWebSiteSchema } from '../lib/seo';
 import { MarketingNav } from '../components/marketing/MarketingNav';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 import {
@@ -100,7 +102,7 @@ function AnimatedHeroCard() {
 
   return (
     <div
-      className="rounded-xl overflow-hidden w-full"
+      className="rounded-md overflow-hidden w-full"
       style={{
         background: 'rgba(6,14,32,0.92)',
         backdropFilter: 'blur(24px)',
@@ -116,7 +118,7 @@ function AnimatedHeroCard() {
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#febc2e' }} />
         <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#28c840' }} />
         <span className="ml-3 text-[9px] font-mono uppercase tracking-widest" style={{ color: '#424754' }}>
-          reposcout / workspace
+          repohive / workspace
         </span>
         <span
           className="ml-auto text-[9px] font-mono px-2 py-0.5 rounded"
@@ -254,32 +256,49 @@ function Orbs() {
 /* ── Pain points ── */
 const PAIN_POINTS = [
   { icon: <BookmarkX className="w-6 h-6" />, title: 'Stop losing repos in your bookmarks',    desc: "You've saved hundreds of great repos across browser bookmarks, GitHub stars, Notion pages, and random text files. You never find them when you need them.", color: '#ff6b6b' },
-  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived, abandoned, license-changed, security issue. RepoScout monitors your list and alerts you before you build on a foundation that crumbles.",     color: AMBER },
-  { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your own curated list first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
+  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived or abandoned. RepoHive watches your library and flags it before you build on a foundation that's crumbling.",     color: AMBER },
+  { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your imported repo library first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
 ];
 
 /* ── Features ── */
 const FEATURES = [
   { icon: <Layers className="w-5 h-5" />, title: 'Bulk import',        desc: 'Paste any GitHub URL — single repo, org, or a list of 1,000. Everything ingested in minutes.',                                       color: PRIMARY },
-  { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Updated weekly.',                             color: PRIMARY_CTR },
-  { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '370+ pre-loaded OSS alternatives to expensive SaaS tools. Available on Solo and Studio as a curated starting point.',                color: AMBER },
-  { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos, license changes, dropped stars, and security flags. Know before your team does.',                   color: TERTIARY },
-  { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoScout to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
-  { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Add a project and get AI-curated recommendations.',                        color: '#60a5fa' },
+  { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Re-checked daily.',                             color: PRIMARY_CTR },
+  { icon: <Flame className="w-5 h-5" />,  title: 'Preloaded library',  desc: '500+ high-scoring open-source repos, already analysed and scored — including 100+ App Killers, named replacements for specific paid tools. Included on Solo and Studio as a built-in head start.',                color: AMBER },
+  { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos and stalled commit activity. Know before your team does.',                   color: TERTIARY },
+  { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoHive to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
+  { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Brief a project and get matched repos for everyone.',                        color: '#60a5fa' },
 ];
 
 const IDE_INTEGRATIONS = ['Replit', 'Bolt', 'Lovable', 'Base44', 'Claude Code', 'Cursor'];
 
 const STATS = [
-  { value: '374+',    label: 'Repos analysed' },
+  { value: '25 free', label: 'Repos to import' },
   { value: '3,072',   label: 'Vector dimensions' },
   { value: '<40ms',   label: 'Search latency' },
   { value: '6 tools', label: 'IDE integrations' },
 ];
 
+const WEB_SCHEMA = buildWebSiteSchema('RepoHive', 'https://repohive.app', {
+  description: 'Import, analyze, monitor, and search the GitHub repos you already use.',
+});
+
 export function LandingPage() {
   return (
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
+      <SEO
+        title="RepoHive | AI Repo Analysis, Monitoring & Search for Your GitHub Stack"
+        description="Import GitHub repos you use, save, or star. RepoHive analyzes, scores, monitors, and makes them searchable inside your dev workflow."
+        openGraph={{
+          type: 'website',
+          title: 'RepoHive — AI Repo Intelligence for Your GitHub Stack',
+          description: 'Analyze, monitor, and search the repos you already use — inside your dev workflow.',
+          url: 'https://repohive.app/',
+          siteName: 'RepoHive',
+        }}
+        twitter={{ card: 'summary_large_image' }}
+        jsonLd={WEB_SCHEMA}
+      />
       <Orbs />
       <MarketingNav />
 
@@ -340,16 +359,16 @@ export function LandingPage() {
                   Add your repos free <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  to="/app"
+                  to="/how-it-works"
                   className="flex items-center gap-2 px-6 py-3 rounded-full font-mono font-bold text-sm transition-all hover:bg-white/5"
                   style={{ border: '1px solid rgba(66,71,84,0.30)', color: PRIMARY }}
                 >
-                  See the demo <ChevronRight className="w-4 h-4" />
+                  How it works <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 
               <p className="mt-5 text-[11px] font-mono" style={{ color: '#424754' }}>
-                Free forever · No credit card · 374 repos already analysed
+                Free forever · No credit card · Bring your own repos
               </p>
             </div>
 
@@ -360,7 +379,7 @@ export function LandingPage() {
           </div>
 
           {/* Stats strip */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-xl"
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-md"
             style={{ background: GLASS_BORDER }}>
             {STATS.map((s) => (
               <div key={s.label} className="flex flex-col items-center py-5 px-4"
@@ -390,9 +409,9 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PAIN_POINTS.map((p) => (
-              <div key={p.title} className="p-8 rounded-xl"
+              <div key={p.title} className="p-8 rounded-md"
                 style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                <div className="w-12 h-12 rounded-md flex items-center justify-center mb-6"
                   style={{ background: `${p.color}18`, color: p.color }}>{p.icon}</div>
                 <h3 className="font-mono font-bold text-white text-lg mb-3">{p.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>{p.desc}</p>
@@ -417,11 +436,11 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: '01', title: 'Add your repos',         desc: 'Paste any GitHub URL — or bulk import a list. Your bookmarks, GitHub stars, side project deps. 25 free, 1,000+ on Solo.', color: PRIMARY_CTR },
-              { step: '02', title: 'We analyse everything',  desc: 'DeepSeek reads every repo: tech stack, category, SaaS readiness, maintenance health, license. All updated weekly.', color: TERTIARY },
+              { step: '02', title: 'We analyse everything',  desc: 'DeepSeek reads every repo: tech stack, category, SaaS readiness, maintenance health, license. Re-checked daily.', color: TERTIARY },
               { step: '03', title: 'Search, monitor, build', desc: 'Ask in plain English. Get staleness alerts. Pull your library into Replit, Bolt, or Claude Code via API.', color: '#c084fc' },
             ].map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center font-mono font-black text-2xl mb-6"
+                <div className="w-14 h-14 rounded-md flex items-center justify-center font-mono font-black text-2xl mb-6"
                   style={{ background: `${s.color}15`, color: s.color, border: `1px solid ${s.color}30` }}>
                   {s.step}
                 </div>
@@ -429,6 +448,15 @@ export function LandingPage() {
                 <p className="text-sm leading-relaxed" style={{ color: '#c2c6d6' }}>{s.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-12">
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:text-white"
+              style={{ color: TERTIARY }}
+            >
+              The full walkthrough <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>
@@ -447,7 +475,7 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
-              <div key={f.title} className="p-7 rounded-xl transition-all duration-200"
+              <div key={f.title} className="p-7 rounded-md transition-all duration-200"
                 style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = `${f.color}30`; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = GLASS_BORDER; }}
@@ -476,7 +504,7 @@ export function LandingPage() {
                 <span style={{ color: 'rgba(192,132,252,0.60)' }}>inside every tool you use.</span>
               </h2>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                One API key. Connect RepoScout to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your own curated list.
+                One API key. Connect RepoHive to any platform that supports custom context — Replit, Bolt, Lovable, Base44, Claude Code, Cursor. Ask your AI assistant to find repos from your imported repo library.
               </p>
               <div className="space-y-3 pt-2">
                 {[
@@ -490,8 +518,15 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
+              <Link
+                to="/integrations"
+                className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest transition-colors hover:text-white pt-2"
+                style={{ color: '#c084fc' }}
+              >
+                Integration guide <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <div className="rounded-xl p-6" style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
+            <div className="rounded-md p-6" style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: GLASS_BORDER }}>
               <div className="text-[10px] font-mono uppercase tracking-widest mb-5" style={{ color: '#8c909f' }}>Connect to any platform</div>
               <div className="grid grid-cols-2 gap-3 mb-5">
                 {IDE_INTEGRATIONS.map((name) => (
@@ -505,9 +540,9 @@ export function LandingPage() {
               <div className="p-4 rounded-lg font-mono text-xs space-y-1"
                 style={{ background: '#020810', border: '1px solid rgba(77,142,255,0.15)' }}>
                 <div style={{ color: '#424754' }}># Example API call</div>
-                <div><span style={{ color: '#c084fc' }}>GET</span> <span style={{ color: PRIMARY }}>api.reposcout.io/v1/search</span></div>
+                <div><span style={{ color: '#c084fc' }}>GET</span> <span style={{ color: PRIMARY }}>api.repohive.cloud/v1/search</span></div>
                 <div style={{ color: '#8c909f' }}>  ?q=auth+library+nextjs&amp;scope=my_repos</div>
-                <div style={{ color: TERTIARY }}># Returns your curated list first</div>
+                <div style={{ color: TERTIARY }}># Returns results from your imported library</div>
               </div>
             </div>
           </div>
@@ -519,7 +554,7 @@ export function LandingPage() {
       ══════════════════════════════════════════ */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-10"
+          <div className="rounded-md p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-10"
             style={{ background: GLASS_BG, backdropFilter: 'blur(20px)', border: '1px solid rgba(173,198,255,0.15)' }}>
             <div className="flex-1 space-y-4">
               <div className="flex items-center gap-2">
@@ -528,17 +563,22 @@ export function LandingPage() {
               </div>
               <h3 className="font-mono font-black text-white leading-tight tracking-tight"
                 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)' }}>
-                370+ curated repos, pre-loaded.
+                500+ high-scoring repos, already in your account.
               </h3>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                Solo and Studio plans unlock our hand-curated App Killers library — 370+ open source alternatives to the most expensive SaaS tools. Already analysed, scored, and ready to search.
+                Solo and Studio plans preload a 500+ repo library — production-grade open source, already analysed and scored — including 100+ App Killers, named replacements for specific paid tools. Searchable from day one, alongside your own repo library.
               </p>
             </div>
-            <div className="flex-none">
-              <Link to="/pricing"
-                className="flex items-center gap-2 px-8 py-4 rounded-full font-mono font-bold text-sm transition-all hover:scale-105"
+            <div className="flex-none flex flex-col gap-3">
+              <Link to="/app-killers"
+                className="flex items-center justify-center gap-2 px-8 py-4 rounded-full font-mono font-bold text-sm transition-all hover:scale-105"
                 style={{ background: PRIMARY_CTR, color: ON_PRIMARY_CTR, boxShadow: '0 0 20px rgba(77,142,255,0.30)' }}>
-                See plans <ArrowRight className="w-4 h-4" />
+                Explore App Killers <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/pricing"
+                className="flex items-center justify-center gap-2 px-8 py-3 rounded-full font-mono font-bold text-xs transition-all hover:bg-white/5"
+                style={{ border: '1px solid rgba(66,71,84,0.30)', color: PRIMARY }}>
+                See plans
               </Link>
             </div>
           </div>

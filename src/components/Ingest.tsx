@@ -104,7 +104,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
   /* ── Main scan ── */
   const handleInitiate = async () => {
-    const urlList = [...new Set(urls.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')))];
+    const urlList = [...new Set<string>(urls.split('\n').map(u => u.trim()).filter(u => u.startsWith('http')))];
     if (urlList.length === 0) return;
 
     // Clear any lingering timers from previous run
@@ -203,7 +203,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
       {summary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}>
           <div
-            className="relative w-full max-w-sm mx-4 rounded-2xl p-8 text-center shadow-2xl"
+            className="relative w-full max-w-sm mx-4 rounded-lg p-8 text-center shadow-2xl"
             style={{
               background: 'rgba(15,23,42,0.96)',
               border: summary.stopped
@@ -220,7 +220,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
           >
             {/* Icon */}
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              className="w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-5"
               style={{
                 background: summary.stopped
                   ? 'rgba(251,191,36,0.10)'
@@ -256,7 +256,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
 
             <button
               onClick={handleDismissSummary}
-              className="mt-7 w-full py-3 rounded-xl font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
+              className="mt-7 w-full py-3 rounded-md font-mono font-bold text-sm transition-all hover:scale-105 active:scale-95"
               style={{
                 background: summary.stopped
                   ? 'rgba(251,191,36,0.15)'
@@ -291,7 +291,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
 
           {/* ── Live Monitor ── */}
-          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+          <div className="flex flex-col rounded-lg overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div className="flex items-center gap-3">
@@ -327,7 +327,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
             <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
               {stream.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                  <div className="w-16 h-16 rounded-2xl border border-white/10 flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <div className="w-16 h-16 rounded-lg border border-white/10 flex items-center justify-center mb-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
                     <Rocket className="w-7 h-7 text-slate-600" />
                   </div>
                   <p className="text-slate-500 font-medium">No scans running</p>
@@ -336,7 +336,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
               ) : stream.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-md border p-4"
                   style={{
                     transition: 'opacity 0.45s ease, transform 0.45s ease, max-height 0.45s ease',
                     opacity: item.removing ? 0 : 1,
@@ -414,7 +414,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
           </div>
 
           {/* ── URL Input ── */}
-          <div className="flex flex-col rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+          <div className="flex flex-col rounded-lg overflow-hidden border border-white/10 shadow-2xl" style={{ background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
               <div>
                 <p className="text-white font-semibold text-lg">Paste URLs</p>
@@ -453,7 +453,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   <button
                     onClick={handleStop}
                     title="Stop scan"
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs tracking-wide transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md font-bold text-xs tracking-wide transition-all hover:scale-105 active:scale-95"
                     style={{
                       background: 'rgba(239,68,68,0.12)',
                       border: '1px solid rgba(239,68,68,0.35)',
@@ -468,7 +468,7 @@ export const Ingest: React.FC<IngestProps> = ({ onComplete }) => {
                   <button
                     onClick={handleInitiate}
                     disabled={repoCount === 0}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white font-bold text-xs tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-white font-bold text-xs tracking-wide transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                     style={{
                       background: repoCount === 0
                         ? 'rgba(99,102,241,0.2)'

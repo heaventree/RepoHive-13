@@ -1,0 +1,106 @@
+{
+  "_about": "Environment variables to paste into Netlify → Site → Environment variables. Grouped by what's required now vs deferred. VITE_-prefixed vars are baked into the frontend at build time; everything else is server-side and read by the API function at runtime.",
+
+  "required_now": {
+    "TURSO_DATABASE_URL": {
+      "scope": "server",
+      "description": "Turso libSQL connection URL.",
+      "example": "libsql://your-db.turso.io",
+      "where_to_get": "Turso dashboard → your database → Connect."
+    },
+    "TURSO_AUTH_TOKEN": {
+      "scope": "server",
+      "description": "Turso auth token with read + write.",
+      "example": "eyJhbGciOi...",
+      "where_to_get": "Turso dashboard → your database → Tokens → Create token."
+    },
+    "CLERK_SECRET_KEY": {
+      "scope": "server",
+      "description": "Clerk server-side secret. Validates sessions on every /api request.",
+      "example": "sk_test_... or sk_live_...",
+      "where_to_get": "Clerk dashboard → API Keys → Secret key."
+    },
+    "VITE_CLERK_PUBLISHABLE_KEY": {
+      "scope": "frontend (build-time)",
+      "description": "Clerk publishable key, browser-safe. Must be VITE_-prefixed to be baked into the frontend bundle.",
+      "example": "pk_test_... or pk_live_...",
+      "where_to_get": "Clerk dashboard → API Keys → Publishable key."
+    },
+    "DEEPSEEK_API_KEY": {
+      "scope": "server",
+      "description": "Powers AI repo analysis (category, tags, summary, App Killer flag).",
+      "example": "sk-...",
+      "where_to_get": "platform.deepseek.com → API Keys."
+    },
+    "GEMINI_API_KEY": {
+      "scope": "server",
+      "description": "Powers vector embeddings for semantic search / recommendations.",
+      "example": "AI...",
+      "where_to_get": "ai.google.dev → Get API key (Google AI Studio)."
+    },
+    "GITHUB_TOKEN": {
+      "scope": "server",
+      "description": "GitHub Personal Access Token. Raises ingest rate limit from 60 to 5000 req/hr. Public-repo read scope is enough.",
+      "example": "ghp_...",
+      "where_to_get": "github.com/settings/tokens → Generate new token (classic) → public_repo."
+    },
+    "APP_URL": {
+      "scope": "server",
+      "description": "Canonical public URL of the deployed site. Used for self-referential links shown in the UI.",
+      "example": "https://repohive.netlify.app"
+    }
+  },
+
+  "optional_now": {
+    "ADMIN_USER_IDS": {
+      "scope": "server",
+      "description": "Comma-separated Clerk user ids allowed to curate the preloaded App Killers library. Leave blank until you've signed in once and run `npm run tenants` (or checked Clerk dashboard) to find your user_... id.",
+      "example": "user_2abcXYZ...,user_2defXYZ..."
+    }
+  },
+
+  "stripe_billing": {
+    "_note": "Billing routes respond 503 until these are set, so they can be added in any order. Webhook endpoint URL: https://repohive.cloud/api/stripe/webhook — subscribe it to checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.payment_failed.",
+    "STRIPE_SECRET_KEY": {
+      "scope": "server",
+      "description": "Stripe dashboard → Developers → API keys.",
+      "example": "sk_test_... or sk_live_..."
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "scope": "server",
+      "description": "Signing secret shown when creating the webhook endpoint.",
+      "example": "whsec_..."
+    },
+    "STRIPE_PRICE_SOLO_MONTHLY": {
+      "scope": "server",
+      "description": "Recurring Price ID for Solo monthly ($19/mo). Stripe dashboard → Products.",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_SOLO_ANNUAL": {
+      "scope": "server",
+      "description": "Recurring Price ID for Solo annual ($180/yr).",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_STUDIO_MONTHLY": {
+      "scope": "server",
+      "description": "Recurring Price ID for Studio monthly ($49/mo).",
+      "example": "price_..."
+    },
+    "STRIPE_PRICE_STUDIO_ANNUAL": {
+      "scope": "server",
+      "description": "Recurring Price ID for Studio annual ($468/yr).",
+      "example": "price_..."
+    },
+    "VITE_STRIPE_PUBLISHABLE_KEY": {
+      "scope": "frontend (build-time)",
+      "description": "Not currently read by the frontend (Checkout is hosted by Stripe) — safe to set for future use.",
+      "example": "pk_test_..."
+    }
+  },
+
+  "do_not_set_on_netlify": {
+    "PORT": "Netlify manages the listening port internally — leave unset.",
+    "NODE_ENV": "Netlify sets this to 'production' automatically during builds and function runtime.",
+    "URL": "Auto-injected by Netlify (the canonical site URL). If you'd rather drive APP_URL from this at runtime, you can — but setting APP_URL explicitly is clearer."
+  }
+}

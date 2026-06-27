@@ -31,7 +31,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
               className="text-3xl font-black font-mono bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #6366f1)', filter: 'drop-shadow(0 0 8px rgba(77,142,255,0.5))' }}
             >
-              RS
+              RH
             </span>
           </Link>
         </div>
@@ -61,7 +61,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
             </span>
           </div>
           <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(194,198,214,0.4)' }}>
-            © 2025 REPOSCOUT
+            © 2025 REPOHIVE
           </span>
         </div>
       </section>
@@ -79,7 +79,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
 
         {/* Glass card */}
         <div
-          className="w-full max-w-md rounded-xl p-10"
+          className="w-full max-w-md rounded-md p-10"
           style={{
             background: 'rgba(15,23,42,0.82)',
             backdropFilter: 'blur(20px)',
@@ -95,7 +95,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
                 className="text-2xl font-black font-mono bg-clip-text text-transparent"
                 style={{ backgroundImage: 'linear-gradient(to right, #3b82f6, #6366f1)' }}
               >
-                RS
+                RH
               </span>
             </Link>
           </div>
@@ -152,7 +152,7 @@ export function SignInPage({ mode = 'signin' }: Props) {
               </label>
               <input
                 type="email"
-                placeholder="operator@reposcout.io"
+                placeholder="operator@repohive.cloud"
                 className="w-full rounded-lg px-4 py-3 text-white text-sm placeholder-slate-600 outline-none transition-all"
                 style={{
                   background: '#020810',

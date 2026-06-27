@@ -1,0 +1,58 @@
+# Netlify build + routing for RepoHive.
+# - Vite builds the static frontend into dist/.
+# - The Express API runs as a single Netlify Function (netlify/functions/api.ts),
+#   wrapped with serverless-http.
+# - /api/* is rewritten to that function. Everything else falls back to
+#   index.html so client-side routes (React Router) work on direct hits.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  # VITE_-prefixed publishable keys are baked into the frontend bundle on
+  # purpose — they are browser-safe by design (Clerk/Stripe publishable keys).
+  # APP_URL is the public website address printed in our legal pages and
+  # advertised everywhere. Without these omissions Netlify's secrets scanner
+  # flags them in dist/ and fails the deploy.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_CLERK_PUBLISHABLE_KEY,VITE_STRIPE_PUBLISHABLE_KEY,APP_URL,TURSO_DATABASE_URL"
+  # Also skip files where the public site URL legitimately appears as visible
+  # body text (legal pages) or as a default placeholder (env example).
+  SECRETS_SCAN_OMIT_PATHS = ".env.example,src/pages/legal/Imprint.tsx,src/pages/legal/Privacy.tsx,src/pages/legal/Terms.tsx,src/pages/legal/AcceptableUse.tsx"
+
+[functions]
+  node_bundler = "esbuild"
+  # Bundle the seed JSON and any other non-JS assets the function imports
+  # so they're present at runtime.
+  included_files = ["scripts/seed/**"]
+
+# Send every API call to the bundled Express function. Using the bare function
+# path (no :splat) makes Netlify preserve the original /api/... URL when the
+# function runs, so the existing Express route registrations match as-is.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+# Sitemap & robots are served by the Express function too — they need to live
+# at the site root (not under /api) so crawlers find them.
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+# SPA fallback — any unmatched path serves the built index.html so
+# React Router can take it from there.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

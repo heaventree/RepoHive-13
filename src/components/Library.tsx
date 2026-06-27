@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Filter, 
-  SortDesc, 
-  PlusCircle, 
-  Verified, 
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import {
+  Filter,
+  PlusCircle,
+  Verified,
   ExternalLink,
   Search,
   RefreshCw,
@@ -14,29 +13,31 @@ import {
   Cpu,
   Globe,
   ShieldCheck,
-  ChevronDown,
   X,
   Star,
   Github,
   HelpCircle,
   ChevronRight,
-  Building2,
-  Flame
+  Flame,
+  GitCompare,
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Play,
+  Server,
+  Heart
 } from 'lucide-react';
 import { Repo } from '../types';
+import { classifyRepo } from '../lib/classification';
+import { CompareModal } from './CompareModal';
 
 interface LibraryProps {
   onViewRepo: (repo: Repo) => void;
   onBulkIngest: () => void;
   onGoToWorkspace: () => void;
   appKillersMode?: boolean;
+  saasReadyMode?: boolean;
 }
-
-const LinkIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" className={className} fill="currentColor">
-    <path d="M384 64C366.3 64 352 78.3 352 96C352 113.7 366.3 128 384 128L466.7 128L265.3 329.4C252.8 341.9 252.8 362.2 265.3 374.7C277.8 387.2 298.1 387.2 310.6 374.7L512 173.3L512 256C512 273.7 526.3 288 544 288C561.7 288 576 273.7 576 256L576 96C576 78.3 561.7 64 544 64L384 64zM144 160C99.8 160 64 195.8 64 240L64 496C64 540.2 99.8 576 144 576L400 576C444.2 576 480 540.2 480 496L480 416C480 398.3 465.7 384 448 384C430.3 384 416 398.3 416 416L416 496C416 504.8 408.8 512 400 512L144 512C135.2 512 128 504.8 128 496L128 240C128 231.2 135.2 224 144 224L224 224C241.7 224 256 209.7 256 192C256 174.3 241.7 160 224 160L144 160z"/>
-  </svg>
-);
 
 const StatusIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" className={className} fill="currentColor">
@@ -44,24 +45,77 @@ const StatusIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace, appKillersMode = false }) => {
+export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGoToWorkspace, appKillersMode = false, saasReadyMode = false }) => {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLicense, setSelectedLicense] = useState<string>('All');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('All');
+  const [selectedLicenses, setSelectedLicenses] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [minScore, setMinScore] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>('latest');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isRescanning, setIsRescanning] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [singleRepoUrl, setSingleRepoUrl] = useState('');
-  const [isQuickAdding, setIsQuickAdding] = useState(false);
-  const [quickAddStatus, setQuickAddStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [purposeRepo, setPurposeRepo] = useState<Repo | null>(null);
   const [enterpriseOnly, setEnterpriseOnly] = useState(appKillersMode);
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [showCompare, setShowCompare] = useState(false);
+
+  // Render pagination — only this many cards are mounted at once, with
+  // infinite scroll loading the next batch as the sentinel comes into view.
+  // Rendering all ~1k cards up-front was the dominant cost of opening the
+  // Library; capping the initial mount makes first paint near-instant.
+  const PAGE_SIZE = 40;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Favourites — per-user starred repos, persisted server-side. Held as a Set
+  // for O(1) membership checks in the card render path.
+  const [favouriteIds, setFavouriteIds] = useState<Set<string>>(new Set());
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/favourites')
+      .then(r => r.json())
+      .then(d => setFavouriteIds(new Set(d?.repoIds ?? [])))
+      .catch(() => {});
+  }, []);
+
+  const toggleFavourite = (repoId: string) => {
+    const [owner, name] = repoId.split('/');
+    if (!owner || !name) return;
+    const isFav = favouriteIds.has(repoId);
+    // Optimistic — flip locally, then reconcile with the server.
+    setFavouriteIds(prev => {
+      const next = new Set(prev);
+      if (isFav) next.delete(repoId); else next.add(repoId);
+      return next;
+    });
+    fetch(`/api/favourites/${owner}/${name}`, { method: isFav ? 'DELETE' : 'PUT' })
+      .catch(() => {
+        // Revert on network failure.
+        setFavouriteIds(prev => {
+          const next = new Set(prev);
+          if (isFav) next.add(repoId); else next.delete(repoId);
+          return next;
+        });
+      });
+  };
+
+  const toggleCompare = (id: string) => {
+    setCompareIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < 4) next.add(id);
+      return next;
+    });
+  };
+
+  const toggleInArray = (arr: string[], setter: (v: string[]) => void, value: string) => {
+    setter(arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]);
+  };
 
   useEffect(() => {
     setEnterpriseOnly(appKillersMode);
@@ -72,9 +126,10 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
     fetch('/api/repos')
       .then(res => res.json())
       .then(data => {
-        setRepos(data);
+        setRepos(Array.isArray(data) ? data : []);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -91,32 +146,17 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         }
       } catch (e) {}
     });
-    return ['All', ...Array.from(cats)];
+    return Array.from(cats).sort();
   }, [repos]);
 
   const licenses = useMemo(() => {
     const unique = new Set(repos.map(r => r.license).filter(Boolean));
-    return ['All', ...Array.from(unique)];
+    return Array.from(unique).sort();
   }, [repos]);
 
   const languages = useMemo(() => {
     const unique = new Set(repos.map(r => r.language).filter(Boolean));
-    return ['All', ...Array.from(unique)];
-  }, [repos]);
-
-  const suitabilities = useMemo(() => {
-    const unique = new Set<string>();
-    repos.forEach(r => {
-      try {
-        if (r.ai_analysis) {
-          const data = JSON.parse(r.ai_analysis);
-          if (data.useCases) {
-            data.useCases.forEach((u: string) => unique.add(u));
-          }
-        }
-      } catch (e) {}
-    });
-    return ['All', ...Array.from(unique)];
+    return Array.from(unique).sort();
   }, [repos]);
 
   const getLicenseColor = (license: string) => {
@@ -131,28 +171,26 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const filteredRepos = useMemo(() => {
     return repos
       .filter(repo => {
-        const matchesSearch = repo.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        const matchesSearch = repo.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                              repo.description?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesLicense = selectedLicense === 'All' || repo.license === selectedLicense;
-        const matchesLanguage = selectedLanguage === 'All' || repo.language === selectedLanguage;
+        const matchesLicense = selectedLicenses.length === 0 || selectedLicenses.includes(repo.license);
+        const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.includes(repo.language);
         const matchesScore = repo.score >= minScore;
-        
-        let matchesCategory = selectedCategory === 'All';
 
+        let matchesCategory = selectedCategories.length === 0;
         if (!matchesCategory && repo.ai_analysis) {
           try {
             const data = JSON.parse(repo.ai_analysis);
-            matchesCategory = data.category === selectedCategory;
+            matchesCategory = selectedCategories.includes(data.category);
           } catch (e) {}
         }
-        
+
         let matchesEnterprise = true;
         if (enterpriseOnly) {
           try {
             const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
-            matchesEnterprise = data.enterpriseTier === true;
+            matchesEnterprise = classifyRepo(data).kind === 'app-killer';
           } catch { matchesEnterprise = false; }
-          // App Killers must have an open-source license
           if (matchesEnterprise && appKillersMode) {
             const lic = (repo.license || '').toUpperCase();
             const openLicenses = ['MIT', 'APACHE', 'BSD', 'LGPL', 'MPL', 'ISC', 'AGPL', 'GPL'];
@@ -160,59 +198,59 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           }
         }
 
-        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise;
+        let matchesSaas = true;
+        if (saasReadyMode) {
+          try {
+            const data = repo.ai_analysis ? JSON.parse(repo.ai_analysis) : {};
+            matchesSaas = classifyRepo(data).kind === 'saas-ready';
+          } catch { matchesSaas = false; }
+        }
+
+        const matchesFavourite = !favouritesOnly || favouriteIds.has(repo.id);
+
+        return matchesSearch && matchesLicense && matchesCategory && matchesLanguage && matchesScore && matchesEnterprise && matchesSaas && matchesFavourite;
       })
       .sort((a, b) => {
-        if (sortBy === 'latest') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-        if (sortBy === 'oldest') return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
-        
         let comparison = 0;
-        if (sortBy === 'score') comparison = a.score - b.score;
+        if (sortBy === 'latest' || sortBy === 'updated') {
+          comparison = new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        } else if (sortBy === 'score') comparison = a.score - b.score;
         else if (sortBy === 'stars') comparison = a.stars - b.stars;
+        else if (sortBy === 'forks') comparison = (a.forks || 0) - (b.forks || 0);
         else if (sortBy === 'name') comparison = a.id.localeCompare(b.id);
-        else if (sortBy === 'language') comparison = (a.language || '').localeCompare(b.language || '');
-        else if (sortBy === 'license') comparison = (a.license || '').localeCompare(b.license || '');
-        else if (sortBy === 'status') comparison = (a.status || '').localeCompare(b.status || '');
-        
+
         return sortOrder === 'asc' ? comparison : -comparison;
       });
-  }, [repos, searchQuery, selectedLicense, selectedCategory, selectedLanguage, minScore, sortBy, sortOrder, enterpriseOnly]);
+  }, [repos, searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode, favouritesOnly, favouriteIds]);
 
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('desc');
-    }
-  };
+  // Whenever the filter set changes, snap the visible window back to the
+  // first page so the user isn't looking at a paginated slice of the
+  // previous result set.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery, selectedLicenses, selectedCategories, selectedLanguages, minScore, sortBy, sortOrder, enterpriseOnly, saasReadyMode, favouritesOnly]);
 
-  const handleQuickAdd = async () => {
-    const url = singleRepoUrl.trim();
-    if (!url || isQuickAdding) return;
-    setIsQuickAdding(true);
-    setQuickAddStatus(null);
-    try {
-      const res = await fetch('/api/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 409) throw new Error('Already in library');
-        throw new Error(data.error || res.statusText);
-      }
-      setQuickAddStatus({ ok: true, msg: `Added ${data.id} · score ${data.score} · ${data.category}` });
-      setSingleRepoUrl('');
-      fetchRepos();
-    } catch (err: any) {
-      setQuickAddStatus({ ok: false, msg: err.message });
-    } finally {
-      setIsQuickAdding(false);
-      setTimeout(() => setQuickAddStatus(null), 4000);
-    }
-  };
+  const visibleRepos = useMemo(
+    () => filteredRepos.slice(0, visibleCount),
+    [filteredRepos, visibleCount],
+  );
+  const hasMore = visibleCount < filteredRepos.length;
+
+  useEffect(() => {
+    if (!hasMore) return;
+    const node = sentinelRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setVisibleCount(c => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: '600px 0px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, visibleRepos.length]);
 
   const formatRepoName = (id: string) => {
     const parts = id.split('/');
@@ -223,164 +261,164 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
   const isStale = (lastPush: string) => {
     const lastDate = new Date(lastPush);
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - lastDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(Math.abs(now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
     return diffDays > 30;
   };
 
   const handleRescanAll = async () => {
     if (isRescanning || repos.length === 0) return;
     setIsRescanning(true);
-    // In a real app, we'd probably do this on the server or via a queue
-    // For this demo, we'll just trigger the ingest logic for each
-    onBulkIngest(); 
+    onBulkIngest();
     setIsRescanning(false);
+  };
+
+  const activeFilterCount =
+    selectedLicenses.length + selectedCategories.length + selectedLanguages.length + (minScore > 0 ? 1 : 0);
+
+  const resetFilters = () => {
+    setSelectedLicenses([]);
+    setSelectedCategories([]);
+    setSelectedLanguages([]);
+    setMinScore(0);
   };
 
   return (
     <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
-      <div className="glass-header flex-none p-6 pb-4 flex items-end justify-between">
-        <div>
-          <h2 className="text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
-            <span className="text-accent-blue">~/</span>Repositories
-          </h2>
+      {/* Compare action bar */}
+      {compareIds.size > 0 && (
+        <div className="flex-none px-6 py-2 flex items-center justify-between border-b border-border-main/30" style={{ background: 'rgba(77,142,255,0.08)' }}>
+          <div className="flex items-center gap-2 text-xs font-mono text-accent-blue">
+            <GitCompare className="w-3.5 h-3.5" />
+            <span className="font-bold">{compareIds.size}</span> selected for compare
+            <span className="text-slate-500 ml-1">(max 4)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCompareIds(new Set())} className="text-[11px] text-slate-500 hover:text-slate-300 font-mono">Clear</button>
+            <button
+              onClick={() => setShowCompare(true)}
+              disabled={compareIds.size < 2}
+              className="px-3 py-1.5 rounded bg-accent-blue/20 border border-accent-blue/40 text-accent-blue text-xs font-mono font-bold hover:bg-accent-blue/30 transition-all disabled:opacity-40"
+            >
+              Compare {compareIds.size} repos →
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end gap-1">
-            <div className={`flex items-center gap-2 bg-bg-panel border rounded-sm px-3 py-1.5 transition-colors ${isQuickAdding ? 'border-accent-blue' : 'border-border-main focus-within:border-accent-blue'}`}>
-              {isQuickAdding
-                ? <RefreshCw className="w-4 h-4 text-accent-blue animate-spin" />
-                : <PlusCircle className="w-4 h-4 text-slate-500" />}
-              <input 
-                type="text" 
-                placeholder="Quick add repo URL..." 
-                className="bg-transparent border-0 text-xs text-white outline-none w-48 placeholder-slate-600"
-                value={singleRepoUrl}
-                onChange={(e) => setSingleRepoUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()}
-                disabled={isQuickAdding}
-              />
-            </div>
-            {quickAddStatus && (
-              <span className={`text-[10px] font-mono px-1 ${quickAddStatus.ok ? 'text-accent-green' : 'text-accent-red'}`}>
-                {quickAddStatus.msg}
-              </span>
+      )}
+
+      {/* Single toolbar row */}
+      <div className="glass-header flex-none px-6 py-3 flex items-center justify-between gap-3 border-b border-white/5">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5 shadow-inner">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-sm transition-all ${viewMode === 'list' ? 'bg-accent-blue text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+              title="List view"
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-accent-blue text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="text-xs text-slate-500 font-mono whitespace-nowrap">
+            Showing <span className="text-slate-200 font-bold">{filteredRepos.length}</span> of <span className="text-slate-200">{repos.length}</span>
+          </div>
+
+          <button
+            onClick={() => setIsFilterModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-bg-panel border border-border-main rounded-sm text-xs font-bold text-slate-300 hover:text-white hover:border-accent-blue transition-all"
+          >
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="px-1.5 py-0 rounded-full bg-accent-blue text-white text-[10px] font-mono font-bold">{activeFilterCount}</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setFavouritesOnly(v => !v)}
+            title={favouritesOnly ? 'Showing favourites only — click to show all' : 'Show favourites only'}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-bold border transition-all ${
+              favouritesOnly
+                ? 'bg-rose-500/15 border-rose-400/50 text-rose-300 hover:bg-rose-500/25'
+                : 'bg-bg-panel border-border-main text-slate-300 hover:text-white hover:border-rose-400/60'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${favouritesOnly ? 'fill-rose-400' : ''}`} />
+            <span>Favourites</span>
+            {favouriteIds.size > 0 && (
+              <span className={`px-1.5 py-0 rounded-full text-[10px] font-mono font-bold ${favouritesOnly ? 'bg-rose-400/80 text-rose-50' : 'bg-slate-700 text-slate-300'}`}>{favouriteIds.size}</span>
+            )}
+          </button>
+
+          <div className="flex items-center bg-bg-panel border border-border-main rounded-sm">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-transparent text-xs font-bold py-1.5 pl-2 pr-1 text-slate-200 focus:outline-none cursor-pointer uppercase font-mono [&>option]:bg-bg-dark [&>option]:text-slate-200 [&>option]:normal-case"
+            >
+              <option value="latest" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Updated</option>
+              <option value="score" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Score</option>
+              <option value="stars" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Stars</option>
+              <option value="forks" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Forks</option>
+              <option value="name" style={{ backgroundColor: '#0d1424', color: '#e2e8f0' }}>Name</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? 'Ascending — click to reverse' : 'Descending — click to reverse'}
+              className="px-2 py-1.5 border-l border-border-main text-slate-300 hover:text-accent-blue transition-colors"
+            >
+              {sortOrder === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          <div className="relative group">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 group-focus-within:text-accent-blue transition-colors" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search library..."
+              className="bg-bg-panel border border-border-main rounded-sm text-sm py-1.5 pl-9 pr-8 text-white placeholder-slate-600 focus:border-accent-blue outline-none transition-all w-72"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
-          <button 
+        </div>
+
+        <div className="flex items-center gap-2 flex-none">
+          <button
             onClick={handleRescanAll}
             disabled={isRescanning || repos.length === 0}
-            className="bg-bg-panel hover:bg-slate-800 disabled:opacity-50 text-slate-200 text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-border-main"
+            title="Refresh library"
+            className="bg-bg-panel hover:bg-slate-800 disabled:opacity-50 text-slate-200 p-2 rounded-sm shadow-sm transition-colors border border-border-main"
           >
             <RefreshCw className={`w-4 h-4 ${isRescanning ? 'animate-spin' : ''}`} />
-            <span>{isRescanning ? 'Refreshing...' : 'Refresh'}</span>
           </button>
-          <button 
+          <button
             onClick={onBulkIngest}
             className="bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded-sm flex items-center gap-2 shadow-sm transition-colors border border-blue-500"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Bulk</span>
+            <span>Import</span>
           </button>
         </div>
       </div>
 
-      <div className="flex-none px-6 py-3 mb-6 flex flex-col gap-3 border-b border-white/5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex bg-bg-panel border border-border-main rounded-sm p-0.5 mr-2 shadow-inner">
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-sm transition-all ${viewMode === 'list' ? 'bg-accent-blue text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-              >
-                <ListIcon className="w-3.5 h-3.5" />
-              </button>
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-accent-blue text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="relative group">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 group-focus-within:text-accent-blue transition-colors" />
-              <input 
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search library..."
-                className="bg-bg-panel border border-border-main rounded-sm text-sm py-1.5 pl-9 pr-8 text-white placeholder-slate-600 focus:border-accent-blue outline-none transition-all w-72"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <div className="h-4 w-px bg-border-main mx-2"></div>
-
-            <button 
-              onClick={() => setIsFilterModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-bg-panel border border-border-main rounded-sm text-sm font-bold text-slate-300 hover:text-white hover:border-accent-blue transition-all"
-            >
-              <Filter className="w-4 h-4" />
-              <span>Advanced Filters</span>
-              {(selectedCategory !== 'All' || selectedLanguage !== 'All' || minScore > 0) && (
-                <span className="w-2 h-2 rounded-full bg-accent-blue animate-pulse"></span>
-              )}
-            </button>
-
-            <div className="flex items-center gap-1.5 ml-2">
-              <span className="text-xs font-bold text-slate-500 uppercase font-mono">Sort:</span>
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-bg-panel border border-border-main rounded-sm text-xs font-bold py-1.5 px-2 text-slate-200 focus:border-accent-blue outline-none cursor-pointer uppercase font-mono"
-              >
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="score">Score</option>
-                <option value="stars">Stars</option>
-                <option value="name">Name</option>
-              </select>
-            </div>
-          </div>
-          <div className="text-sm text-slate-500 font-mono">
-            Showing <span className="text-slate-200 font-bold">{filteredRepos.length}</span> of <span className="text-slate-200">{repos.length}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <span className="text-xs font-bold text-slate-500 uppercase font-mono whitespace-nowrap mr-1">License:</span>
-          {licenses.map(license => {
-            const isActive = selectedLicense === license;
-            const colorClasses = getLicenseColor(license);
-            return (
-              <button
-                key={license}
-                onClick={() => setSelectedLicense(license)}
-                className={`px-3 py-1 rounded-full text-xs font-bold font-mono transition-all border whitespace-nowrap ${
-                  isActive 
-                    ? `${colorClasses} scale-105 shadow-md` 
-                    : 'bg-slate-800/30 text-slate-500 border-slate-700/50 hover:border-slate-500 hover:text-slate-300'
-                }`}
-              >
-                {license}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-auto px-6 pb-6 custom-scrollbar">
+      <div className="flex-1 overflow-auto px-6 pt-6 pb-6 custom-scrollbar">
 
         {appKillersMode && (
-          <div className="mb-5 rounded-xl border border-amber-500/20 px-5 py-4 flex items-start gap-4"
+          <div className="mb-5 rounded-md border border-amber-500/20 px-5 py-4 flex items-start gap-4"
             style={{ background: 'rgba(245,158,11,0.04)' }}>
             <Flame className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
@@ -395,9 +433,25 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </div>
         )}
 
+        {saasReadyMode && (
+          <div className="mb-5 rounded-md border border-cyan-500/25 px-5 py-4 flex items-start gap-4"
+            style={{ background: 'rgba(6,182,212,0.05)' }}>
+            <Server className="w-5 h-5 text-cyan-300 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-cyan-200 font-bold text-sm mb-1">SaaS Ready — self-hostable apps you can run as a service</p>
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Production-grade, self-hostable applications with their own UI that you can deploy and run as a
+                service. Unlike App Killers, these don't map cleanly to one named commercial product — they may
+                span several categories or define a new one — but they're still complete, runnable apps rather than
+                libraries or building blocks.
+              </p>
+            </div>
+          </div>
+        )}
+
         {purposeRepo && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div className="glass-card rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden">
               <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
                   <Rocket className="w-5 h-5 text-accent-blue" /> Purpose & Suitability Analysis
@@ -466,7 +520,7 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                 </div>
               </div>
               <div className="px-6 py-4 bg-bg-dark border-t border-border-main flex justify-end">
-                <button 
+                <button
                   onClick={() => setPurposeRepo(null)}
                   className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-md transition-all font-mono"
                 >
@@ -477,46 +531,51 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </div>
         )}
 
+        {/* Unified Filter Modal — full-width, multi-select */}
         {isFilterModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="glass-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsFilterModalOpen(false)}>
+            <div className="glass-card rounded-lg shadow-2xl w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between flex-none">
                 <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-accent-blue" /> Advanced Filters
+                  <Filter className="w-5 h-5 text-accent-blue" /> Filters
+                  {activeFilterCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-accent-blue/20 border border-accent-blue/40 text-accent-blue text-xs font-mono">
+                      {activeFilterCount} active
+                    </span>
+                  )}
                 </h3>
                 <button onClick={() => setIsFilterModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase font-mono tracking-wider">Primary Category</label>
-                  <select 
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full bg-bg-dark border border-border-main rounded-md py-2 px-3 text-sm text-white focus:border-accent-blue outline-none cursor-pointer font-mono"
-                  >
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase font-mono tracking-wider">Programming Language</label>
-                  <select 
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="w-full bg-bg-dark border border-border-main rounded-md py-2 px-3 text-sm text-white focus:border-accent-blue outline-none cursor-pointer font-mono"
-                  >
-                    {languages.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
-                </div>
+              <div className="p-6 space-y-6 overflow-auto custom-scrollbar">
+                <FilterChipGroup
+                  label="License"
+                  options={licenses}
+                  selected={selectedLicenses}
+                  onToggle={(v) => toggleInArray(selectedLicenses, setSelectedLicenses, v)}
+                  colorize={(l) => getLicenseColor(l)}
+                />
+                <FilterChipGroup
+                  label="Programming Language"
+                  options={languages}
+                  selected={selectedLanguages}
+                  onToggle={(v) => toggleInArray(selectedLanguages, setSelectedLanguages, v)}
+                />
+                <FilterChipGroup
+                  label="Category"
+                  options={categories}
+                  selected={selectedCategories}
+                  onToggle={(v) => toggleInArray(selectedCategories, setSelectedCategories, v)}
+                />
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <label className="text-xs font-bold text-slate-400 uppercase font-mono tracking-wider">Minimum Intelligence Score</label>
                     <span className="text-sm font-bold text-accent-blue font-mono">{minScore}</span>
                   </div>
-                  <input 
+                  <input
                     type="range"
                     min="0"
                     max="100"
@@ -525,28 +584,26 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                     className="w-full h-1.5 bg-bg-dark rounded-lg appearance-none cursor-pointer accent-accent-blue border border-border-main"
                   />
                   <div className="flex justify-between text-[10px] text-slate-600 font-mono">
-                    <span>0</span>
-                    <span>50</span>
-                    <span>100</span>
+                    <span>0</span><span>50</span><span>100</span>
                   </div>
                 </div>
               </div>
-              <div className="px-6 py-4 bg-bg-dark border-t border-border-main flex justify-between gap-3">
-                <button 
-                  onClick={() => {
-                    setSelectedCategory('All');
-                    setSelectedLanguage('All');
-                    setMinScore(0);
-                  }}
+
+              <div className="px-6 py-4 bg-bg-dark border-t border-border-main flex justify-between items-center flex-none">
+                <button
+                  onClick={resetFilters}
                   className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors font-mono"
                 >
                   Reset All
                 </button>
-                <button 
+                <div className="text-xs text-slate-500 font-mono">
+                  {filteredRepos.length} of {repos.length} match
+                </div>
+                <button
                   onClick={() => setIsFilterModalOpen(false)}
                   className="px-6 py-2 bg-accent-blue hover:bg-blue-600 text-white text-xs font-bold rounded-md transition-all font-mono shadow-lg shadow-blue-500/20"
                 >
-                  Apply Filters
+                  Apply
                 </button>
               </div>
             </div>
@@ -560,66 +617,52 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
         ) : viewMode === 'list' ? (
           <div className="bg-bg-panel border border-border-main rounded-sm shadow-xl min-w-[1000px]">
             <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-border-main bg-[#162032] text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono sticky top-0 z-10">
-              <div 
-                onClick={() => handleSort('name')}
-                className="col-span-4 pl-2 cursor-pointer hover:text-white flex items-center gap-1"
-              >
-                Repository Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </div>
+              <div className="col-span-4 pl-2">Repository Name</div>
               <div className="col-span-1 text-center">Purpose</div>
-              <div 
-                onClick={() => handleSort('status')}
-                className="col-span-1 cursor-pointer hover:text-white flex items-center justify-center gap-1"
-              >
-                Active {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </div>
-              <div 
-                onClick={() => handleSort('stars')}
-                className="col-span-1 cursor-pointer hover:text-white flex items-center justify-center gap-1"
-              >
-                Stars {sortBy === 'stars' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </div>
-              <div 
-                onClick={() => handleSort('score')}
-                className="col-span-2 cursor-pointer hover:text-white flex items-center justify-center gap-1"
-              >
-                AI Score {sortBy === 'score' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </div>
-              <div 
-                onClick={() => handleSort('license')}
-                className="col-span-2 cursor-pointer hover:text-white flex items-center justify-center gap-1"
-              >
-                License {sortBy === 'license' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </div>
+              <div className="col-span-1 text-center">Active</div>
+              <div className="col-span-1 text-center">Stars</div>
+              <div className="col-span-2 text-center">AI Score</div>
+              <div className="col-span-2 text-center">License</div>
               <div className="col-span-1 flex justify-end pr-2">
                 <Github className="w-4 h-4" />
               </div>
             </div>
-            
-            <div className="divide-y divide-border-main">
-              {filteredRepos.map(repo => {
-                let aiData = null;
-                try {
-                  if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis);
-                } catch (e) {}
 
+            <div className="divide-y divide-border-main">
+              {visibleRepos.map(repo => {
+                let aiData = null;
+                try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
+                const cls = classifyRepo(aiData);
                 const stale = isStale(repo.last_push);
 
                 return (
-                  <div 
+                  <div
                     key={repo.id}
                     onClick={() => onViewRepo(repo)}
-                    className="group hover:bg-white/5 cursor-pointer transition-colors border-l-2 border-l-transparent hover:border-l-accent-blue"
+                    className={`group hover:bg-white/5 cursor-pointer transition-colors border-l-2 ${compareIds.has(repo.id) ? 'border-l-accent-blue bg-accent-blue/[0.04]' : 'border-l-transparent hover:border-l-accent-blue'}`}
                   >
                     <div className="grid grid-cols-12 gap-4 items-center px-4 py-6">
                       <div className="col-span-4 flex flex-col gap-1 pl-2">
                         <div className="min-w-0">
                           <div className="font-bold text-lg text-slate-200 group-hover:text-accent-blue transition-colors truncate flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
+                              title="Add to compare"
+                              className={`w-4 h-4 flex-none rounded border ${compareIds.has(repo.id) ? 'bg-accent-blue border-accent-blue' : 'border-slate-600 hover:border-accent-blue'}`}
+                            >
+                              {compareIds.has(repo.id) && <Check className="w-3 h-3 text-white" />}
+                            </button>
                             {formatRepoName(repo.id)}
-                            {aiData?.enterpriseTier && (
+                            {cls.kind === 'app-killer' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-[9px] font-bold text-amber-400 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
                                 <Flame className="w-2.5 h-2.5" />
-                                {aiData.comparableApp ? `vs ${aiData.comparableApp}` : 'App Killer'}
+                                vs {cls.comparableApp}
+                              </span>
+                            )}
+                            {cls.kind === 'saas-ready' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[9px] font-bold text-cyan-300 uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+                                <Server className="w-2.5 h-2.5" />
+                                SaaS Ready
                               </span>
                             )}
                           </div>
@@ -638,11 +681,8 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         </div>
                       </div>
                       <div className="col-span-1 flex justify-center">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPurposeRepo(repo);
-                          }}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPurposeRepo(repo); }}
                           className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded transition-colors"
                           title="View Purpose & Suitability"
                         >
@@ -661,16 +701,12 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                       <div className="col-span-2 flex items-center justify-center">
                         <div className="flex items-center gap-3">
                           <div className="w-20 bg-bg-dark h-1.5 rounded-full overflow-hidden border border-border-main">
-                            <div 
-                              className={`h-full transition-all duration-500 ${
-                                repo.score > 80 ? 'bg-[#00FF00]' : repo.score > 50 ? 'bg-accent-amber' : 'bg-accent-red'
-                              }`}
+                            <div
+                              className={`h-full transition-all duration-500 ${repo.score > 80 ? 'bg-[#00FF00]' : repo.score > 50 ? 'bg-accent-amber' : 'bg-accent-red'}`}
                               style={{ width: `${repo.score}%` }}
                             ></div>
                           </div>
-                          <span className={`text-sm font-bold font-mono w-8 text-right ${
-                            repo.score > 80 ? 'text-[#00FF00]' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'
-                          }`}>{repo.score}</span>
+                          <span className={`text-sm font-bold font-mono w-8 text-right ${repo.score > 80 ? 'text-[#00FF00]' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'}`}>{repo.score}</span>
                         </div>
                       </div>
                       <div className="col-span-2 flex justify-center">
@@ -680,25 +716,22 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
                         </div>
                       </div>
                       <div className="col-span-1 flex justify-end items-center pr-2 gap-1">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onViewRepo(repo);
-                          }}
-                          className="p-1.5 text-accent-blue hover:text-white hover:bg-accent-blue/20 rounded transition-all"
-                          title="View Details"
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavourite(repo.id); }}
+                          title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
+                          className={`p-1.5 rounded transition-all ${favouriteIds.has(repo.id) ? 'text-rose-400 hover:bg-rose-500/10' : 'text-rose-300/70 hover:text-rose-300 hover:bg-rose-500/10'}`}
                         >
-                          <ChevronRight className="w-5 h-5" />
+                          <Heart className={`w-5 h-5 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
                         </button>
-                        <a 
-                          href={repo.url} 
-                          target="_blank" 
+                        <a
+                          href={repo.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded transition-all"
                           title="View on GitHub"
                         >
-                          <LinkIcon className="w-5 h-5" />
+                          <Github className="w-5 h-5" />
                         </a>
                       </div>
                     </div>
@@ -709,76 +742,111 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredRepos.map(repo => {
+            {visibleRepos.map(repo => {
               let aiData = null;
-              try {
-                if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis);
-              } catch (e) {}
+              try { if (repo.ai_analysis) aiData = JSON.parse(repo.ai_analysis); } catch (e) {}
+              const cls = classifyRepo(aiData);
+              const selected = compareIds.has(repo.id);
 
               return (
-                <div 
+                <div
                   key={repo.id}
                   onClick={() => onViewRepo(repo)}
-                  className="glass-card rounded-2xl overflow-hidden group hover:border-white/20 transition-all cursor-pointer flex flex-col"
+                  className={`glass-card rounded-lg overflow-hidden group transition-all cursor-pointer flex flex-col relative ${selected ? 'ring-2 ring-accent-blue border-accent-blue/40' : 'hover:border-white/20'}`}
                 >
-                  <div className="p-5 border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
-                    {aiData?.enterpriseTier && (
-                      <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border-b border-amber-500/25">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavourite(repo.id); }}
+                    title={favouriteIds.has(repo.id) ? 'Remove from favourites' : 'Add to favourites'}
+                    className={`absolute top-2 right-2 z-10 p-1.5 rounded-full backdrop-blur-sm transition-all ${
+                      favouriteIds.has(repo.id)
+                        ? 'bg-rose-500/25 text-rose-300 hover:bg-rose-500/40'
+                        : 'bg-black/50 text-rose-300/80 hover:bg-rose-500/20 hover:text-rose-300'
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${favouriteIds.has(repo.id) ? 'fill-rose-400' : ''}`} />
+                  </button>
+                  <div className="border-b border-border-main bg-gradient-to-br from-bg-panel to-bg-dark relative">
+                    {/* Classification badge — always reserves height so cards don't jump. */}
+                    {cls.kind === 'saas-ready' ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-cyan-500/30 bg-black/40">
+                        <Server className="w-3 h-3 text-cyan-300 flex-shrink-0" />
+                        <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider truncate">
+                          SaaS Ready
+                        </span>
+                      </div>
+                    ) : (
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b border-amber-500/25 ${cls.kind === 'app-killer' ? 'bg-black/40 visible' : 'invisible'}`}>
                         <Flame className="w-3 h-3 text-amber-400 flex-shrink-0" />
                         <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider truncate">
-                          Replaces {aiData.comparableApp || 'Paid SaaS'}
+                          Replaces {cls.comparableApp}
                         </span>
                       </div>
                     )}
-                    <div className={`flex justify-between items-start mb-4 ${aiData?.enterpriseTier ? 'mt-7' : ''}`}>
-                      <div className="flex flex-col">
-                        <h4 className="text-lg font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate max-w-[180px]">
-                          {formatRepoName(repo.id)}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">Updated {new Date(repo.last_push).toLocaleDateString()}</p>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1 text-yellow-500 font-mono text-sm mb-1">
-                          <Star className="w-3.5 h-3.5 fill-yellow-500" />
-                          <span>{repo.stars > 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}</span>
+                    <div className="p-5">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex flex-col min-w-0">
+                          <h4 className="text-lg font-bold text-white group-hover:text-accent-blue transition-colors font-mono truncate">
+                            {formatRepoName(repo.id)}
+                          </h4>
+                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">Updated {new Date(repo.last_push).toLocaleDateString()}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 bg-bg-dark h-1 rounded-full overflow-hidden border border-border-main">
-                            <div 
-                              className={`h-full transition-all duration-500 ${
-                                repo.score > 80 ? 'bg-[#00FF00]' : repo.score > 50 ? 'bg-accent-amber' : 'bg-accent-red'
-                              }`}
-                              style={{ width: `${repo.score}%` }}
-                            ></div>
+                        <div className="flex flex-col items-end flex-none ml-3">
+                          <div className="flex items-center gap-1 text-yellow-500 font-mono text-sm mb-1">
+                            <Star className="w-3.5 h-3.5 fill-yellow-500" />
+                            <span>{repo.stars > 1000 ? `${(repo.stars / 1000).toFixed(1)}k` : repo.stars}</span>
                           </div>
-                          <span className={`text-xs font-bold font-mono ${
-                            repo.score > 80 ? 'text-[#00FF00]' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'
-                          }`}>{repo.score}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-bg-dark h-1 rounded-full overflow-hidden border border-border-main">
+                              <div
+                                className={`h-full transition-all duration-500 ${repo.score > 80 ? 'bg-[#00FF00]' : repo.score > 50 ? 'bg-accent-amber' : 'bg-accent-red'}`}
+                                style={{ width: `${repo.score}%` }}
+                              ></div>
+                            </div>
+                            <span className={`text-xs font-bold font-mono ${repo.score > 80 ? 'text-[#00FF00]' : repo.score > 50 ? 'text-accent-amber' : 'text-accent-red'}`}>{repo.score}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="mt-5 flex gap-3 items-center">
-                      <a 
-                        href={repo.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-slate-700 bg-slate-800/50 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-[10px] font-bold font-mono uppercase"
-                      >
-                        <Github className="w-3.5 h-3.5" />
-                        <span>View on Github</span>
-                      </a>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewRepo(repo);
-                        }}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-accent-blue/30 bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 hover:border-accent-blue transition-all text-[10px] font-bold font-mono uppercase"
-                      >
-                        <span>Full Details</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="mt-5 flex gap-2 items-stretch">
+                        <a
+                          href={repo.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-slate-700 bg-slate-800/50 text-slate-400 hover:text-white hover:border-slate-500 transition-all text-[11px] font-bold font-mono uppercase"
+                        >
+                          <Github className="w-3.5 h-3.5" />
+                          <span>Github</span>
+                        </a>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onViewRepo(repo); }}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded border border-accent-blue/30 bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 hover:border-accent-blue transition-all text-[11px] font-bold font-mono uppercase"
+                        >
+                          <span>Details</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                        {cls.demoUrl && (
+                          <a
+                            href={cls.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Open live demo"
+                            className="flex-none w-10 inline-flex items-center justify-center rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 transition-all"
+                          >
+                            <Play className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleCompare(repo.id); }}
+                          title={selected ? 'Remove from compare' : 'Add to compare'}
+                          className={`flex-none w-10 inline-flex items-center justify-center rounded border transition-all ${selected
+                            ? 'border-accent-blue bg-accent-blue text-white'
+                            : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:text-accent-blue hover:border-accent-blue'}`}
+                        >
+                          {selected ? <Check className="w-4 h-4" /> : <GitCompare className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -820,6 +888,69 @@ export const Library: React.FC<LibraryProps> = ({ onViewRepo, onBulkIngest, onGo
             })}
           </div>
         )}
+
+        {!loading && filteredRepos.length > 0 && (
+          <div ref={sentinelRef} className="mt-6 flex flex-col items-center gap-3 text-xs font-mono text-slate-500">
+            <span>
+              Showing {visibleRepos.length} of {filteredRepos.length}
+            </span>
+            {hasMore && (
+              <button
+                onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                className="px-4 py-2 rounded border border-border-main bg-bg-panel hover:bg-white/5 hover:border-accent-blue text-slate-300 hover:text-accent-blue transition-all font-bold uppercase tracking-wider text-[11px]"
+              >
+                Load {Math.min(PAGE_SIZE, filteredRepos.length - visibleCount)} more
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showCompare && compareIds.size >= 2 && (
+        <CompareModal
+          repos={repos.filter(r => compareIds.has(r.id))}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+interface FilterChipGroupProps {
+  label: string;
+  options: string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  colorize?: (v: string) => string;
+}
+
+const FilterChipGroup: React.FC<FilterChipGroupProps> = ({ label, options, selected, onToggle, colorize }) => {
+  if (options.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <label className="text-xs font-bold text-slate-400 uppercase font-mono tracking-wider">{label}</label>
+        <span className="text-[10px] text-slate-600 font-mono">{selected.length} selected</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map(opt => {
+          const isActive = selected.includes(opt);
+          const colorClasses = colorize ? colorize(opt) : '';
+          return (
+            <button
+              key={opt}
+              onClick={() => onToggle(opt)}
+              className={`px-3 py-1 rounded-full text-xs font-bold font-mono transition-all border whitespace-nowrap ${
+                isActive
+                  ? colorClasses || 'bg-accent-blue/20 border-accent-blue/50 text-accent-blue shadow-md'
+                  : 'bg-slate-800/30 text-slate-400 border-slate-700/50 hover:border-slate-500 hover:text-slate-200'
+              }`}
+            >
+              {isActive && <Check className="inline w-3 h-3 mr-1 -mt-0.5" />}
+              {opt}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
