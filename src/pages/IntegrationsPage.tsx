@@ -49,11 +49,11 @@ export function IntegrationsPage() {
   return (
     <MarketingPage
       kicker="Integrations"
-      title={<>Plug RepoHive into <span style={{ color: '#adc6ff' }}>any AI coding tool.</span></>}
-      subtitle="RepoHive ships a simple authenticated HTTP API. Generate a key, paste it into the agent of your choice, and your hand-picked open-source library becomes the source of truth the AI builds with."
+      title={<>Give your AI build tool <span style={{ color: '#adc6ff' }}>a repo memory.</span></>}
+      subtitle="Pick your build tool inside RepoHive, generate a ready-made connection snippet, and connect it in minutes. Once live, tools like Lovable, Cursor, Replit, or Claude Code can search your saved repo library and use it as build context — instead of starting from a blank prompt."
       seo={{
-        title: 'Integrations — Connect RepoHive to Cursor, Claude, Copilot & More',
-        description: 'Use RepoHive\'s REST API to wire your curated repo library into Cursor, Claude Code, Replit, Bolt, Lovable, and any other AI coding tool.',
+        title: 'Integrations — Connect Your Repo Library to Lovable, Cursor, Claude Code & More',
+        description: 'Pick your AI build tool, generate a connection snippet from your RepoHive dashboard, and let it search your saved repos for build context.',
         openGraph: { type: 'website', url: 'https://repohive.app/integrations', siteName: 'RepoHive' },
       }}
     >
@@ -62,30 +62,58 @@ export function IntegrationsPage() {
         className="rounded-lg p-8 mb-16"
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-6">The idea</h2>
+        <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-6">How the integration flow works</h2>
         <div className="grid md:grid-cols-3 gap-6 text-sm text-slate-400">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Key className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">1. Generate a key</span>
+              <span className="text-white font-bold">1. Pick your build tool</span>
             </div>
-            <p>In RepoHive → API → Generate. You get an <code className="text-blue-400">rh_…</code> key. Shown once; copy it.</p>
+            <p>Inside your RepoHive dashboard, choose the platform you want to connect — Lovable, Cursor, Replit, Bolt, or Claude Code.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Terminal className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">2. Paste it into your tool</span>
+              <span className="text-white font-bold">2. Get your connection snippet</span>
             </div>
-            <p>Every agent has a "custom HTTP source" or "knowledge connector" slot. Drop the key + endpoint URL in.</p>
+            <p>We generate the API key and setup snippet your tool needs, so you&apos;re not wiring this from scratch.</p>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Bot className="w-4 h-4 text-blue-400" />
-              <span className="text-white font-bold">3. Ask in plain English</span>
+              <span className="text-white font-bold">3. Build with live repo context</span>
             </div>
-            <p>"Use a self-hostable Slack alternative." The agent queries your library and builds with what&apos;s there.</p>
+            <p>Your AI tool can now query your library in plain English, surface the best-matching repos, and use them while it builds.</p>
           </div>
         </div>
+      </div>
+
+      {/* Use-case scenario */}
+      <div
+        className="rounded-lg p-8 mb-16"
+        style={{ background: 'rgba(77,142,255,0.06)', border: '1px solid rgba(77,142,255,0.18)' }}
+      >
+        <p className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-3">Example: building a project management tool in Lovable</p>
+        <p className="text-sm text-slate-300 leading-relaxed mb-4">
+          You tell Lovable what you&apos;re building. Lovable queries your RepoHive library for relevant
+          repos — task boards, auth systems, notification layers, file upload tools, self-hosted
+          collaboration apps. RepoHive returns the strongest matches from the repos you&apos;ve already
+          saved and analyzed.
+        </p>
+        <p className="text-sm text-slate-300 leading-relaxed">
+          From there, Lovable can review the options, weigh fit and warnings, and build using repo patterns
+          you&apos;ve already vetted — instead of starting from a blank prompt.
+        </p>
+      </div>
+
+      {/* Why this matters */}
+      <div className="text-center mb-16 max-w-2xl mx-auto">
+        <h2 className="font-mono font-black text-white text-2xl mb-4">Why this matters</h2>
+        <p className="text-sm text-slate-400 leading-relaxed">
+          AI coding tools are powerful, but they&apos;re often missing your actual stack memory. RepoHive
+          gives them access to the repos you&apos;ve already collected, evaluated, and want to reuse — so
+          they can start from signal instead of starting from scratch.
+        </p>
       </div>
 
       {/* Tool cards */}
@@ -108,10 +136,10 @@ export function IntegrationsPage() {
         style={{ background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
       >
         <h2 className="font-mono font-bold text-white text-lg uppercase tracking-widest mb-3 flex items-center gap-2">
-          <Workflow className="w-5 h-5 text-blue-400" /> What the API returns
+          <Workflow className="w-5 h-5 text-blue-400" /> What your AI tool gets back
         </h2>
         <p className="text-sm text-slate-400 mb-4">
-          A simple JSON list with everything an agent needs to reason about a repo — owner/name, URL, AI summary, category, tags, score, and stars.
+          RepoHive returns structured repo intelligence your build tool can actually use — owner/name, URL, AI summary, category, tags, score, and stars for every match.
         </p>
         <pre className="text-[12px] font-mono p-4 rounded overflow-x-auto"
           style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.06)', color: '#adc6ff' }}>
@@ -161,7 +189,7 @@ export function IntegrationsPage() {
           className="inline-block px-8 py-4 rounded-md font-mono text-sm font-bold tracking-widest uppercase transition-all hover:opacity-90 active:scale-[0.98]"
           style={{ background: '#4d8eff', color: '#00285d', boxShadow: '0 0 24px rgba(77,142,255,0.4)' }}
         >
-          Get your API key
+          Generate your integration
         </Link>
         <p className="text-xs text-slate-500 mt-3 font-mono">Solo and Studio plans. Free plan can preview without API access.</p>
       </div>

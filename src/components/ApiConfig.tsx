@@ -115,10 +115,10 @@ export const ApiConfig: React.FC = () => {
         <div className="bg-accent-blue/5 border border-accent-blue/20 p-6 rounded-sm flex gap-4 items-start backdrop-blur-sm">
           <Info className="w-6 h-6 text-accent-blue mt-0.5" />
           <div>
-            <h4 className="text-lg font-bold text-white mb-2">Connect Your AI Coding Agents</h4>
+            <h4 className="text-lg font-bold text-white mb-2">Give Your AI Build Tools a Repo Memory</h4>
             <p className="text-sm text-slate-400 leading-relaxed font-mono">
-              RepoHive acts as a private, curated library for your AI coding assistants. You can connect tools like <span className="text-white font-bold">Lovable, Replit, Bolt, or Cursor</span> directly to your repository list. 
-              By providing your API key, these agents can "read" your library to find the best components and logic to use when building your projects.
+              Connect tools like <span className="text-white font-bold">Lovable, Replit, Bolt, or Cursor</span> directly to the repos you&apos;ve imported.
+              With your API key, these tools can search your saved repo library and use the best matches as build context — instead of starting from a blank prompt.
             </p>
           </div>
         </div>
