@@ -42,7 +42,7 @@ const SEO_CONFIG = {
   hostname: 'https://repohive.app',
   appName: 'RepoHive',
   lang: 'en',
-  defaultDescription: 'Discover the best open-source tools for any project. AI-powered repo discovery, scoring, and comparison.',
+  defaultDescription: 'Turn the repos you import into searchable build intelligence — AI analysis, scoring, monitoring, and plain-English search, all on your own library.',
   defaultOGImage: 'https://repohive.app/og-image.png',
   environment: (import.meta.env.DEV ? 'development' : 'production') as 'development' | 'production',
 };

@@ -85,12 +85,12 @@ export function HowItWorksPage() {
         <FeatureCard
           icon={Zap}
           title="IDE & agent integration"
-          body={<p>Generate API keys and let Cursor, Replit, Lovable, Bolt, or Claude Code query the repos you've imported as a source of truth while they build.</p>}
+          body={<p>Generate API keys and let Cursor, Replit, Lovable, Bolt, or Claude Code search the repos you've imported as build context while they work.</p>}
         />
         <FeatureCard
           icon={BookOpen}
           title="App Killers library"
-          body={<p>Need a starting point too? Paid plans also include App Killers — a hand-curated library of open-source alternatives to expensive SaaS tools.</p>}
+          body={<p>Need a starting point too? Paid plans also include App Killers — 500+ preloaded, production-grade open-source alternatives to expensive SaaS tools, ready to search from day one.</p>}
         />
       </div>
 

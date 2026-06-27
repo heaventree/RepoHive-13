@@ -71,11 +71,11 @@ export const PublicProjectPage: React.FC = () => {
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at top, #1e1b4b 0%, #0b1326 60%)' }}>
       <SEO
         title={data.project.name}
-        description={data.project.description || `A curated list of ${data.recommendations.length} open-source repos for ${data.project.name}.`}
+        description={data.project.description || `A saved shortlist of ${data.recommendations.length} open-source repos for ${data.project.name}.`}
         openGraph={{
           type: 'website',
           title: `${data.project.name} — RepoHive Project`,
-          description: data.project.description || `${data.recommendations.length} curated open-source repos`,
+          description: data.project.description || `${data.recommendations.length} matched open-source repos`,
           url: `https://repohive.app/p/${slug}`,
           siteName: 'RepoHive',
         }}
@@ -162,8 +162,8 @@ export const PublicProjectPage: React.FC = () => {
 
         {/* CTA */}
         <div className="mt-12 p-8 rounded-lg text-center" style={{ background: 'rgba(77,142,255,0.08)', border: '1px solid rgba(77,142,255,0.2)' }}>
-          <h3 className="text-xl font-bold text-white font-mono mb-2">Build your own curated list</h3>
-          <p className="text-sm text-slate-400 mb-4">RepoHive helps you find the right open-source repos for any project. Free tier includes 50 repos.</p>
+          <h3 className="text-xl font-bold text-white font-mono mb-2">Brief your own project</h3>
+          <p className="text-sm text-slate-400 mb-4">RepoHive matches the right open-source repos to your project brief from your imported library. Free tier includes 25 repos.</p>
           <Link to="/sign-up" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-accent-blue text-white font-mono font-bold text-sm hover:bg-accent-blue/80">
             Get started free <ArrowRight className="w-4 h-4" />
           </Link>

@@ -264,10 +264,10 @@ const PAIN_POINTS = [
 const FEATURES = [
   { icon: <Layers className="w-5 h-5" />, title: 'Bulk import',        desc: 'Paste any GitHub URL — single repo, org, or a list of 1,000. Everything ingested in minutes.',                                       color: PRIMARY },
   { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Updated weekly.',                             color: PRIMARY_CTR },
-  { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '500+ pre-loaded OSS alternatives to expensive SaaS tools. Available on Solo and Studio as a curated starting point.',                color: AMBER },
+  { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '500+ preloaded OSS alternatives to expensive SaaS tools, already analysed and scored. Included on Solo and Studio as a built-in head start.',                color: AMBER },
   { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos, license changes, dropped stars, and security flags. Know before your team does.',                   color: TERTIARY },
   { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoHive to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
-  { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Add a project and get AI-curated recommendations.',                        color: '#60a5fa' },
+  { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Brief a project and get matched repos for everyone.',                        color: '#60a5fa' },
 ];
 
 const IDE_INTEGRATIONS = ['Replit', 'Bolt', 'Lovable', 'Base44', 'Claude Code', 'Cursor'];
@@ -563,10 +563,10 @@ export function LandingPage() {
               </div>
               <h3 className="font-mono font-black text-white leading-tight tracking-tight"
                 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)' }}>
-                500+ curated repos, pre-loaded.
+                500+ App Killers, already in your account.
               </h3>
               <p className="text-base leading-relaxed" style={{ color: '#c2c6d6' }}>
-                Solo and Studio plans unlock our hand-curated App Killers library — 500+ open source alternatives to the most expensive SaaS tools. Already analysed, scored, and ready to search.
+                Solo and Studio plans preload 500+ production-grade open-source alternatives to expensive SaaS tools — already analysed, scored, and searchable from day one, alongside your own repo library.
               </p>
             </div>
             <div className="flex-none flex flex-col gap-3">

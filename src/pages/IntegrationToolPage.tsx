@@ -60,7 +60,7 @@ export const IntegrationToolPage: React.FC = () => {
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
       <SEO
         title={tool.seoTitle || `Connect RepoHive to ${tool.name}`}
-        description={tool.seoDescription || tool.tagline || `Step-by-step instructions for wiring RepoHive's curated repo library into ${tool.name}.`}
+        description={tool.seoDescription || tool.tagline || `Step-by-step instructions for connecting your imported RepoHive repo library to ${tool.name}.`}
         openGraph={{
           type: 'article',
           title: `Connect RepoHive to ${tool.name}`,

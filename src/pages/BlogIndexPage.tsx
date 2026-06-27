@@ -29,7 +29,7 @@ export const BlogIndexPage: React.FC = () => {
     <div className="min-h-screen relative" style={{ background: '#0b1326', color: '#dae2fd' }}>
       <SEO
         title="Blog — Open Source Insights & SEO for Developers"
-        description="Practical articles on open-source tooling, self-hosting paid SaaS, and shipping faster with curated repos. From the RepoHive team."
+        description="Practical articles on open-source tooling, self-hosting paid SaaS, and shipping faster with a searchable repo library. From the RepoHive team."
         openGraph={{ type: 'website', url: 'https://repohive.app/blog', siteName: 'RepoHive' }}
       />
       <MarketingNav />

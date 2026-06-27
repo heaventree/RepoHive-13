@@ -288,7 +288,7 @@ export const ApiConfig: React.FC = () => {
             <div className="space-y-3">
               <div className="w-8 h-8 rounded-full bg-accent-blue/20 text-accent-blue flex items-center justify-center font-bold font-mono">3</div>
               <h4 className="font-bold text-white">Start Coding</h4>
-              <p className="text-xs text-slate-500 font-mono leading-relaxed">Give the URL to Cursor, Lovable, or Replit so they can use your library as a source of truth for your code.</p>
+              <p className="text-xs text-slate-500 font-mono leading-relaxed">Give the URL to Cursor, Lovable, or Replit so they can search your library as build context while they work.</p>
             </div>
           </div>
           
