@@ -2465,28 +2465,37 @@ Return ONLY valid JSON with this exact structure:
       source, format, body_html, featured_repo_id,
     } = req.body ?? {};
     if (!title) return res.status(400).json({ error: "title is required" });
-    const finalSlug = slug || slugify(title);
-    const publishedAt = status === 'published' ? new Date().toISOString() : null;
-    if (id) {
-      await run(
-        `UPDATE blog_posts SET slug=?, title=?, excerpt=?, body_md=?, og_image=?, seo_title=?, seo_description=?,
-           tags=?, author=?, status=?, source=?, format=?, body_html=?, featured_repo_id=?,
-           published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN CURRENT_TIMESTAMP ELSE published_at END,
-           updated_at = CURRENT_TIMESTAMP
-         WHERE id=?`,
-        [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
-         tags ?? null, author ?? null, status ?? 'draft', source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null,
-         status ?? 'draft', id],
-      );
-      res.json({ success: true, id });
-    } else {
-      const result = await run(
-        `INSERT INTO blog_posts (slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status, published_at, source, format, body_html, featured_repo_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
-         tags ?? null, author ?? null, status ?? 'draft', publishedAt, source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null],
-      );
-      res.json({ success: true, id: Number(result.lastInsertRowid) });
+    try {
+      const requestedSlug = slug || slugify(title);
+      const collision = await get<{ id: number }>("SELECT id FROM blog_posts WHERE slug = ?", [requestedSlug]);
+      // A duplicate slug (e.g. two posts saved with the same/blank title) would
+      // otherwise hit the UNIQUE constraint and crash the request — dedupe instead.
+      const finalSlug = collision && collision.id !== Number(id) ? await uniqueBlogSlug(requestedSlug) : requestedSlug;
+      const publishedAt = status === 'published' ? new Date().toISOString() : null;
+      if (id) {
+        await run(
+          `UPDATE blog_posts SET slug=?, title=?, excerpt=?, body_md=?, og_image=?, seo_title=?, seo_description=?,
+             tags=?, author=?, status=?, source=?, format=?, body_html=?, featured_repo_id=?,
+             published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN CURRENT_TIMESTAMP ELSE published_at END,
+             updated_at = CURRENT_TIMESTAMP
+           WHERE id=?`,
+          [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
+           tags ?? null, author ?? null, status ?? 'draft', source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null,
+           status ?? 'draft', id],
+        );
+        res.json({ success: true, id, slug: finalSlug });
+      } else {
+        const result = await run(
+          `INSERT INTO blog_posts (slug, title, excerpt, body_md, og_image, seo_title, seo_description, tags, author, status, published_at, source, format, body_html, featured_repo_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [finalSlug, title, excerpt ?? null, body_md ?? null, og_image ?? null, seo_title ?? null, seo_description ?? null,
+           tags ?? null, author ?? null, status ?? 'draft', publishedAt, source ?? null, format ?? null, body_html ?? null, featured_repo_id ?? null],
+        );
+        res.json({ success: true, id: Number(result.lastInsertRowid), slug: finalSlug });
+      }
+    } catch (err: any) {
+      console.error("Failed to save blog post:", err);
+      res.status(500).json({ error: err.message || "Failed to save post" });
     }
   });
 

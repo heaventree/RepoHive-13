@@ -11,6 +11,17 @@ import { createApiApp, injectSeoMeta } from "./api-app";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// A thrown error inside an async route handler doesn't reach Express's error
+// middleware — it becomes an unhandled rejection, which by default kills the
+// whole process (taking every tenant down with it). Log instead of crashing;
+// the offending request just hangs/times out rather than the whole server.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection (request likely failed silently):", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception (request likely failed silently):", err);
+});
+
 async function startServer() {
   const app = createApiApp();
   const PORT = parseInt(process.env.PORT || "24678", 10);
