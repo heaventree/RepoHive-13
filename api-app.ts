@@ -373,6 +373,48 @@ async function recordStripeIds(tenantId: string, customerId?: string | null, sub
   );
 }
 
+// Persist the renewal/cancellation state straight off a Stripe Subscription
+// object so the billing UI can show "renews on" vs "cancels on" without a
+// second API call.
+async function syncSubscriptionFields(tenantId: string, sub: Stripe.Subscription) {
+  // current_period_end lives on the subscription item, not the subscription
+  // itself, as of Stripe's newer multi-item billing model.
+  const periodEnd = sub.items.data[0]?.current_period_end;
+  await run(
+    `UPDATE subscriptions SET
+       current_period_end = ?,
+       cancel_at_period_end = ?,
+       updated_at = CURRENT_TIMESTAMP
+     WHERE tenant_id = ?`,
+    [periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+     sub.cancel_at_period_end ? 1 : 0,
+     tenantId],
+  );
+}
+
+// A dedicated Portal configuration so "Cancel subscription" always defers to
+// the end of the period already paid for, regardless of how the Stripe
+// account's own default Portal configuration happens to be set up. Created
+// once and cached; never touches the merchant's existing default config.
+let portalConfigId: string | null = null;
+async function getOrCreatePortalConfig(stripe: Stripe): Promise<string | undefined> {
+  if (portalConfigId) return portalConfigId;
+  try {
+    const config = await stripe.billingPortal.configurations.create({
+      features: {
+        customer_update: { enabled: true, allowed_updates: ["email", "address"] },
+        invoice_history: { enabled: true },
+        payment_method_update: { enabled: true },
+        subscription_cancel: { enabled: true, mode: "at_period_end" },
+      },
+    });
+    portalConfigId = config.id;
+  } catch (err: any) {
+    console.warn("Stripe: could not create deferred-cancellation portal configuration, using account default:", err.message);
+  }
+  return portalConfigId ?? undefined;
+}
+
 async function tenantForStripeEvent(opts: { metadataTenant?: string | null; customerId?: string | null; subscriptionId?: string | null }): Promise<string | null> {
   if (opts.metadataTenant) return opts.metadataTenant;
   if (opts.subscriptionId) {
@@ -596,6 +638,9 @@ async function runMigrations() {
     "ALTER TABLE blog_posts ADD COLUMN harbor_job_id TEXT",
     "ALTER TABLE blog_posts ADD COLUMN featured_repo_id TEXT",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_blog_harbor_job_id ON blog_posts(harbor_job_id) WHERE harbor_job_id IS NOT NULL",
+    // Phase 4: deferred cancellation — a tenant keeps paid access through the
+    // period Stripe already billed for, surfaced to the billing UI.
+    "ALTER TABLE subscriptions ADD COLUMN cancel_at_period_end INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     try { await run(sql); } catch { /* column already exists — ok */ }
@@ -1389,10 +1434,12 @@ export function createApiApp(): express.Express {
   app.get("/api/subscription", async (req, res) => {
     const { tenantId } = getTenant(req);
     const plan = await getPlan(tenantId);
-    const [repos, additions, keyCount] = await Promise.all([
+    const [repos, additions, keyCount, billing] = await Promise.all([
       countUserRepos(tenantId),
       monthlyAdditions(tenantId),
       get<{ c: number }>("SELECT COUNT(*) AS c FROM api_keys WHERE tenant_id = ?", [tenantId]).then(r => r?.c ?? 0),
+      get<{ status: string; current_period_end: string | null; cancel_at_period_end: number; stripe_customer_id: string | null }>(
+        "SELECT status, current_period_end, cancel_at_period_end, stripe_customer_id FROM subscriptions WHERE tenant_id = ?", [tenantId]),
     ]);
     res.json({
       plan: plan.id,
@@ -1408,6 +1455,12 @@ export function createApiApp(): express.Express {
         additionsThisMonth: additions,
         apiKeys: keyCount,
         period: currentPeriod(),
+      },
+      billing: {
+        status: billing?.status ?? 'active',
+        currentPeriodEnd: billing?.current_period_end ?? null,
+        cancelAtPeriodEnd: Boolean(billing?.cancel_at_period_end),
+        hasPaymentMethod: Boolean(billing?.stripe_customer_id),
       },
     });
   });
@@ -1486,9 +1539,11 @@ export function createApiApp(): express.Express {
     }
     const appUrl = (process.env.APP_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
     try {
+      const configuration = await getOrCreatePortalConfig(stripe);
       const portal = await stripe.billingPortal.sessions.create({
         customer: row.stripe_customer_id,
         return_url: `${appUrl}/app`,
+        ...(configuration ? { configuration } : {}),
       });
       res.json({ url: portal.url });
     } catch (err: any) {
@@ -1532,6 +1587,7 @@ export function createApiApp(): express.Express {
           break;
         }
 
+        case "customer.subscription.created":
         case "customer.subscription.updated": {
           const sub = event.data.object as Stripe.Subscription;
           const tenantId = await tenantForStripeEvent({
@@ -1544,6 +1600,9 @@ export function createApiApp(): express.Express {
           const priceId = sub.items.data[0]?.price?.id;
           const plan = priceId ? priceToPlan(priceId) : null;
           if (sub.status === "active" || sub.status === "trialing") {
+            // cancel_at_period_end stays true here while the period plays out —
+            // status only flips to "canceled" once Stripe actually ends it, so
+            // paid access (and this UPDATE) correctly persists until then.
             if (plan) {
               const { copied } = await applyPlan(tenantId, plan);
               if (copied > 0) await loadEmbeddingCache();
@@ -1554,6 +1613,7 @@ export function createApiApp(): express.Express {
           } else if (sub.status === "canceled") {
             await applyPlan(tenantId, "free");
           }
+          await syncSubscriptionFields(tenantId, sub);
           console.log(`Stripe: subscription ${sub.id} → ${sub.status} (tenant ${tenantId}, plan ${plan ?? "unchanged"})`);
           break;
         }

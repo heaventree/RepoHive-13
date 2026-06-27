@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Activity, ShieldCheck, Globe, Settings as SettingsIcon } from 'lucide-react';
+import { Activity, ShieldCheck, Globe, Settings as SettingsIcon, CreditCard } from 'lucide-react';
 import { Monitoring } from './Monitoring';
 import { Policies } from './Policies';
 import { ApiConfig } from './ApiConfig';
 import { ConfigPortal } from './ConfigPortal';
+import { BillingSettings } from './BillingSettings';
 
-type SettingsSection = 'monitoring' | 'policies' | 'api' | 'config';
+type SettingsSection = 'monitoring' | 'policies' | 'api' | 'billing' | 'config';
 
 const sections: { id: SettingsSection; icon: React.ComponentType<{ className?: string }>; label: string }[] = [
   { id: 'monitoring', icon: Activity,    label: 'Monitoring' },
   { id: 'policies',   icon: ShieldCheck, label: 'Policies' },
   { id: 'api',        icon: Globe,       label: 'API' },
+  { id: 'billing',    icon: CreditCard,  label: 'Billing' },
   { id: 'config',     icon: SettingsIcon, label: 'System Config' },
 ];
 
@@ -34,6 +36,7 @@ export const SettingsHub: React.FC<SettingsHubProps> = ({ initialSection = 'moni
         {section === 'monitoring' && <Monitoring />}
         {section === 'policies' && <Policies />}
         {section === 'api' && <ApiConfig />}
+        {section === 'billing' && <BillingSettings />}
         {section === 'config' && <ConfigPortal onBack={onExit ?? (() => setSection('monitoring'))} />}
       </div>
     </div>
