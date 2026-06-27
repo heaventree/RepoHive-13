@@ -40,7 +40,7 @@ const PLANS = [
       { label: 'AI analysis on all your repos',                included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public repos only',                            included: true },
-      { label: '500+ preloaded App Killers — search only',     included: false },
+      { label: '500+ preloaded App Killers',                   included: false },
       { label: 'Staleness monitoring & alerts',                included: false },
       { label: 'API key for IDE integration',                  included: false },
       { label: 'Project workspaces',                           included: false },
@@ -58,7 +58,7 @@ const PLANS = [
     note: 'Includes ~$1–2/month in AI costs per 1,000 repos analysed.',
     features: [
       { label: '1,000 repos in your library',                  included: true },
-      { label: 'AI analysis + weekly re-analysis',             included: true },
+      { label: 'AI analysis + daily re-analysis',              included: true },
       { label: 'Plain-English semantic search',                included: true },
       { label: 'Public + private repos',                       included: true },
       { label: '500+ hottest App Killers — SaaS-ready, preloaded',  included: true },

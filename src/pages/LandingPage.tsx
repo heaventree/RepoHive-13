@@ -256,16 +256,16 @@ function Orbs() {
 /* ── Pain points ── */
 const PAIN_POINTS = [
   { icon: <BookmarkX className="w-6 h-6" />, title: 'Stop losing repos in your bookmarks',    desc: "You've saved hundreds of great repos across browser bookmarks, GitHub stars, Notion pages, and random text files. You never find them when you need them.", color: '#ff6b6b' },
-  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived, abandoned, license-changed, security issue. RepoHive monitors your list and alerts you before you build on a foundation that crumbles.",     color: AMBER },
+  { icon: <Bell className="w-6 h-6" />,       title: 'Know when a repo goes stale or dies',   desc: "Archived or abandoned. RepoHive watches your library and flags it before you build on a foundation that's crumbling.",     color: AMBER },
   { icon: <Search className="w-6 h-6" />,     title: 'Find the right repo for your next build', desc: 'Describe what you need in plain English. We search your imported repo library first — scored for SaaS readiness, maintenance health, and license.',        color: PRIMARY_CTR },
 ];
 
 /* ── Features ── */
 const FEATURES = [
   { icon: <Layers className="w-5 h-5" />, title: 'Bulk import',        desc: 'Paste any GitHub URL — single repo, org, or a list of 1,000. Everything ingested in minutes.',                                       color: PRIMARY },
-  { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Updated weekly.',                             color: PRIMARY_CTR },
+  { icon: <Brain className="w-5 h-5" />,  title: 'AI intelligence',    desc: 'DeepSeek analyses every repo: tech stack, SaaS readiness, maintenance health, category. Re-checked daily.',                             color: PRIMARY_CTR },
   { icon: <Flame className="w-5 h-5" />,  title: 'App Killers',        desc: '500+ preloaded OSS alternatives to expensive SaaS tools, already analysed and scored. Included on Solo and Studio as a built-in head start.',                color: AMBER },
-  { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos, license changes, dropped stars, and security flags. Know before your team does.',                   color: TERTIARY },
+  { icon: <Bell className="w-5 h-5" />,   title: 'Staleness alerts',   desc: 'Weekly checks for archived repos and stalled commit activity. Know before your team does.',                   color: TERTIARY },
   { icon: <Plug className="w-5 h-5" />,   title: 'IDE & platform API', desc: 'One API key connects RepoHive to Replit, Bolt, Lovable, Base44, and Claude Code. Your repo library, in your flow.',                 color: '#c084fc' },
   { icon: <Users className="w-5 h-5" />,  title: 'Team workspaces',    desc: 'Studio plan gives your whole team a shared repo library. Brief a project and get matched repos for everyone.',                        color: '#60a5fa' },
 ];
@@ -436,7 +436,7 @@ export function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: '01', title: 'Add your repos',         desc: 'Paste any GitHub URL — or bulk import a list. Your bookmarks, GitHub stars, side project deps. 25 free, 1,000+ on Solo.', color: PRIMARY_CTR },
-              { step: '02', title: 'We analyse everything',  desc: 'DeepSeek reads every repo: tech stack, category, SaaS readiness, maintenance health, license. All updated weekly.', color: TERTIARY },
+              { step: '02', title: 'We analyse everything',  desc: 'DeepSeek reads every repo: tech stack, category, SaaS readiness, maintenance health, license. Re-checked daily.', color: TERTIARY },
               { step: '03', title: 'Search, monitor, build', desc: 'Ask in plain English. Get staleness alerts. Pull your library into Replit, Bolt, or Claude Code via API.', color: '#c084fc' },
             ].map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">

@@ -52,8 +52,8 @@ export function HowItWorksPage() {
           title="4 — Stay current"
           body={
             <>
-              <p>Staleness monitoring keeps an eye on your library: archive status, last-commit gaps, open CVEs, sudden star-velocity changes, license drift. You get a heads-up before a dependency surprises you.</p>
-              <p>Weekly on Solo, daily on Studio.</p>
+              <p>Staleness monitoring keeps an eye on your library: archive status and last-commit gaps. You get a heads-up before a dependency goes quiet on you.</p>
+              <p>Runs weekly, on every plan.</p>
             </>
           }
         />

@@ -140,8 +140,8 @@ export function AppKillersPage() {
           <p className="text-sm font-mono font-bold text-amber-300 mb-1">Included in paid plans as a built-in head start</p>
           <p className="text-xs text-slate-300 leading-relaxed">
             Upgrade to Solo or Studio and get 500+ preloaded App Killers copied into your account — searchable,
-            scored, and ready to use in search, projects, and AI integrations from day one. The free Explorer
-            plan can browse and search the library read-only.
+            scored, and ready to use in search, projects, and AI integrations from day one. App Killers isn't
+            available on the free Explorer plan.
           </p>
         </div>
       </div>
