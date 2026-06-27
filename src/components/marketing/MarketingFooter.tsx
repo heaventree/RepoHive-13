@@ -43,6 +43,7 @@ export function MarketingFooter() {
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-600 mb-4">Company</div>
           {[
             { label: 'Pricing', to: '/pricing' },
+            { label: 'FAQ',     to: '/faq' },
             { label: 'Blog',    to: '/blog' },
             { label: 'Sign in', to: '/sign-in' },
             { label: 'Sign up', to: '/sign-up' },

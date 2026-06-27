@@ -4,6 +4,7 @@ import { SEOProvider } from './lib/seo';
 import { SignIn, SignUp } from '@clerk/react';
 import { LandingPage } from './pages/LandingPage';
 import { PricingPage } from './pages/PricingPage';
+import { FAQPage } from './pages/FAQPage';
 import { SignInPage } from './pages/SignInPage';
 import { HowItWorksPage } from './pages/HowItWorksPage';
 import { AppKillersPage } from './pages/AppKillersPage';
@@ -54,6 +55,7 @@ export function Router() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/faq" element={<FAQPage />} />
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/app-killers" element={<AppKillersPage />} />
         <Route path="/integrations" element={<IntegrationsPage />} />
