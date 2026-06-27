@@ -13,6 +13,7 @@ import { rescanOldestRepos } from "./lib/rescan";
 import { buildAnalysisPrompt, analyzeRepo } from "./lib/analyze";
 import { reclassifyBatch, reclassifyStats, reclassifyDistribution, reclassifyTenantBreakdown } from "./lib/reclassify";
 import { pullCompletedArticles, getAccount as harborGetAccount, HarborError, type HarborJob } from "./lib/harbor";
+import { saveImage, getImage } from "./lib/storage";
 
 // When CLERK_SECRET_KEY is absent we run with auth disabled and scope all data
 // to a single dev tenant — keeps the app runnable offline / in CI / sandboxes.
@@ -841,6 +842,8 @@ export function createApiApp(): express.Express {
   // Keep the raw request bytes alongside the parsed JSON — Stripe webhook
   // signatures are computed over the exact raw body.
   app.use(express.json({
+    // 8mb covers a base64-encoded OG image (1200x630 PNG/JPG) comfortably.
+    limit: "8mb",
     verify: (req, _res, buf) => { (req as any).rawBody = buf; },
   }));
 
@@ -2193,6 +2196,14 @@ export function createApiApp(): express.Express {
     res.json({ settings, overrides });
   });
 
+  // Public — serves uploaded OG images. Long cache since the id is
+  // content-addressed (a re-upload gets a new id, never overwrites one in place).
+  app.get("/api/seo/og-image/:id", async (req, res) => {
+    const image = await getImage(req.params.id);
+    if (!image) return res.status(404).end();
+    res.set("Content-Type", image.contentType).set("Cache-Control", "public, max-age=31536000, immutable").send(image.buffer);
+  });
+
   app.get("/api/admin/seo/pages", async (req, res) => {
     if (!requireAdmin(req, res)) return;
     const rows = await all(
@@ -2215,6 +2226,26 @@ export function createApiApp(): express.Express {
       [path, label ?? null, title ?? null, description ?? null, og_image ?? null, keywords ?? null, noindex ? 1 : 0],
     );
     res.json({ success: true });
+  });
+
+  // Admin-only: upload an OG image (data URL) and get back an absolute URL
+  // to drop into og_image / DEFAULT_OG_IMAGE. Images are content-addressed
+  // by a random id and served back out via the public route below.
+  app.post("/api/admin/seo/og-image", async (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { dataUrl } = req.body ?? {};
+    const match = typeof dataUrl === "string" && dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/);
+    if (!match) {
+      return res.status(400).json({ error: "dataUrl must be a base64 PNG/JPEG/WebP image" });
+    }
+    const [, contentType, , base64] = match;
+    const buffer = Buffer.from(base64, "base64");
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: "Image too large (max 5MB)" });
+    }
+    const id = await saveImage(buffer, contentType);
+    const SITE_URL = (process.env.APP_URL || "https://repohive.app").replace(/\/$/, "");
+    res.json({ url: `${SITE_URL}/api/seo/og-image/${id}` });
   });
 
   app.delete("/api/admin/seo/pages", async (req, res) => {

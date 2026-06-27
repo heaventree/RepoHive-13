@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   FileText, Sparkles, Save, RefreshCw, AlertCircle, CheckCircle2, Plus,
   Settings as SettingsIcon, Trash2, Edit3, Eye, Zap, Globe, Search, Loader,
-  Ship, Star, GitFork, Wand2,
+  Ship, Star, GitFork, Wand2, Upload,
 } from 'lucide-react';
 
 interface SeoPage {
@@ -33,6 +33,73 @@ interface BlogRow {
 }
 
 type Sub = 'pages' | 'settings' | 'blog' | 'harbor' | 'promo';
+
+// Shared OG-image control: a URL field plus an upload button. Uploaded files
+// are stored server-side (lib/storage.ts) and swapped in as an absolute URL,
+// so it's a drop-in replacement for the plain text field wherever og_image
+// is edited (SEO pages, blog posts, the site-wide default).
+function OgImageField({ value, onChange, label = 'OG image URL', help = 'Absolute URL to a 1200×630 PNG/JPG — or upload one.' }: {
+  value: string | null;
+  onChange: (url: string) => void;
+  label?: string;
+  help?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (file: File) => {
+    setError(null);
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+      });
+      const r = await fetch('/api/admin/seo/og-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Upload failed');
+      onChange(d.url);
+    } catch (e: any) {
+      setError(e.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">{label}</div>
+      <div className="flex items-center gap-2">
+        {value && <img src={value} alt="" className="w-10 h-10 object-cover rounded border border-border-main shrink-0" />}
+        <input
+          type="text"
+          value={value ?? ''}
+          onChange={e => onChange(e.target.value)}
+          className="flex-1 bg-bg-dark border border-border-main rounded px-3 py-2 text-xs text-slate-200 focus:border-accent-blue focus:outline-none font-mono"
+        />
+        <label className="px-3 py-2 rounded bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono hover:text-white cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0">
+          {uploading ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+          {uploading ? 'Uploading…' : 'Upload'}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            disabled={uploading}
+            onChange={e => { const file = e.target.files?.[0]; if (file) handleFile(file); e.target.value = ''; }}
+          />
+        </label>
+      </div>
+      {error && <div className="text-[10px] text-red-400 mt-1">{error}</div>}
+      {help && <div className="text-[10px] text-slate-600 mt-1">{help}</div>}
+    </div>
+  );
+}
 
 export const AdminSEO: React.FC = () => {
   const [sub, setSub] = useState<Sub>('pages');
@@ -258,7 +325,7 @@ function PageEditor({ page, onSave, onCancel }: { page: SeoPage; onSave: () => v
         <Field label="Page title" value={f.title} onChange={(v: string) => setF({ ...f, title: v })} help={`${(f.title ?? '').length} chars — aim for 50-60`} />
         <Field label="Meta description" value={f.description} onChange={(v: string) => setF({ ...f, description: v })} multiline help={`${(f.description ?? '').length} chars — aim for 140-160`} />
         <Field label="Keywords" value={f.keywords} onChange={(v: string) => setF({ ...f, keywords: v })} help="Comma-separated, 5-8 high-intent terms" />
-        <Field label="OG image URL" value={f.og_image} onChange={(v: string) => setF({ ...f, og_image: v })} help="Absolute URL to a 1200×630 PNG/JPG" />
+        <OgImageField value={f.og_image} onChange={(v) => setF({ ...f, og_image: v })} />
         <label className="flex items-center gap-2 text-xs text-slate-400 font-mono">
           <input type="checkbox" checked={!!f.noindex} onChange={e => setF({ ...f, noindex: e.target.checked ? 1 : 0 })} />
           noindex (hide from search engines)
@@ -338,8 +405,8 @@ function SettingsPanel() {
     { key: 'GA4_ID',                       label: 'Google Analytics 4 measurement ID', help: 'Starts with G-… Injected as gtag.js on every page.' },
     { key: 'GTM_ID',                       label: 'Google Tag Manager container ID',   help: 'Starts with GTM-… Loads the GTM snippet on every page.' },
     { key: 'SEARCH_CONSOLE_VERIFICATION',  label: 'Search Console verification token',  help: 'The content="..." value from the meta-tag verification method.' },
-    { key: 'DEFAULT_OG_IMAGE',             label: 'Default Open Graph image URL',       help: 'Used when a page has no custom og:image.' },
   ];
+  const ogImageValue: string | null = s.DEFAULT_OG_IMAGE ?? null;
 
   return (
     <div className="glass-card rounded-lg p-6 shadow-xl space-y-4">
@@ -358,6 +425,12 @@ function SettingsPanel() {
           <div className="text-[10px] text-slate-600 mt-1">{f.help}</div>
         </label>
       ))}
+      <OgImageField
+        label="Default Open Graph image"
+        help="Used when a page has no custom og:image."
+        value={ogImageValue}
+        onChange={(v) => setS({ ...s, DEFAULT_OG_IMAGE: v })}
+      />
       <div className="flex items-center gap-2 pt-2">
         <button onClick={save} className="px-4 py-2 rounded-lg bg-accent-blue text-white font-mono text-xs font-bold hover:bg-accent-blue/80 flex items-center gap-1.5">
           <Save className="w-3.5 h-3.5" /> Save settings
@@ -593,10 +666,7 @@ function BlogEditor({ post, onSave, onCancel }: { post: BlogPost; onSave: () => 
             <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">SEO Title (override)</div>
             <input value={f.seo_title ?? ''} onChange={e => setF({ ...f, seo_title: e.target.value })} className="w-full bg-bg-dark border border-border-main rounded px-3 py-2 text-xs text-slate-200 focus:border-accent-blue focus:outline-none font-mono" />
           </label>
-          <label className="block">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">OG image URL</div>
-            <input value={f.og_image ?? ''} onChange={e => setF({ ...f, og_image: e.target.value })} className="w-full bg-bg-dark border border-border-main rounded px-3 py-2 text-xs text-slate-200 focus:border-accent-blue focus:outline-none font-mono" />
-          </label>
+          <OgImageField value={f.og_image} onChange={(v) => setF({ ...f, og_image: v })} />
         </div>
         <label className="block">
           <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-1.5">SEO Description (override)</div>
